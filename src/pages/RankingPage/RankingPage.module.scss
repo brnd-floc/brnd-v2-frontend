@@ -1,0 +1,34 @@
+@import "@/styles/index.scss";
+
+.body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  @include baseLayout();
+  gap: 12px;
+  height: 100vh;
+  overflow: hidden;
+  padding: 0 12px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  padding-top: 3px;
+}
+
+.tabs {
+  width: 100%;
+  padding-top: 20px;
+}
+
+.periodFilter {
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+  padding-top: 6px;
+  padding-bottom: 8px;
+  padding-left: 0;
+}

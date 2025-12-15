@@ -1,0 +1,36 @@
+{
+  "accountAssociation": {
+    "header": "eyJmaWQiOjY5NDYsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHg3MDMyODkwNkIzOTU4NDYwNDAxMGJiOTk5NDY1MzU5QjIyMTU1NGFBIn0",
+    "payload": "eyJkb21haW4iOiJicm5kLmxhbmQifQ",
+    "signature": "MHg2NGEzZDJjM2ZhMjlkNmE1NzViNjRkM2ZjNmVhNTkyYWE4ZWUyYWU5Y2I0ODcwMDJhNWIxZDEzZjkzNjA2MGRhNTk5NTdlMjVkZTU1NWI0NDZkZWI3NzBkNDk2NDA0YzY1ZjZjZDdiMTUyNzVmMmU1NmQ5MjBiZDhmOGE2NWFjNDFi"
+  },
+  "frame": {
+    "version": "1",
+    "name": "BRND",
+    "iconUrl": "https://brnd.land/icon.jpg",
+    "homeUrl": "https://brnd.land",
+    "imageUrl": "https://brnd.land/image.png",
+    "buttonTitle": "REBRND",
+    "splashImageUrl": "https://brnd.land/splash.png",
+    "splashBackgroundColor": "#000000",
+    "webhookUrl": "https://brnd-v2-backend-production.up.railway.app/notifications-service/farcaster-webhook",
+    "subtitle": "The onchain brands stage",
+    "description": "Discover, rank, and share top onchain brands. Earn BRND tokens.",
+    "screenshotUrls": [
+      "https://brnd.land/screenshot-1.jpg",
+      "https://brnd.land/screenshot-2.jpg",
+      "https://brnd.land/screenshot-3.jpg"
+    ],
+    "primaryCategory": "social",
+    "tags": ["brands", "leaderboard", "ranking"],
+    "heroImageUrl": "https://brnd.land/hero.jpg",
+    "tagline": "The onchain brands stage",
+    "ogTitle": "BRND",
+    "ogDescription": "Discover, rank, and share top onchain brands. Earn BRND tokens.",
+    "ogImageUrl": "https://brnd.land/image.png"
+  },
+  "noindex": true,
+  "baseBuilder": {
+    "allowedAddresses": ["0x77C16fB601Afc7ec0936ea18b2eDFE193DF4AEa8"]
+  }
+}

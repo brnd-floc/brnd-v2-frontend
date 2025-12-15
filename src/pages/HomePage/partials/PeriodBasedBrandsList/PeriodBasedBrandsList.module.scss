@@ -1,0 +1,166 @@
+.wrapper {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin: 0 auto;
+  margin: 8px auto;
+}
+
+.container {
+  display: flex;
+  height: 100%;
+  touch-action: pan-y;
+  padding: 3px;
+  width: 100%;
+  background: #333;
+  border-radius: 12px;
+}
+
+.leftSection {
+  flex: 0 0 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+  }
+}
+
+.periodSvg {
+  width: 100%;
+  height: auto;
+  max-width: 200px;
+
+  svg {
+    width: 100%;
+    color: #fff;
+    height: auto;
+  }
+}
+
+.rightSection {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 6px 8px 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+  }
+}
+
+.brandsList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  flex: 1;
+}
+
+.brandItem {
+  display: flex;
+  align-items: center;
+  background: #16181d;
+  padding: 6px 10px;
+  border-radius: 5px;
+  border: 0.64px solid #2f2f2f;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #1a1d24;
+    border-color: #444;
+  }
+}
+
+.brandInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.brandImage {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.brandName {
+  color: white;
+  font-size: 14px;
+  width: 100%;
+  font-weight: 500;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.periodIndicator {
+  width: 6%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  align-items: center;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #666;
+  transition: background-color 0.2s ease;
+}
+
+.activeDot {
+  background-color: #fff;
+}
+
+/* Skeleton loading styles */
+.skeletonImage {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, #444 25%, #555 50%, #444 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+  flex-shrink: 0;
+}
+
+.skeletonName {
+  height: 14px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #444 25%, #555 50%, #444 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+  flex: 1;
+  max-width: 120px;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}

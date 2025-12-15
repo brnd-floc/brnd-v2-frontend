@@ -1,0 +1,93 @@
+// Dependencies
+import classNames from "clsx";
+
+// StyleSheet
+import styles from "./PodiumColumn.module.scss";
+
+// Components
+import Typography from "@/components/Typography";
+
+// Assets
+import AddIcon from "@/assets/icons/add-solid.svg?react";
+
+// Hooks
+import { Brand } from "@/hooks/brands";
+
+interface PodiumColumnProps {
+  variant: "primary" | "secondary";
+  position: number;
+  selected?: Brand;
+  onClick?: () => void;
+}
+
+export default function PodiumColumn({
+  variant,
+  selected,
+  position,
+  onClick,
+}: Readonly<PodiumColumnProps>) {
+
+  return (
+    <div
+      className={classNames(
+        styles.body,
+        styles[variant],
+        selected && styles.selected
+      )}
+    >
+      {selected ? (
+        onClick ? (
+          <button className={styles.field} onClick={onClick}>
+            <div className={styles.image}>
+              <img src={selected.imageUrl} alt={selected.name} />
+            </div>
+            <Typography
+              variant={"geist"}
+              textAlign={"center"}
+              className={styles.name}
+              size={14}
+              weight={"bold"}
+            >
+              {selected.name}
+            </Typography>
+          </button>
+        ) : (
+          <div className={styles.field}>
+            <div className={styles.image}>
+              <img src={selected.imageUrl} alt={selected.name} />
+            </div>
+            <Typography
+              variant={"geist"}
+              textAlign={"center"}
+              className={styles.name}
+              size={14}
+              weight={"bold"}
+            >
+              {selected.name}
+            </Typography>
+          </div>
+        )
+      ) : onClick ? (
+        <button className={styles.brand} onClick={onClick}>
+          <AddIcon />
+        </button>
+      ) : (
+        <div className={styles.brand}>
+          <AddIcon />
+        </div>
+      )}
+      <div>
+        <Typography
+          size={64}
+          variant={"druk"}
+          lineHeight={80}
+          weight={"wide"}
+          className={styles.number}
+          textAlign={"center"}
+        >
+          {position}
+        </Typography>
+      </div>
+    </div>
+  );
+}

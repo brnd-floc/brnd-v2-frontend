@@ -1,0 +1,193 @@
+// Dependencies
+import React, { useEffect, useMemo, useState } from "react";
+
+// Components
+
+// StyleSheet
+import styles from "./PeriodBasedBrandsList.module.scss";
+
+// Hook
+import { useBrandList } from "@/hooks/brands";
+
+// Utils
+import { useNavigate } from "react-router-dom";
+
+// Assets
+import BrandOfTheWeek from "@/assets/images/brand-of-the-week-white.svg?react";
+import BrandOfTheMonth from "@/assets/images/brand-of-the-month-white.svg?react";
+import AllTimeBrand from "@/assets/images/all-time-brand-white.svg?react";
+
+import { BrandTimePeriod } from "@/shared/components/TimePeriodFilter";
+import Typography from "@/shared/components/Typography";
+
+interface PeriodBasedBrandsListProps {
+  period: BrandTimePeriod;
+  onPeriodChange: (period: BrandTimePeriod) => void;
+}
+
+const PERIOD_SVGS: Record<BrandTimePeriod, React.ComponentType> = {
+  day: BrandOfTheWeek,
+  week: BrandOfTheWeek,
+  month: BrandOfTheMonth,
+  all: AllTimeBrand,
+};
+
+const PERIODS: BrandTimePeriod[] = ["day", "week", "month", "all"];
+
+function PeriodBasedBrandsList({
+  period,
+  onPeriodChange,
+}: PeriodBasedBrandsListProps) {
+  const { data, refetch, isLoading } = useBrandList("top", "", 1, 5, period);
+
+  const [startY, setStartY] = useState(0);
+  const navigate = useNavigate();
+
+  // Auto-rotate periods every 3 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const currentIndex = PERIODS.indexOf(period);
+      const nextIndex = (currentIndex + 1) % PERIODS.length;
+      onPeriodChange(PERIODS[nextIndex]);
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [period, onPeriodChange]);
+
+  useEffect(() => {
+    // Refetch when period changes
+    try {
+      refetch();
+    } catch (error) {
+      // Error refetching brands - silently fail
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [period]); // Only refetch when period changes, not when refetch function reference changes
+
+  const processedBrands = useMemo(() => {
+    if (!data?.brands) return [];
+    return data.brands;
+  }, [data?.brands, period]);
+
+  // Swipe functionality
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setStartY(e.touches[0].clientY);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    const endY = e.changedTouches[0].clientY;
+    const diffY = startY - endY;
+
+    // Minimum swipe distance
+    if (Math.abs(diffY) > 50) {
+      const currentIndex = PERIODS.indexOf(period);
+      let nextIndex;
+
+      if (diffY > 0) {
+        // Swipe up - next period
+        nextIndex = (currentIndex + 1) % PERIODS.length;
+      } else {
+        // Swipe down - previous period
+        nextIndex = currentIndex === 0 ? PERIODS.length - 1 : currentIndex - 1;
+      }
+
+      onPeriodChange(PERIODS[nextIndex]);
+    }
+  };
+
+  const PeriodSvg = PERIOD_SVGS[period];
+  const currentPeriodIndex = PERIODS.indexOf(period);
+
+  const truncateName = (name: string, maxLength: number = 16) => {
+    return name.length > maxLength
+      ? `${name.substring(0, maxLength)}...`
+      : name;
+  };
+
+  const handleClickBrand = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    navigate(`/brand/${id}`);
+  };
+
+  const handleClickRankingSection = () => {
+    // Navigate to ranking page with current period state
+    navigate(`/ranking?period=${period}`);
+  };
+
+  const handleClickLeftSection = () => {
+    // Navigate to ranking page with current period state
+    navigate(`/ranking?period=${period}`);
+  };
+
+  return (
+    <div className={styles.wrapper}>
+      <div
+        className={styles.container}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
+        <div className={styles.leftSection} onClick={handleClickLeftSection}>
+          <div className={styles.periodSvg}>
+            <PeriodSvg />
+          </div>
+        </div>
+
+        <div
+          className={styles.rightSection}
+          onClick={handleClickRankingSection}
+        >
+          <ul className={styles.brandsList}>
+            {isLoading || !processedBrands || processedBrands.length === 0
+              ? // Show skeleton loading state
+                Array.from({ length: 3 }).map((_, index) => (
+                  <li key={`skeleton-${index}`} className={styles.brandItem}>
+                    <div className={styles.brandInfo}>
+                      <div className={styles.skeletonImage} />
+                      <div className={styles.skeletonName} />
+                    </div>
+                  </li>
+                ))
+              : // Show actual brand data
+                processedBrands.slice(0, 3).map((brand, index) => (
+                  <li
+                    onClick={(e) => handleClickBrand(e, brand.id.toString())}
+                    key={`brand-item-${index}`}
+                    className={styles.brandItem}
+                  >
+                    <div className={styles.brandInfo}>
+                      <img
+                        src={brand.imageUrl}
+                        alt={brand.name}
+                        className={styles.brandImage}
+                      />
+                      <Typography
+                        size={14}
+                        lineHeight={14}
+                        weight="medium"
+                        variant="geist"
+                        className={styles.brandName}
+                      >
+                        {truncateName(brand.name)}
+                      </Typography>
+                    </div>
+                  </li>
+                ))}
+          </ul>
+        </div>
+      </div>
+
+      <div className={styles.periodIndicator}>
+        {PERIODS.map((_, index) => (
+          <div
+            key={index}
+            className={`${styles.dot} ${
+              index === currentPeriodIndex ? styles.activeDot : ""
+            }`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export default React.memo(PeriodBasedBrandsList);

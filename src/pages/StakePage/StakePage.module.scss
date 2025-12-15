@@ -1,0 +1,893 @@
+// StakePage.module.scss
+
+// ============================================
+// CONTAINER
+// ============================================
+.container {
+  box-sizing: border-box;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  max-width: 374px;
+  height: 100vh;
+  max-height: 100vh;
+  margin: 0 auto;
+  background: #000000;
+  border-radius: 12px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+
+  @media (max-width: 374px) {
+    border-radius: 0;
+    max-width: 100%;
+  }
+}
+
+// ============================================
+// BLUR BACKGROUND
+// ============================================
+.container::before {
+  content: "";
+  position: fixed;
+  width: 100%;
+  max-width: 341px;
+  height: 98%;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(
+    90.03deg,
+    rgba(255, 142, 0, 0.5) 7.38%,
+    rgba(255, 0, 0, 0.5) 35.51%,
+    rgba(14, 0, 255, 0.5) 63.64%,
+    rgba(0, 255, 0, 0.5) 92.62%
+  );
+  filter: blur(140px);
+  z-index: 0;
+  pointer-events: none;
+}
+
+// ============================================
+// HEADER
+// ============================================
+.header {
+  position: relative;
+  z-index: 1;
+  padding: 16px;
+  padding-top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: start;
+  flex-shrink: 0;
+}
+
+.closeButton {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  right: 4px;
+  top: 4px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  padding: 0;
+
+  &::before {
+    content: "✕";
+    position: absolute;
+    color: #ffffff;
+    font-size: 24px;
+    font-weight: 400;
+    line-height: 1;
+  }
+
+  &:hover:not(:disabled) {
+    opacity: 0.7;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+}
+
+// ============================================
+// BALANCE SECTION
+// ============================================
+.balanceSection {
+  position: relative;
+  z-index: 1;
+  padding: 0 16px;
+  flex-shrink: 0;
+}
+
+.balanceGrid {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 8px;
+  width: 100%;
+}
+
+.balanceCard {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 12px 8px;
+  gap: 4px;
+  flex: 1;
+  min-height: 128px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(0, 0, 0, 0) 99.99%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  border-radius: 12px;
+}
+
+.balanceCardLeft {
+  // Same as balanceCard
+}
+
+.balanceCardRight {
+  // Same as balanceCard
+}
+
+.balanceLabel {
+  font-family: "Geist", sans-serif;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 125%;
+  text-align: center;
+  color: #8a8a8a;
+  margin: 0;
+}
+
+.balanceAmount {
+  font-family: "Geist", sans-serif;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 30px;
+  line-height: 125%;
+  text-align: center;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+
+  // Gradient text effect
+  background: linear-gradient(
+      360deg,
+      #eaeaea 0%,
+      rgba(255, 255, 255, 0.8) 50%,
+      #eaeaea 100%
+    ),
+    linear-gradient(
+      191.75deg,
+      #fff000 0%,
+      #ff0000 33%,
+      #0e00ff 66%,
+      #00ff00 100%
+    ),
+    #ffffff;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-fill-color: transparent;
+}
+
+.balanceToken {
+  font-family: "Geist", sans-serif;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 125%;
+  color: #8a8a8a;
+  margin: 0;
+}
+
+// ============================================
+// POWER SECTION
+// ============================================
+.powerSection {
+  position: relative;
+  z-index: 1;
+  padding: 0 16px;
+  margin-top: 16px;
+  flex-shrink: 0;
+}
+
+.powerCard {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(0, 0, 0, 0) 99.99%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.powerInfo {
+  flex: 1;
+}
+
+.powerLabel {
+  color: #ffffff;
+  font-size: 14px;
+  margin: 0 0 4px 0;
+}
+
+.powerLevel {
+  color: #ffffff;
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+}
+
+.powerMultiplier {
+  color: #8a8a8a;
+  font-size: 12px;
+  margin: 0;
+}
+
+.powerActions {
+  display: flex;
+  gap: 8px;
+}
+
+.powerButton {
+  background: linear-gradient(
+      360deg,
+      #eaeaea 0%,
+      rgba(255, 255, 255, 0.8) 50%,
+      #eaeaea 100%
+    ),
+    linear-gradient(
+      191.75deg,
+      #fff000 0%,
+      #ff0000 33%,
+      #0e00ff 66%,
+      #00ff00 100%
+    );
+  backdrop-filter: blur(12px);
+  color: #000000;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    opacity: 0.9;
+  }
+}
+
+// ============================================
+// INFO BANNER
+// ============================================
+.infoContainer {
+  position: relative;
+  z-index: 1;
+  padding: 0 16px;
+  margin-top: 12px;
+  flex-shrink: 0;
+}
+
+.infoBanner {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 12px;
+  gap: 8px;
+  width: 100%;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(0, 0, 0, 0) 99.99%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  border-radius: 6px;
+}
+
+.infoBannerContent {
+  width: 100%;
+}
+
+.infoTitle {
+  font-family: "Geist", sans-serif;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 100%;
+  text-transform: uppercase;
+  color: #ffffff;
+  margin: 0 0 8px 0;
+}
+
+.infoList {
+  font-family: "Geist", sans-serif;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 125%;
+  color: #ffffff;
+  margin: 0;
+  padding-left: 0;
+  white-space: pre-line;
+}
+
+// ============================================
+// TABS
+// ============================================
+.tabsContainer {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  padding: 0 16px;
+  position: relative;
+  z-index: 1;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  flex-shrink: 0;
+}
+
+.tab {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 12px 0;
+  gap: 4px;
+  flex: 1;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: "Geist", sans-serif;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 125%;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.25);
+  position: relative;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+}
+
+.tabActive {
+  color: #ffffff;
+
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #00ff00;
+  }
+}
+
+.tabWithdrawActive {
+  color: #ffffff;
+
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #00ff00;
+  }
+}
+
+// ============================================
+// CONTENT
+// ============================================
+.content {
+  position: relative;
+  z-index: 1;
+  padding: 16px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: 24px;
+}
+
+.formContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.sharesCard {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(0, 0, 0, 0) 99.99%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  border-radius: 12px;
+  padding: 12px;
+  text-align: center;
+}
+
+// ============================================
+// INPUT GROUP
+// ============================================
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inputLabel {
+  font-family: "Geist", sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 125%;
+  color: #ffffff;
+  margin: 0;
+}
+
+.inputWrapper {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  gap: 8px;
+  width: 100%;
+  min-height: 50px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(0, 0, 0, 0) 99.99%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+}
+
+.input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-family: "Geist", sans-serif;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 100%;
+  text-align: left;
+  outline: none;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.inputWithdraw {
+  // Same as input
+}
+
+.maxButton {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 8px 16px;
+  gap: 8px;
+  min-width: 65px;
+  height: 34px;
+  background: linear-gradient(
+      360deg,
+      #eaeaea 0%,
+      rgba(255, 255, 255, 0.8) 50%,
+      #eaeaea 100%
+    ),
+    linear-gradient(
+      191.75deg,
+      #fff000 0%,
+      #ff0000 33%,
+      #0e00ff 66%,
+      #00ff00 100%
+    );
+  backdrop-filter: blur(12px);
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  font-family: "Geist", sans-serif;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 125%;
+  color: #000000;
+
+  &:hover:not(:disabled) {
+    opacity: 0.9;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.maxButtonWithdraw {
+  // Same as maxButton
+}
+
+// ============================================
+// SUBMIT BUTTON
+// ============================================
+.submitButton {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 12px 16px;
+  gap: 8px;
+  isolation: isolate;
+  position: relative;
+  width: 100%;
+  min-height: 47px;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(12px);
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  overflow: visible;
+  margin-top: 16px;
+
+  // Blur effect behind text
+  &::before {
+    content: "";
+    position: absolute;
+    width: 87px;
+    height: 20px;
+    left: calc(50% - 87px / 2);
+    top: calc(50% - 20px / 2);
+    background: linear-gradient(
+      90.03deg,
+      #ff8e00 7.38%,
+      #ff0000 35.51%,
+      #0e00ff 63.64%,
+      #00ff00 92.62%
+    );
+    filter: blur(28px);
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  font-family: "Geist", sans-serif;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 18px;
+  line-height: 125%;
+  color: #ffffff;
+  position: relative;
+  z-index: 1;
+
+  span {
+    position: relative;
+    z-index: 1;
+  }
+
+  &:hover:not(:disabled) {
+    opacity: 0.9;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.submitButtonWithdraw {
+  // Same as submitButton
+}
+
+.spinner {
+  display: inline-block;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// ============================================
+// WITHDRAWAL DELAY WARNING
+// ============================================
+.withdrawalDelayWarning {
+  background: rgba(255, 165, 0, 0.15);
+  border: 1px solid rgba(255, 165, 0, 0.3);
+  border-radius: 12px;
+  padding: 12px;
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.delayText {
+  color: #ffcc99;
+  font-weight: 600;
+}
+
+.delaySubtext {
+  color: #cccccc;
+  opacity: 0.8;
+}
+
+// ============================================
+// STATUS MESSAGES
+// ============================================
+.errorText {
+  color: #ff0000;
+  margin: 8px 0 0 0;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.pendingText {
+  color: #ffffff;
+  text-align: center;
+  margin: 8px 0 0 0;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+// ============================================
+// ERROR BANNER
+// ============================================
+.errorBanner {
+  margin-top: 16px;
+  background: rgba(255, 0, 0, 0.2);
+  border: 1px solid #ff0000;
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.errorIcon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.errorTitle {
+  color: #ffffff;
+  margin: 0 0 4px 0;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.errorMessage {
+  color: #ff9999;
+  margin: 0;
+  font-size: 14px;
+}
+
+// ============================================
+// SUCCESS BANNER
+// ============================================
+.successBanner {
+  margin-top: 16px;
+  background: rgba(0, 255, 0, 0.2);
+  border: 1px solid #00ff00;
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.successIcon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.successContent {
+  flex: 1;
+}
+
+.successTitle {
+  color: #ffffff;
+  margin: 0 0 8px 0;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.txLink {
+  color: #00ff00;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: color 0.2s ease;
+  font-size: 14px;
+  font-weight: 700;
+
+  &:hover {
+    color: #00dd00;
+  }
+}
+
+// ============================================
+// CONNECT WALLET SECTION
+// ============================================
+.connectSection {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  flex: 1;
+  min-height: 0;
+}
+
+.connectCard {
+  text-align: center;
+  max-width: 100%;
+  width: 100%;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(0, 0, 0, 0) 99.99%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  border-radius: 12px;
+  padding: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.connectTitle {
+  color: #ffffff;
+  margin: 0 0 1rem 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.connectSubtitle {
+  color: #8a8a8a;
+  margin: 0 0 2rem 0;
+  font-size: 0.875rem;
+}
+
+.connectButton {
+  background: linear-gradient(
+      360deg,
+      #eaeaea 0%,
+      rgba(255, 255, 255, 0.8) 50%,
+      #eaeaea 100%
+    ),
+    linear-gradient(
+      191.75deg,
+      #fff000 0%,
+      #ff0000 33%,
+      #0e00ff 66%,
+      #00ff00 100%
+    );
+  backdrop-filter: blur(12px);
+  color: #000000;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 18px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  max-width: 300px;
+
+  &:hover {
+    opacity: 0.9;
+  }
+}
+
+// ============================================
+// FOOTER
+// ============================================
+.footer {
+  position: relative;
+  z-index: 1;
+  padding: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.footerLink {
+  color: #8a8a8a;
+  font-weight: 700;
+  text-decoration: none;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: #ffffff;
+  }
+}
+
+.footerButton {
+  background: none;
+  border: none;
+  color: #8a8a8a;
+  font-weight: 700;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  font-size: 14px;
+  padding: 0;
+
+  &:hover:not(:disabled) {
+    color: #ffffff;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+}
+
+.tellerLink {
+  text-decoration: underline;
+  color: #00ff00;
+  cursor: pointer;
+}

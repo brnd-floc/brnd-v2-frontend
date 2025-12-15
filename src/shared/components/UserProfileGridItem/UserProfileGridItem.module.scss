@@ -1,0 +1,189 @@
+@import "@/styles/index.scss";
+
+.layout {
+  padding: 1px;
+  border: none;
+  background: #2f2f2f;
+  border-radius: 12px;
+  border: 1px solid #2f2f2f;
+  overflow: hidden;
+  width: 100%;
+  min-height: 120px;
+  aspect-ratio: 1/1;
+
+  &.green {
+    background: linear-gradient(
+      270deg,
+      rgba(255, 255, 255, 0.15) 1.82%,
+      rgba(37, 209, 64, 0.75) 49.13%,
+      rgba(255, 255, 255, 0.15) 94.55%
+    );
+    .container {
+      position: relative;
+      background: #0a0b0d;
+      &:before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        background: radial-gradient(
+          50% 50% at 50% 50%,
+          rgba(37, 209, 64, 0.25) 0%,
+          rgba(37, 209, 64, 0.05) 100%
+        );
+      }
+    }
+  }
+
+  &.red {
+    background: linear-gradient(
+      270deg,
+      rgba(255, 255, 255, 0.15) 1.82%,
+      rgb(209 37 37 / 75%) 49.13%,
+      rgba(255, 255, 255, 0.15) 94.55%
+    );
+    .container {
+      position: relative;
+      background: #0a0b0d;
+      &:before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        background: radial-gradient(
+          50% 50% at 50% 50%,
+          rgb(209 37 37 / 25%) 0%,
+          rgb(209 37 37 / 5%) 100%
+        );
+      }
+    }
+  }
+
+  &.blue {
+    background: linear-gradient(
+      270deg,
+      rgba(255, 255, 255, 0.15) 1.82%,
+      rgb(37 112 209 / 75%) 49.13%,
+      rgba(255, 255, 255, 0.15) 94.55%
+    );
+    .container {
+      position: relative;
+      background: #0a0b0d;
+      &:before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        background: radial-gradient(
+          50% 50% at 50% 50%,
+          rgb(37 116 209 / 25%) 0%,
+          rgb(37 74 209 / 5%) 100%
+        );
+      }
+    }
+  }
+}
+
+.container {
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  background-color: #0a0b0d;
+  border-radius: 12px;
+  overflow: hidden;
+  min-height: inherit;
+  height: 100%;
+  position: relative;
+
+  h5,
+  > div {
+    position: relative;
+    z-index: 2;
+  }
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: auto;
+}
+
+.title {
+  color: #fff;
+  text-transform: uppercase;
+}
+
+.content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: auto;
+  width: 100%;
+}
+
+.valueSection {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.mainValue {
+  color: #fff;
+}
+
+.subText {
+  color: #9b92a5;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.linkIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  color: #9b92a5;
+  cursor: pointer;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: #fff;
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+@include isMobile() {
+  .layout {
+    min-height: 100px;
+    aspect-ratio: 1/1;
+  }
+
+  .container {
+    padding: 12px;
+  }
+
+  .mainValue {
+    font-size: 16px;
+    line-height: 20px;
+  }
+
+  .title {
+    font-size: 9px;
+    line-height: 11px;
+  }
+
+  .linkIcon {
+    width: 20px;
+    height: 20px;
+
+    svg {
+      width: 14px;
+      height: 14px;
+    }
+  }
+}

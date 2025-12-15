@@ -1,0 +1,42 @@
+.layout {
+  position: relative;
+  border: 1px solid #2f2f2f;
+  background: #0a0b0d;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 500px;
+
+  &:before {
+    content: "";
+    inset: 23px;
+    position: absolute;
+    z-index: 1;
+    background: linear-gradient(
+      90.03deg,
+      #ff9533 7.38%,
+      #ff0000 35.51%,
+      #0c00ff 63.64%,
+      #00ff00 92.62%
+    );
+    opacity: 0.25;
+    filter: blur(60px);
+  }
+}
+
+.closeBtn {
+  position: absolute;
+  right: 0;
+  top: -40px;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.container {
+  position: relative;
+  z-index: 2;
+  padding: 12px;
+  width: 100%;
+}

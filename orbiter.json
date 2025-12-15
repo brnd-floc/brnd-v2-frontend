@@ -1,0 +1,6 @@
+{
+  "siteId": "364c46ad-19b1-4cb7-90da-b7fa8f20d28b",
+  "domain": "rebrndprod",
+  "buildCommand": "bun run build",
+  "buildDir": "dist"
+}
