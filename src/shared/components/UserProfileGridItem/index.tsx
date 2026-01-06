@@ -15,6 +15,7 @@ interface UserProfileGridItemProps {
   subtext?: string;
   hasLink?: boolean;
   className?: string;
+  onClick?: () => void;
   children?: React.ReactNode;
 }
 
@@ -24,12 +25,15 @@ const UserProfileGridItem: React.FC<UserProfileGridItemProps> = ({
   value,
   subtext,
   hasLink = false,
+  onClick = () => {
+    return;
+  },
   className,
   children,
 }) => {
   return (
     <div className={classNames(styles.layout, styles[variant], className)}>
-      <div className={styles.container}>
+      <div className={styles.container} onClick={onClick}>
         {/* Title - Top Left */}
         <div className={styles.header}>
           <Typography

@@ -5,20 +5,20 @@ import React, { useState, useEffect } from "react";
 import styles from "./CustomLinksFrame.module.scss";
 import Typography from "../Typography";
 import sdk from "@farcaster/miniapp-sdk";
-import { useNavigate } from "react-router-dom";
+//import { useNavigate } from "react-router-dom";
 
 function CustomLinksFrame(): React.ReactNode {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [prevIndex, setPrevIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const navigate = useNavigate();
+  //const navigate = useNavigate();
 
   const linksData = [
     {
       id: 1,
-      text: "BRND Power",
+      text: "BRND on Brand3",
       action: () => {
-        navigate("/profile/power");
+        sdk.actions.openUrl({ url: "https://paragraph.com/@brand3/brnd-v2" });
       },
     },
     {

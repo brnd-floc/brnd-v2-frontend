@@ -18,36 +18,19 @@
   justify-content: center;
   align-items: center;
   padding: 20px 0;
-  background: linear-gradient(
-    135deg,
-    #00ff00 0%,
-    #0c00ff 34%,
-    #ff0000 67%,
-    #fff100 100%
-  );
+  background-image: url("/src/shared/assets/images/brnd-power-bg.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   color: white;
   gap: 4px;
   border-radius: 4px;
-}
-
-.airdropText {
-  font-size: 32px;
-  font-weight: bold;
-  line-height: 1;
-  margin-bottom: 4px;
-}
-
-.leaderboardText {
-  font-size: 14px;
-  font-weight: 600;
-  opacity: 0.9;
-  margin-bottom: 2px;
-}
-
-.seasonText {
-  font-size: 12px;
-  font-weight: 500;
-  opacity: 0.8;
+  position: relative;
+  
+  svg {
+    position: relative;
+    z-index: 1;
+  }
 }
 
 .arrowSection {
@@ -66,15 +49,3 @@
   justify-content: center;
 }
 
-.leaderboardTextContainer {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.seasonOneText {
-  border: 1px solid white;
-  padding: 2px 6px;
-  border-radius: 12px;
-  margin-left: 4px;
-}

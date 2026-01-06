@@ -20,7 +20,7 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes  
+      gcTime: 10 * 60 * 1000, // 10 minutes
       refetchOnWindowFocus: false, // Prevent refetch on window focus
       refetchOnMount: false, // Prevent refetch on component mount
       refetchOnReconnect: false, // Prevent refetch on network reconnect
@@ -33,12 +33,21 @@ const queryClient = new QueryClient({
 // Configuration
 import { router } from "./config/router";
 
+// Error Boundary
+import { ErrorBoundary } from "./shared/components/ErrorBoundary";
+
+if (import.meta.env.VITE_ENVIRONMENT === "dev") {
+  import("eruda").then((eruda) => eruda.default.init());
+}
+
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <WagmiProvider config={config}>
-      <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} />
-      </QueryClientProvider>
-    </WagmiProvider>
+    <ErrorBoundary>
+      <WagmiProvider config={config}>
+        <QueryClientProvider client={queryClient}>
+          <RouterProvider router={router} />
+        </QueryClientProvider>
+      </WagmiProvider>
+    </ErrorBoundary>
   </React.StrictMode>
 );

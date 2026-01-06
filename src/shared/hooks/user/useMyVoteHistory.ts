@@ -18,6 +18,7 @@ export const useMyVoteHistory = (pageId: number = 1, limit: number = 15) => {
     staleTime: 2 * 60 * 1000, // Consider data fresh for 2 minutes
     // No need for enabled: false since we always want to fetch when user is authenticated
   });
+  console.log("THE MY VOTE HISTORY IS: ", result.data);
 
   if (!result.isError && result.data) {
     const votes = result.data.data || {};

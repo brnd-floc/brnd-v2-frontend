@@ -1,7 +1,12 @@
 // src/shared/contexts/BlockchainContext.tsx
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useStoriesInMotion } from "../hooks/contract/useStoriesInMotion";
-import { useContractWagmi, StakeBrndParams, WithdrawBrndParams } from "../hooks/contract/useContractWagmi";
+import {
+  useContractWagmi,
+  StakeBrndParams,
+  WithdrawBrndParams,
+} from "../hooks/contract/useContractWagmi";
+import { useBrandRankings } from "./BrandRankingsContext";
 
 interface BlockchainState {
   // Wallet connection
@@ -43,7 +48,13 @@ interface BlockchainActions {
   vote: (brandIds: [number, number, number]) => Promise<void>;
 
   // Reward actions
-  claimReward: (castHash: string, voteId: string, transactionHash?: string) => Promise<void>;
+  claimReward: (
+    castHash: string,
+    voteId: string,
+    transactionHash: string,
+    recipient: string,
+    castedFrom: number
+  ) => Promise<void>;
   getRewardAmount: (powerLevel: number) => Promise<string>;
 
   // Brand actions
@@ -56,7 +67,9 @@ interface BlockchainActions {
 
 interface BlockchainContextType extends BlockchainState, BlockchainActions {}
 
-const BlockchainContext = createContext<BlockchainContextType | undefined>(undefined);
+const BlockchainContext = createContext<BlockchainContextType | undefined>(
+  undefined
+);
 
 export const useBlockchain = () => {
   const context = useContext(BlockchainContext);
@@ -70,9 +83,16 @@ interface BlockchainProviderProps {
   children: React.ReactNode;
 }
 
-export const BlockchainProvider: React.FC<BlockchainProviderProps> = ({ children }) => {
-  const [lastTransactionHash, setLastTransactionHash] = useState<string | null>(null);
+export const BlockchainProvider: React.FC<BlockchainProviderProps> = ({
+  children,
+}) => {
+  const [lastTransactionHash, setLastTransactionHash] = useState<string | null>(
+    null
+  );
   const [combinedError, setCombinedError] = useState<string | null>(null);
+  const [pendingVoteBrandIds, setPendingVoteBrandIds] = useState<[number, number, number] | null>(null);
+
+  const { updateBrandOptimistically } = useBrandRankings();
 
   // StoriesInMotion hook for blockchain features
   const storiesInMotion = useStoriesInMotion(
@@ -90,6 +110,22 @@ export const BlockchainProvider: React.FC<BlockchainProviderProps> = ({ children
     (txData) => {
       setLastTransactionHash(txData.txHash);
       setCombinedError(null);
+      
+      // Optimistically update rankings for voted brands
+      if (pendingVoteBrandIds) {
+        const periods = ["day", "week", "month", "all"] as const;
+        const basePointsPerVote = 100; // Base points awarded per vote
+        
+        // Update rankings for all voted brands across all periods
+        pendingVoteBrandIds.forEach((brandId) => {
+          periods.forEach((period) => {
+            updateBrandOptimistically(brandId, period, basePointsPerVote);
+          });
+        });
+        
+        // Clear pending brand IDs
+        setPendingVoteBrandIds(null);
+      }
     },
     // onClaimSuccess
     (txData) => {
@@ -116,7 +152,12 @@ export const BlockchainProvider: React.FC<BlockchainProviderProps> = ({ children
   useEffect(() => {
     const error = storiesInMotion.error || tellerStaking.error;
     setCombinedError(error);
-  }, [storiesInMotion.error, tellerStaking.error]);
+    
+    // Clear pending vote brand IDs if there's an error during voting
+    if (error && pendingVoteBrandIds) {
+      setPendingVoteBrandIds(null);
+    }
+  }, [storiesInMotion.error, tellerStaking.error, pendingVoteBrandIds]);
 
   // Combined state
   const state: BlockchainState = {
@@ -141,8 +182,8 @@ export const BlockchainProvider: React.FC<BlockchainProviderProps> = ({ children
     lastTransactionHash,
 
     // Loading states
-    isLoading: 
-      storiesInMotion.isLoadingUserInfo || 
+    isLoading:
+      storiesInMotion.isLoadingUserInfo ||
       tellerStaking.isLoadingBrndBalances ||
       storiesInMotion.isConfirming ||
       tellerStaking.isConfirming,
@@ -161,10 +202,29 @@ export const BlockchainProvider: React.FC<BlockchainProviderProps> = ({ children
     levelUpBrndPower: storiesInMotion.levelUpBrndPower,
 
     // Voting actions
-    vote: storiesInMotion.vote,
+    vote: async (brandIds: [number, number, number]) => {
+      // Store the brand IDs for optimistic updates
+      setPendingVoteBrandIds(brandIds);
+      // Call the actual vote function
+      return storiesInMotion.vote(brandIds);
+    },
 
     // Reward actions
-    claimReward: storiesInMotion.claimReward,
+    claimReward: async (
+      castHash: string,
+      voteId: string,
+      transactionHash: string,
+      recipient: string,
+      castedFrom: number
+    ) => {
+      return storiesInMotion.claimReward(
+        castHash,
+        voteId,
+        transactionHash,
+        recipient,
+        castedFrom
+      );
+    },
     getRewardAmount: storiesInMotion.getRewardAmount,
 
     // Brand actions

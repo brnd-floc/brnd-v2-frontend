@@ -25,6 +25,7 @@ import styles from "./CongratsView.module.scss";
 
 // Assets
 import Logo from "@/assets/images/logo.svg";
+import sdk from "@farcaster/miniapp-sdk";
 
 type VerificationState = "verifying" | "success" | "error" | "skipped";
 
@@ -152,6 +153,7 @@ export default function CongratsView({
    * Handle navigation to home
    */
   const handleClickContinue = useCallback(() => {
+    sdk.haptics.selectionChanged();
     navigate("/");
   }, [navigate]);
 

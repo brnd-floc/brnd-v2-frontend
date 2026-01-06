@@ -3,12 +3,12 @@
 .body {
   display: flex;
   flex-direction: column;
-  flex: 1;
   @include baseLayout();
-  gap: 8px;
+  gap: 0;
   padding: 0 12px;
-  min-height: 100vh;
+  padding-top: 8px;
   padding-bottom: 60px;
+  width: 100%;
   &:not(:has(.footer)) {
     padding-bottom: 0;
   }
@@ -37,14 +37,8 @@
 
 .container {
   width: 100%;
-  // FIXED: Make container properly scrollable and flexible
-  flex: 1;
-  overflow-y: auto; // Changed from just 'auto'
-  overflow-x: hidden; // Prevent horizontal scroll
-  padding-bottom: 24px;
-  padding-top: 12px;
-  // FIXED: Add proper scrolling behavior
-  -webkit-overflow-scrolling: touch; // Smooth scrolling on iOS
+  display: flex;
+  flex-direction: column;
   &:not(:has(+ .footer)) {
     padding-bottom: 0;
   }
@@ -57,11 +51,9 @@
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0%, 100%));
-  gap: 24px;
-  &.inline {
-    grid-template-columns: 1fr;
-  }
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  margin-top: 8px;
 }
 
 .imageBox {
@@ -236,4 +228,78 @@
     gap: 8px;
     margin-left: auto;
   }
+}
+
+// New styles for redesigned layout
+.descriptionSection {
+  grid-column: 1 / -1;
+  margin-top: 4px;
+}
+
+.descriptionCard {
+  height: auto !important;
+  aspect-ratio: unset !important;
+
+  .container {
+    height: auto !important;
+  }
+}
+
+.descriptionContent {
+  padding-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.descriptionText {
+  color: #ffffff;
+  line-height: 1.4;
+}
+
+.websiteLink {
+  color: #00ff00;
+
+  a {
+    color: inherit;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.channelContent {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding-top: 8px;
+}
+
+.channelLink {
+  color: #00ff00;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.guardianContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 100%;
+  padding-top: 8px;
+}
+
+.guardianAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
 }

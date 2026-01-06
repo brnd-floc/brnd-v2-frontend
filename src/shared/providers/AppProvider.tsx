@@ -12,6 +12,7 @@ import {
 import { BottomSheetProvider } from "./BottomSheetProvider";
 import { ModalProvider } from "./ModalProvider";
 import { PowerLevelProvider } from "../contexts/PowerLevelContext";
+import { BrandRankingsProvider } from "../contexts/BrandRankingsContext";
 
 // Components
 import NotificationPrompt from "@/shared/components/NotificationPrompt";
@@ -67,7 +68,6 @@ export const AuthContext = createContext<AuthContextData>({
   refetch: async () => {},
   updateAuthData: () => {},
 });
-
 
 /**
  * AppProvider component that manages Farcaster miniapp authentication and context.
@@ -172,6 +172,7 @@ export function AppProvider(): JSX.Element {
           setAuthError(null);
           try {
             const userData = await getMe();
+
             setAuthData(userData);
           } catch (error) {
             setAuthError(
@@ -269,8 +270,7 @@ export function AppProvider(): JSX.Element {
           setIsLoadingAuth(false);
         }
       }
-    } catch (error) {
-    }
+    } catch (error) {}
   }, []);
 
   const signOut = useCallback(() => {
@@ -318,8 +318,9 @@ export function AppProvider(): JSX.Element {
   );
 
   return (
-      <AuthContext.Provider value={contextValue}>
-        <PowerLevelProvider>
+    <AuthContext.Provider value={contextValue}>
+      <PowerLevelProvider>
+        <BrandRankingsProvider>
           <BottomSheetProvider>
             <ModalProvider>
               {/* Add miniapp prompt overlay - shown on app load if needed */}
@@ -349,7 +350,8 @@ export function AppProvider(): JSX.Element {
               <Outlet />
             </ModalProvider>
           </BottomSheetProvider>
-        </PowerLevelProvider>
-      </AuthContext.Provider>
+        </BrandRankingsProvider>
+      </PowerLevelProvider>
+    </AuthContext.Provider>
   );
 }

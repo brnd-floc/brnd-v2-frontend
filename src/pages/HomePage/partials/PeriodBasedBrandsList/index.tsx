@@ -7,7 +7,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import styles from "./PeriodBasedBrandsList.module.scss";
 
 // Hook
-import { useBrandList } from "@/hooks/brands";
+import { useBrandRankings } from "@/shared/contexts/BrandRankingsContext";
+import { Brand } from "@/shared/hooks/brands/types";
 
 // Utils
 import { useNavigate } from "react-router-dom";
@@ -32,14 +33,13 @@ const PERIOD_SVGS: Record<BrandTimePeriod, React.ComponentType> = {
   all: AllTimeBrand,
 };
 
-const PERIODS: BrandTimePeriod[] = ["day", "week", "month", "all"];
+const PERIODS: BrandTimePeriod[] = ["week", "month", "all"];
 
 function PeriodBasedBrandsList({
   period,
   onPeriodChange,
 }: PeriodBasedBrandsListProps) {
-  const { data, refetch, isLoading } = useBrandList("top", "", 1, 5, period);
-
+  const { data: rankingsData, isLoading } = useBrandRankings();
   const [startY, setStartY] = useState(0);
   const navigate = useNavigate();
 
@@ -54,20 +54,11 @@ function PeriodBasedBrandsList({
     return () => clearInterval(interval);
   }, [period, onPeriodChange]);
 
-  useEffect(() => {
-    // Refetch when period changes
-    try {
-      refetch();
-    } catch (error) {
-      // Error refetching brands - silently fail
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [period]); // Only refetch when period changes, not when refetch function reference changes
-
   const processedBrands = useMemo(() => {
-    if (!data?.brands) return [];
-    return data.brands;
-  }, [data?.brands, period]);
+    const currentPeriodData = rankingsData[period];
+    if (!currentPeriodData || currentPeriodData.length === 0) return [];
+    return currentPeriodData.slice(0, 3); // Only show top 3
+  }, [rankingsData, period]);
 
   // Swipe functionality
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -148,7 +139,7 @@ function PeriodBasedBrandsList({
                   </li>
                 ))
               : // Show actual brand data
-                processedBrands.slice(0, 3).map((brand, index) => (
+                processedBrands.map((brand: Brand, index: number) => (
                   <li
                     onClick={(e) => handleClickBrand(e, brand.id.toString())}
                     key={`brand-item-${index}`}

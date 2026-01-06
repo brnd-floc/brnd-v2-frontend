@@ -12,6 +12,7 @@ interface AllRankingsProps {
 }
 
 function AllRankings({ period }: AllRankingsProps) {
+  console.log("THE PERIOD", period);
   return (
     <div className={styles.layout}>
       <BrandsList

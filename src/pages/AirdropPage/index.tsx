@@ -19,8 +19,8 @@ import Button from "@/shared/components/Button";
 // Hooks
 import { useAirdropCheck } from "@/shared/hooks/user/useAirdropCheck";
 import { useAirdropLeaderboard } from "@/shared/hooks/user/useAirdropLeaderboard";
-import { useAirdropClaimStatus } from "@/shared/hooks/user/useAirdropClaimStatus";
-import { useAirdropStats } from "@/shared/hooks/contract/useAirdropStats";
+// import { useAirdropClaimStatus } from "@/shared/hooks/user/useAirdropClaimStatus";
+// import { useAirdropStats } from "@/shared/hooks/contract/useAirdropStats";
 
 // Hocs
 import withProtectionRoute from "@/hocs/withProtectionRoute";
@@ -30,12 +30,14 @@ import { useAuth } from "@/shared/hooks/auth/useAuth";
 import AirdropSvg from "@/shared/assets/images/airdrop.svg?react";
 import IncompleteTaskIcon from "@/shared/assets/icons/incomplete-task.svg?react";
 import QuestionMarkIcon from "@/shared/assets/icons/question-mark.svg?react";
+import SnapshotIcon from "@/shared/assets/icons/snapshot.svg?react";
+import Logo from "@/assets/images/logo.svg";
 
 // Assets
 import airdropBackgroundImage from "@/shared/assets/images/airdrop-background.png";
 
 // Partials
-import ClaimAirdrop from "./partials/ClaimAirdrop";
+// import ClaimAirdrop from "./partials/ClaimAirdrop";
 
 // Admin FIDs
 const ADMIN_FIDS = [6431, 6099, 8109, 222144, 16098];
@@ -48,9 +50,11 @@ function AirdropPage(): React.ReactNode {
   const { fid: routeFid } = useParams();
   const [expandedQuest, setExpandedQuest] = useState<number | null>(null);
   const [currentView, setCurrentView] = useState<PageView>("main");
-  const [adminInput, setAdminInput] = useState<string>("");
+  // const [adminInput, setAdminInput] = useState<string>("");
   const [shouldFetchQuests, setShouldFetchQuests] = useState(false);
   const hasFetchedQuestsRef = useRef(false);
+
+  const airdropStartDate = new Date(Date.UTC(2025, 11, 19, 13, 13, 0));
 
   const { data: authData } = useAuth();
 
@@ -62,14 +66,14 @@ function AirdropPage(): React.ReactNode {
   const airdropData = authData?.airdrop;
   const isEligibleForAirdrop = airdropData?.isEligible || false;
   const snapshotExists = airdropData?.snapshotExists || false;
-  const hasAllocation = !!(
-    airdropData?.tokenAllocation && airdropData.tokenAllocation > 0
-  );
-  const hasClaimed = airdropData?.hasClaimed || false;
+  // const hasAllocation = !!(
+  //   airdropData?.tokenAllocation && airdropData.tokenAllocation > 0
+  // );
+  // const hasClaimed = airdropData?.hasClaimed || false;
 
-  // Check claim status (for contract-level claim verification)
-  const { data: claimStatusData, isLoading: isClaimStatusLoading } =
-    useAirdropClaimStatus({ enabled: true });
+  // // Check claim status (for contract-level claim verification)
+  // const { data: claimStatusData, isLoading: isClaimStatusLoading } =
+  //   useAirdropClaimStatus({ enabled: true });
 
   // Only fetch detailed quest/challenge data when explicitly requested
   // This is only needed for the quests list view
@@ -80,15 +84,7 @@ function AirdropPage(): React.ReactNode {
     refetch: refetchQuests,
   } = useAirdropCheck({ enabled: shouldFetchQuests });
 
-  // Debug log only when data changes
-  useEffect(() => {
-    if (questsDataResponse) {
-      console.log(
-        "This is the quests data response",
-        JSON.stringify(questsDataResponse, null, 2)
-      );
-    }
-  }, [questsDataResponse]);
+  console.log("WENA CTM");
 
   // Auto-fetch quests data when on main view (only once)
   useEffect(() => {
@@ -127,7 +123,6 @@ function AirdropPage(): React.ReactNode {
   // Calculate time until airdrop start: December 19th, 2025 at 13:13 PM UTC
   const getTimeUntilAirdropStart = useCallback(() => {
     const now = new Date();
-    const airdropStartDate = new Date(Date.UTC(2025, 11, 19, 13, 13, 0));
     const diff = airdropStartDate.getTime() - now.getTime();
 
     if (diff <= 0) return "00:00:00";
@@ -177,8 +172,8 @@ function AirdropPage(): React.ReactNode {
     useAirdropLeaderboard(100);
 
   // Real-time airdrop stats from contract (for admin dashboard)
-  const { data: airdropStats, isLoading: airdropStatsLoading } =
-    useAirdropStats();
+  // const { data: airdropStats, isLoading: airdropStatsLoading } =
+  //   useAirdropStats();
 
   // Preload background image on mount
   useEffect(() => {
@@ -221,13 +216,13 @@ function AirdropPage(): React.ReactNode {
     setCurrentView("claim");
   };
 
-  const handleAdminImpersonate = () => {
-    sdk.haptics.selectionChanged();
-    if (adminInput && /^\d+$/.test(adminInput)) {
-      navigate(`/airdrop/${adminInput}`);
-      setAdminInput("");
-    }
-  };
+  // const handleAdminImpersonate = () => {
+  //   sdk.haptics.selectionChanged();
+  //   if (adminInput && /^\d+$/.test(adminInput)) {
+  //     navigate(`/airdrop/${adminInput}`);
+  //     setAdminInput("");
+  //   }
+  // };
 
   const handleBackToMain = () => {
     sdk.haptics.selectionChanged();
@@ -239,105 +234,450 @@ function AirdropPage(): React.ReactNode {
     setExpandedQuest(expandedQuest === questId ? null : questId);
   };
 
-  // Create hardcoded quest elements with backend data integration
+  // Helper function to get challenge data by name
+  const getChallengeData = (challengeName: string) => {
+    const challenges = questsDataResponse?.calculation?.challenges || [];
+    return challenges.find((c: any) => c.name === challengeName);
+  };
+
+  // Individual quest rendering functions for granular control
+  const renderFollowAccountsQuest = () => {
+    const challenge = getChallengeData("Follow Accounts");
+    if (!challenge) return null;
+
+    const accounts = challenge.details?.accounts || [];
+    const brndAccount = accounts.find((acc: any) => acc.name === "@brnd");
+    const flocAccount = accounts.find((acc: any) => acc.name === "@floc");
+
+    return {
+      id: 1,
+      title: "FOLLOW @BRND + @FLOC",
+      progress: `${challenge.progress.current}/${challenge.progress.required}`,
+      isCompleted: challenge.completed,
+      currentMultiplier: challenge.currentMultiplier,
+      maxMultiplier: challenge.maxMultiplier,
+      progressData: challenge.progress,
+      progressPercentage: Math.min(
+        (challenge.progress.current / challenge.progress.required) * 100,
+        100
+      ),
+      nextTier: challenge.tiers.find((tier: any) => !tier.achieved),
+      customDetails: {
+        accounts: [
+          {
+            name: "@brnd",
+            followed: brndAccount?.followed || false,
+            status: brndAccount?.followed ? "✅ Following" : "❌ Not Following",
+          },
+          {
+            name: "@floc",
+            followed: flocAccount?.followed || false,
+            status: flocAccount?.followed ? "✅ Following" : "❌ Not Following",
+          },
+        ],
+      },
+      tasks: challenge.tiers.map((tier: any) => ({
+        name: `${tier.requirement} accounts`,
+        multiplier: `${tier.multiplier}X`,
+        completed: tier.achieved,
+        requirement: tier.requirement,
+      })),
+    };
+  };
+
+  const renderChannelInteractionQuest = () => {
+    const challenge = getChallengeData("Channel Interaction /brnd");
+    if (!challenge) return null;
+
+    const channelFollow = challenge.details?.channelFollow;
+    const podiumCasts = challenge.details?.podiumCasts;
+
+    return {
+      id: 2,
+      title: "INTERACT WITH /BRND CHANNEL",
+      progress: `${challenge.progress.current}/${challenge.progress.required}`,
+      isCompleted: challenge.completed,
+      currentMultiplier: challenge.currentMultiplier,
+      maxMultiplier: challenge.maxMultiplier,
+      progressData: challenge.progress,
+      progressPercentage: Math.min(
+        (challenge.progress.current / challenge.progress.required) * 100,
+        100
+      ),
+      nextTier: challenge.tiers.find((tier: any) => !tier.achieved),
+      customDetails: {
+        channelStatus: channelFollow?.followed
+          ? "✅ Following /brnd"
+          : "❌ Not Following /brnd",
+        podiumsPublished: `📤 ${podiumCasts?.count || 0} podiums published`,
+        requirement: `Need ${
+          podiumCasts?.required || 1
+        } podium + follow channel`,
+      },
+      tasks: challenge.tiers.map((tier: any) => ({
+        name:
+          tier.requirement === 1
+            ? "Follow channel"
+            : "Follow + Publish podiums",
+        multiplier: `${tier.multiplier}X`,
+        completed: tier.achieved,
+        requirement: tier.requirement,
+      })),
+    };
+  };
+
+  const renderHoldingBrndQuest = () => {
+    const challenge = getChallengeData("Holding $BRND");
+    if (!challenge) return null;
+
+    const details = challenge.details;
+    const walletBalance = details?.formattedWalletBalance || "0";
+    const stakedBalance = details?.formattedStakedBalance || "0";
+
+    return {
+      id: 3,
+      title: "HOLDING $BRND",
+      progress: `${
+        Math.round(challenge.progress.current)?.toLocaleString() ?? 0
+      }/${challenge.progress.required?.toLocaleString() ?? 0}`,
+      isCompleted: challenge.completed,
+      currentMultiplier: challenge.currentMultiplier,
+      maxMultiplier: challenge.maxMultiplier,
+      progressData: challenge.progress,
+      progressPercentage: Math.min(
+        (challenge.progress.current / challenge.progress.required) * 100,
+        100
+      ),
+      nextTier: details?.nextTier,
+      customDetails: {
+        walletBalance: `💰 Wallet: ${walletBalance} $BRND`,
+        stakedBalance: `🥩 Staked: ${stakedBalance} $BRND`,
+        totalBalance: `📊 Total: ${details?.formattedBalance || "0"} $BRND`,
+        nextTierInfo: details?.nextTier
+          ? `Next: ${
+              details.nextTier?.requirement?.toLocaleString() ?? 0
+            } $BRND (${details.nextTier?.multiplier?.toLocaleString() ?? 0}X)`
+          : "Max tier reached!",
+      },
+      tasks: challenge.tiers.map((tier: any) => ({
+        name: `${tier.requirement?.toLocaleString() ?? 0} $BRND`,
+        multiplier: `${tier.multiplier}X`,
+        completed: tier.achieved,
+        requirement: tier.requirement,
+      })),
+    };
+  };
+
+  const renderCollectiblesQuest = () => {
+    const challenge = getChallengeData("Collect @brndbot casts");
+    if (!challenge) return null;
+
+    return {
+      id: 4,
+      title: "COLLECT CAST COLLECTIBLES",
+      progress: `${challenge.progress.current}/${challenge.progress.required}`,
+      isCompleted: challenge.completed,
+      currentMultiplier: challenge.currentMultiplier,
+      maxMultiplier: challenge.maxMultiplier,
+      progressData: challenge.progress,
+      progressPercentage: Math.min(
+        (challenge.progress.current / challenge.progress.required) * 100,
+        100
+      ),
+      nextTier: challenge.tiers.find((tier: any) => !tier.achieved),
+      customDetails: {
+        collected: `🎨 ${challenge.progress.current} collectibles`,
+        needed: `Need ${
+          challenge.progress.required - challenge.progress.current
+        } more`,
+        source: "From @brndy or @brnd casts",
+      },
+      tasks: challenge.tiers.map((tier: any) => ({
+        name: `${tier.requirement} collectibles`,
+        multiplier: `${tier.multiplier}X`,
+        completed: tier.achieved,
+        requirement: tier.requirement,
+      })),
+    };
+  };
+
+  const renderVotingQuest = () => {
+    const challenge = getChallengeData("# of different brands voted");
+    if (!challenge) return null;
+
+    return {
+      id: 5,
+      title: "VOTING FOR DIFFERENT BRANDS",
+      progress: `${challenge.progress.current}/${challenge.progress.required}`,
+      isCompleted: challenge.completed,
+      currentMultiplier: challenge.currentMultiplier,
+      maxMultiplier: challenge.maxMultiplier,
+      progressData: challenge.progress,
+      progressPercentage: Math.min(
+        (challenge.progress.current / challenge.progress.required) * 100,
+        100
+      ),
+      nextTier: challenge.details?.nextTier,
+      customDetails: {
+        uniqueBrands: `🗳️ ${
+          challenge.details?.uniqueBrandsVoted || challenge.progress.current
+        } unique brands voted`,
+        nextTarget: challenge.details?.nextTier
+          ? `Next: ${challenge.details.nextTier.requirement} brands (${challenge.details.nextTier.multiplier}X)`
+          : "Max tier reached!",
+        tip: "Vote for more variety to increase multiplier",
+      },
+      tasks: challenge.tiers.map((tier: any) => ({
+        name: `${tier.requirement} brands`,
+        multiplier: `${tier.multiplier}X`,
+        completed: tier.achieved,
+        requirement: tier.requirement,
+      })),
+    };
+  };
+
+  const renderSharingQuest = () => {
+    const challenge = getChallengeData("Podiums Shared");
+    if (!challenge) return null;
+
+    return {
+      id: 6,
+      title: "SHARING PODIUMS",
+      progress: `${challenge.progress.current}/${challenge.progress.required}`,
+      isCompleted: challenge.completed,
+      currentMultiplier: challenge.currentMultiplier,
+      maxMultiplier: challenge.maxMultiplier,
+      progressData: challenge.progress,
+      progressPercentage: Math.min(
+        (challenge.progress.current / challenge.progress.required) * 100,
+        100
+      ),
+      nextTier: challenge.details?.nextTier,
+      customDetails: {
+        shared: `📤 ${
+          challenge.details?.sharedPodiumsCount || challenge.progress.current
+        } podiums shared`,
+        nextTarget: challenge.details?.nextTier
+          ? `Next: ${challenge.details.nextTier.requirement} shares (${challenge.details.nextTier.multiplier}X)`
+          : "Max tier reached!",
+        tip: "Share your voting results to increase multiplier",
+      },
+      tasks: challenge.tiers.map((tier: any) => ({
+        name: `${tier.requirement} podiums`,
+        multiplier: `${tier.multiplier}X`,
+        completed: tier.achieved,
+        requirement: tier.requirement,
+      })),
+    };
+  };
+
+  const renderNeynarQuest = () => {
+    const challenge = getChallengeData("Neynar Score");
+    if (!challenge) return null;
+
+    return {
+      id: 7,
+      title: "NEYNAR SCORE",
+      progress: `${challenge.progress.current}/${challenge.progress.required}`,
+      isCompleted: challenge.completed,
+      currentMultiplier: challenge.currentMultiplier,
+      maxMultiplier: challenge.maxMultiplier,
+      progressData: challenge.progress,
+      progressPercentage: Math.min(
+        (challenge.progress.current / challenge.progress.required) * 100,
+        100
+      ),
+      nextTier: challenge.details?.nextTier,
+      customDetails: {
+        currentScore: `⭐ Score: ${
+          challenge.details?.neynarScore || challenge.progress.current
+        }`,
+        nextTarget: challenge.details?.nextTier
+          ? `Next: ${challenge.details.nextTier.requirement} score (${challenge.details.nextTier.multiplier}X)`
+          : "Max tier reached!",
+        tip: "Maintain high reputation score on Neynar",
+      },
+      tasks: challenge.tiers.map((tier: any) => ({
+        name: `${tier.requirement}`,
+        multiplier: `${tier.multiplier}X`,
+        completed: tier.achieved,
+        requirement: tier.requirement,
+      })),
+    };
+  };
+
+  const renderProUserQuest = () => {
+    const challenge = getChallengeData("Pro User");
+    if (!challenge) return null;
+
+    return {
+      id: 8,
+      title: "FARCASTER PRO",
+      progress: `${challenge.progress.current}/${challenge.progress.required}`,
+      isCompleted: challenge.completed,
+      currentMultiplier: challenge.currentMultiplier,
+      maxMultiplier: challenge.maxMultiplier,
+      progressData: challenge.progress,
+      progressPercentage:
+        challenge.progress.current >= challenge.progress.required ? 100 : 0,
+      nextTier: challenge.details?.nextTier,
+      customDetails: {
+        status: challenge.details?.isProUser
+          ? "✅ Farcaster Pro Active"
+          : "❌ Not Farcaster Pro",
+        benefit: "Subscribe to Farcaster Pro for multiplier boost",
+      },
+      tasks: challenge.tiers.map((tier: any) => ({
+        name: "Pro subscription",
+        multiplier: `1.2X`,
+        completed: tier.achieved,
+        requirement: tier.requirement,
+      })),
+    };
+  };
+
+  // Create hardcoded quest elements using individual render functions
   const questsData = useMemo(() => {
     if (!questsDataResponse?.calculation?.challenges) {
       return [];
     }
 
-    const challenges = questsDataResponse.calculation.challenges;
-
-    // Helper function to get challenge data by name
-    const getChallengeData = (challengeName: string) => {
-      return challenges.find((c: any) => c.name === challengeName);
-    };
-
-    // Helper function to create quest data structure
-    const createQuestData = (
-      id: number,
-      title: string,
-      challengeName: string
-    ) => {
-      const challenge = getChallengeData(challengeName);
-      if (!challenge) {
-        return {
-          id,
-          title,
-          progress: "0/0",
-          isCompleted: false,
-          tasks: [],
-          currentMultiplier: 1,
-          maxMultiplier: 1,
-          currentValue: 0,
-          progressData: { current: 0, required: 0, unit: "" },
-          progressPercentage: 0,
-          nextTier: null,
-          description: "",
-          details: "",
-        };
-      }
-
-      const completedTiers = challenge.tiers.filter(
-        (tier: any) => tier.achieved
-      ).length;
-      const totalTiers = challenge.tiers.length;
-      const progressPercentage = Math.min(
-        (challenge.progress.current / challenge.progress.required) * 100,
-        100
-      );
-      const nextTier = challenge.tiers.find(
-        (tier: any) =>
-          !tier.achieved && tier.requirement > challenge.progress.current
-      );
-      const tasks = challenge.tiers.map((tier: any) => ({
-        name: `${tier.requirement} ${challenge.progress.unit}`,
-        multiplier: `${tier.multiplier}X`,
-        completed: tier.achieved,
-        requirement: tier.requirement,
-        isCurrentTier: tier.requirement === challenge.progress.required,
-      }));
-
-      return {
-        id,
-        title,
-        progress: `${completedTiers}/${totalTiers}`,
-        isCompleted: challenge.completed,
-        tasks,
-        currentMultiplier: challenge.currentMultiplier,
-        maxMultiplier: challenge.maxMultiplier,
-        currentValue: challenge.currentValue,
-        progressData: challenge.progress,
-        progressPercentage,
-        nextTier,
-        description: challenge.description,
-        details: "",
-      };
-    };
-
-    // 8 hardcoded quest elements
     return [
-      createQuestData(1, "FOLLOW @BRND + @FLOC", "Follow Accounts"),
-      createQuestData(
-        2,
-        "INTERACT WITH /BRND CHANNEL",
-        "Channel Interaction /brnd"
-      ),
-      createQuestData(3, "HOLDING $BRND", "Holding $BRND"),
-      createQuestData(
-        4,
-        "COLLECT CAST COLLECTIBLES",
-        "Collect @brndy or @brnd casts"
-      ),
-      createQuestData(
-        5,
-        "VOTING FOR DIFFERENT BRANDS",
-        "# of different brands voted"
-      ),
-      createQuestData(6, "SHARING PODIUMS", "Podiums Shared"),
-      createQuestData(7, "NEYNAR SCORE", "Neynar Score"),
-      createQuestData(8, "FARCASTER PRO", "Pro User"),
-    ];
+      renderFollowAccountsQuest(),
+      renderChannelInteractionQuest(),
+      renderHoldingBrndQuest(),
+      renderCollectiblesQuest(),
+      renderVotingQuest(),
+      renderSharingQuest(),
+      renderNeynarQuest(),
+      renderProUserQuest(),
+    ].filter(Boolean); // Remove any null values
   }, [questsDataResponse]);
+
+  // Check if airdrop has ended but snapshot is not yet available
+  const now = new Date();
+  const airdropHasEnded = now.getTime() >= airdropStartDate.getTime();
+  const isSnapshotBeingTaken = airdropHasEnded && !snapshotExists;
+
+  if (true) {
+    // Format total claimed tokens from Wei (1e18)
+
+    return (
+      <div className={styles.container}>
+        <img src={Logo} className={styles.logo} alt="BRND Logo" />
+
+        <div className={styles.snapshotTitle}>
+          <AirdropSvg />
+        </div>
+
+        <div className={styles.snapshotContent}>
+          <Typography
+            variant="geist"
+            weight="medium"
+            size={16}
+            lineHeight={24}
+            textAlign="center"
+            className={styles.notEligibleText}
+          >
+            S E A S O N 1
+          </Typography>
+          <Typography
+            variant="geist"
+            weight="medium"
+            size={16}
+            lineHeight={24}
+            textAlign="center"
+            className={styles.notEligibleText}
+          >
+            The airdrop claiming period has ended. Thank you to everyone who
+            participated!
+          </Typography>
+
+          <div className={styles.claimersContainer}>
+            <div className={styles.claimersGrid}>
+              <div className={styles.claimersCard}>
+                <Typography
+                  variant="druk"
+                  weight="wide"
+                  size={32}
+                  lineHeight={32}
+                >
+                  594
+                </Typography>
+                <Typography variant="geist" weight="medium" size={14}>
+                  of you claimed
+                </Typography>
+              </div>
+
+              <div className={styles.claimersCard}>
+                <Typography
+                  variant="druk"
+                  weight="wide"
+                  size={28}
+                  lineHeight={32}
+                >
+                  1.086.706.947
+                </Typography>
+                <Typography variant="geist" weight="medium" size={14}>
+                  Total $BRND Claimed
+                </Typography>
+              </div>
+            </div>
+
+            <Button
+              caption="Go Back"
+              onClick={handleBackToMain}
+              variant="primary"
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show snapshot being taken screen if airdrop ended but snapshot not available
+  if (isSnapshotBeingTaken) {
+    return (
+      <div className={styles.snapshotContainer}>
+        <img src={Logo} className={styles.logo} alt="BRND Logo" />
+
+        <div className={styles.snapshotTitle}>
+          <SnapshotIcon />
+        </div>
+
+        <div className={styles.snapshotContent}>
+          <Typography
+            variant="geist"
+            weight="medium"
+            size={16}
+            lineHeight={24}
+            textAlign="center"
+            className={styles.notEligibleText}
+          >
+            We are taking the airdrop 1 snapshot and finalizing details.
+          </Typography>
+          <Typography
+            variant="geist"
+            weight="medium"
+            size={16}
+            lineHeight={24}
+            textAlign="center"
+            className={styles.notEligibleText}
+          >
+            Stay tuned to your notifications to come and claim
+          </Typography>
+        </div>
+
+        <div className={styles.notEligibleButtonSection}>
+          <Button
+            caption="Back Home"
+            onClick={handleBackToMain}
+            variant="primary"
+          />
+        </div>
+      </div>
+    );
+  }
 
   // Show not eligible screen if snapshot exists but user is not eligible
   if (airdropData && snapshotExists && !isEligibleForAirdrop) {
@@ -357,8 +697,20 @@ function AirdropPage(): React.ReactNode {
               textAlign="center"
               className={styles.notEligibleText}
             >
-              We are sorry, but you are out of the 1111 top users on our
-              leaderboard.
+              We are sorry, but you didn't qualify for the BRND Season 1
+              airdrop.
+            </Typography>
+
+            <Typography
+              variant="geist"
+              weight="medium"
+              size={16}
+              lineHeight={20}
+              textAlign="center"
+              className={styles.notEligibleText}
+            >
+              But you can still vote and participate on season 2, and level up
+              your score for the next one.
             </Typography>
             <Typography
               variant="geist"
@@ -368,48 +720,7 @@ function AirdropPage(): React.ReactNode {
               textAlign="center"
               className={styles.notEligibleText}
             >
-              (Your rank is {authData?.leaderboardPosition})
-            </Typography>
-            <Typography
-              variant="geist"
-              weight="medium"
-              size={16}
-              lineHeight={20}
-              textAlign="center"
-              className={styles.notEligibleText}
-            >
-              You are not eligible for the BRND airdrop.
-            </Typography>
-            <Typography
-              variant="geist"
-              weight="medium"
-              size={16}
-              lineHeight={20}
-              textAlign="center"
-              className={styles.notEligibleText}
-            >
-              This updates in: {countdown}
-            </Typography>
-            <Typography
-              variant="geist"
-              weight="medium"
-              size={16}
-              lineHeight={20}
-              textAlign="center"
-              className={styles.notEligibleText}
-            >
-              And the airdrop week starts in 7 days.
-            </Typography>
-            <Typography
-              variant="geist"
-              weight="medium"
-              size={16}
-              lineHeight={20}
-              textAlign="center"
-              className={styles.notEligibleText}
-            >
-              You can still get in! Start voting and sharing podiums now to add
-              points.
+              Welcome back to BRND.
             </Typography>
           </div>
         </div>
@@ -427,29 +738,6 @@ function AirdropPage(): React.ReactNode {
 
   // Show claim view if user is eligible, snapshot exists, and has allocation
   // OR if current view is explicitly set to claim
-  if (
-    (airdropData && snapshotExists && isEligibleForAirdrop && hasAllocation) ||
-    currentView === "claim"
-  ) {
-    // Prepare airdrop data for ClaimAirdrop component using /me endpoint data
-    // Use totalMultiplier from quests data if available, otherwise default to 0
-    const totalMultiplier =
-      questsDataResponse?.calculation.totalMultiplier || 0;
-    const claimAirdropData = airdropData
-      ? {
-          calculation: {
-            finalScore: airdropData.airdropScore || 0,
-            leaderboardPosition: airdropData.leaderboardPosition || 0,
-            tokenAllocation: airdropData.tokenAllocation || 0,
-            totalMultiplier,
-          },
-        }
-      : undefined;
-
-    return (
-      <ClaimAirdrop airdropData={claimAirdropData} onBack={handleBackToMain} />
-    );
-  }
 
   // Admin Dashboard View
   if (currentView === "admin" && isAdmin) {
@@ -481,7 +769,7 @@ function AirdropPage(): React.ReactNode {
           </button>
         </div>
 
-        <div className={styles.adminContent}>
+        {/* <div className={styles.adminContent}>
           <div className={styles.impersonateSection}>
             <Typography
               variant="geist"
@@ -631,7 +919,7 @@ function AirdropPage(): React.ReactNode {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
     );
   }
@@ -857,11 +1145,15 @@ function AirdropPage(): React.ReactNode {
                           className={styles.questProgress}
                         >
                           {quest.progressData.unit === "$BRND"
-                            ? `${Math.round(
-                                quest.progressData.current
-                              ).toLocaleString()} / ${Math.round(
-                                quest.progressData.required
-                              ).toLocaleString()} ${quest.progressData.unit}`
+                            ? `${
+                                Math.round(
+                                  quest.progressData.current
+                                )?.toLocaleString() ?? 0
+                              } / ${
+                                Math.round(
+                                  quest.progressData.required
+                                )?.toLocaleString() ?? 0
+                              } ${quest.progressData.unit}`
                             : `${quest.progressData.current.toLocaleString()} / ${quest.progressData.required.toLocaleString()} ${
                                 quest.progressData.unit
                               }`}
@@ -881,8 +1173,10 @@ function AirdropPage(): React.ReactNode {
                           lineHeight={12}
                           className={styles.nextTierInfo}
                         >
-                          Next: {quest.nextTier.requirement.toLocaleString()}{" "}
-                          {quest.progressData.unit} ({quest.nextTier.multiplier}
+                          Next:{" "}
+                          {quest.nextTier?.requirement?.toLocaleString() ?? 0}{" "}
+                          {quest.progressData.unit} (
+                          {quest.nextTier?.multiplier?.toLocaleString() ?? 0}
                           X)
                         </Typography>
                       )}
@@ -913,64 +1207,225 @@ function AirdropPage(): React.ReactNode {
                   {expandedQuest === quest.id && (
                     <div className={styles.questDetails}>
                       <div className={styles.tiersSection}>
-                        {quest.tasks.map((task: any, index: number) => (
-                          <div key={index} className={`${styles.taskItem}`}>
-                            <Typography
-                              variant="geist"
-                              weight="medium"
-                              size={14}
-                              lineHeight={18}
-                              className={styles.taskName}
-                            >
-                              {task.name}
-                            </Typography>
-                            <Typography
-                              variant="druk"
-                              weight="regular"
-                              size={20}
-                              lineHeight={14}
-                              className={styles.taskMultiplier}
-                            >
-                              {task.multiplier}
-                            </Typography>
-                            <div
-                              className={`${styles.taskStatus} ${
-                                task.completed ? styles.taskCompleted : ""
-                              }`}
-                              aria-hidden
-                            >
-                              {task.completed ? (
-                                <svg
-                                  width="24"
-                                  height="24"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  className={styles.statusIcon}
+                        {/* Follow Accounts Quest - Merged Account + Multiplier Layout */}
+                        {quest.id === 1 && quest.customDetails?.accounts ? (
+                          <>
+                            {/* First tier: 1 account followed (1.2X) */}
+                            {(() => {
+                              const followedAccounts =
+                                quest.customDetails.accounts.filter(
+                                  (acc: any) => acc.followed
+                                );
+                              const firstFollowedAccount = followedAccounts[0];
+                              const tier1Completed =
+                                followedAccounts.length >= 1;
+
+                              return (
+                                <div
+                                  key="tier1"
+                                  className={`${styles.taskItem}`}
                                 >
-                                  <circle
-                                    cx="12"
-                                    cy="12"
-                                    r="12"
-                                    fill="#FFFFFF"
+                                  <Typography
+                                    variant="geist"
+                                    weight="medium"
+                                    size={14}
+                                    lineHeight={18}
+                                    className={styles.taskName}
+                                  >
+                                    {firstFollowedAccount
+                                      ? `${firstFollowedAccount.name}`
+                                      : `1 account (Follow ${
+                                          quest.customDetails.accounts[0]
+                                            ?.name || "@brnd"
+                                        } or ${
+                                          quest.customDetails.accounts[1]
+                                            ?.name || "@floc"
+                                        })`}
+                                  </Typography>
+                                  <Typography
+                                    variant="druk"
+                                    weight="regular"
+                                    size={20}
+                                    lineHeight={14}
+                                    className={styles.taskMultiplier}
+                                  >
+                                    1.2X
+                                  </Typography>
+                                  <div
+                                    className={`${styles.taskStatus} ${
+                                      tier1Completed ? styles.taskCompleted : ""
+                                    }`}
+                                    aria-hidden
+                                  >
+                                    {tier1Completed ? (
+                                      <svg
+                                        width="24"
+                                        height="24"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        className={styles.statusIcon}
+                                      >
+                                        <circle
+                                          cx="12"
+                                          cy="12"
+                                          r="12"
+                                          fill="#FFFFFF"
+                                        />
+                                        <path
+                                          d="M7.5 12.5L10.5 15.5L16.5 9.5"
+                                          stroke="#6A45FF"
+                                          strokeWidth="2.5"
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                        />
+                                      </svg>
+                                    ) : (
+                                      <IncompleteTaskIcon
+                                        width={24}
+                                        height={24}
+                                        className={styles.statusIcon}
+                                      />
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })()}
+
+                            {/* Second tier: 2 accounts followed (1.4X) */}
+                            {(() => {
+                              const followedAccounts =
+                                quest.customDetails.accounts.filter(
+                                  (acc: any) => acc.followed
+                                );
+                              const tier2Completed =
+                                followedAccounts.length >= 2;
+
+                              return (
+                                <div
+                                  key="tier2"
+                                  className={`${styles.taskItem}`}
+                                >
+                                  <Typography
+                                    variant="geist"
+                                    weight="medium"
+                                    size={14}
+                                    lineHeight={18}
+                                    className={styles.taskName}
+                                  >
+                                    {tier2Completed
+                                      ? `@brnd + @floc`
+                                      : `2 accounts (Follow both @brnd + @floc)`}
+                                  </Typography>
+                                  <Typography
+                                    variant="druk"
+                                    weight="regular"
+                                    size={20}
+                                    lineHeight={14}
+                                    className={styles.taskMultiplier}
+                                  >
+                                    1.4X
+                                  </Typography>
+                                  <div
+                                    className={`${styles.taskStatus} ${
+                                      tier2Completed ? styles.taskCompleted : ""
+                                    }`}
+                                    aria-hidden
+                                  >
+                                    {tier2Completed ? (
+                                      <svg
+                                        width="24"
+                                        height="24"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        className={styles.statusIcon}
+                                      >
+                                        <circle
+                                          cx="12"
+                                          cy="12"
+                                          r="12"
+                                          fill="#FFFFFF"
+                                        />
+                                        <path
+                                          d="M7.5 12.5L10.5 15.5L16.5 9.5"
+                                          stroke="#6A45FF"
+                                          strokeWidth="2.5"
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                        />
+                                      </svg>
+                                    ) : (
+                                      <IncompleteTaskIcon
+                                        width={24}
+                                        height={24}
+                                        className={styles.statusIcon}
+                                      />
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })()}
+                          </>
+                        ) : (
+                          /* Default Task Layout for all other quests */
+                          quest.tasks.map((task: any, index: number) => (
+                            <div key={index} className={`${styles.taskItem}`}>
+                              <Typography
+                                variant="geist"
+                                weight="medium"
+                                size={14}
+                                lineHeight={18}
+                                className={styles.taskName}
+                              >
+                                {task.name}
+                              </Typography>
+                              <Typography
+                                variant="druk"
+                                weight="regular"
+                                size={20}
+                                lineHeight={14}
+                                className={styles.taskMultiplier}
+                              >
+                                {task.multiplier}
+                              </Typography>
+                              <div
+                                className={`${styles.taskStatus} ${
+                                  task.completed ? styles.taskCompleted : ""
+                                }`}
+                                aria-hidden
+                              >
+                                {task.completed ? (
+                                  <svg
+                                    width="24"
+                                    height="24"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    className={styles.statusIcon}
+                                  >
+                                    <circle
+                                      cx="12"
+                                      cy="12"
+                                      r="12"
+                                      fill="#FFFFFF"
+                                    />
+                                    <path
+                                      d="M7.5 12.5L10.5 15.5L16.5 9.5"
+                                      stroke="#6A45FF"
+                                      strokeWidth="2.5"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    />
+                                  </svg>
+                                ) : (
+                                  <IncompleteTaskIcon
+                                    width={24}
+                                    height={24}
+                                    className={styles.statusIcon}
                                   />
-                                  <path
-                                    d="M7.5 12.5L10.5 15.5L16.5 9.5"
-                                    stroke="#6A45FF"
-                                    strokeWidth="2.5"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  />
-                                </svg>
-                              ) : (
-                                <IncompleteTaskIcon
-                                  width={24}
-                                  height={24}
-                                  className={styles.statusIcon}
-                                />
-                              )}
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          ))
+                        )}
                       </div>
                     </div>
                   )}
@@ -1153,7 +1608,7 @@ function AirdropPage(): React.ReactNode {
             lineHeight={18}
             className={styles.multiplierText}
           >
-            • Be a Farcaster Pro user (up to 1.4x)
+            • Be a Farcaster Pro user (1.4x)
           </Typography>
 
           <Typography
@@ -1174,7 +1629,7 @@ function AirdropPage(): React.ReactNode {
         <div className={styles.claimSection}>
           {(() => {
             // Show loading while checking claim status
-            if (isClaimStatusLoading && !airdropData) {
+            if (true && !airdropData) {
               return (
                 <Button
                   iconLeft={<CheckLabelIcon />}
@@ -1205,20 +1660,20 @@ function AirdropPage(): React.ReactNode {
               // Snapshot exists - check eligibility
               if (isEligibleForAirdrop) {
                 // Check if already claimed (from /me endpoint or claim status)
-                const hasClaimedStatus =
-                  hasClaimed ||
-                  (claimStatusData?.success && claimStatusData.data.hasClaimed);
+                // const hasClaimedStatus =
+                //   hasClaimed ||
+                //   (claimStatusData?.success && claimStatusData.data.hasClaimed);
 
-                if (hasClaimedStatus) {
-                  return (
-                    <Button
-                      iconLeft={<CheckLabelIcon />}
-                      caption="Already Claimed!"
-                      disabled={true}
-                      onClick={() => {}}
-                    />
-                  );
-                }
+                // if (hasClaimedStatus) {
+                //   return (
+                //     <Button
+                //       iconLeft={<CheckLabelIcon />}
+                //       caption="Already Claimed!"
+                //       disabled={true}
+                //       onClick={() => {}}
+                //     />
+                //   );
+                // }
 
                 // Eligible and can claim
                 return (

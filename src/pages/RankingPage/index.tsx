@@ -26,9 +26,9 @@ function RankingPage(): React.ReactNode {
   // Initialize period from URL parameter
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
-    const periodParam = urlParams.get('period') as BrandTimePeriod;
-    
-    if (periodParam && ['week', 'month', 'all'].includes(periodParam)) {
+    const periodParam = urlParams.get("period") as BrandTimePeriod;
+
+    if (periodParam && ["day", "week", "month", "all"].includes(periodParam)) {
       setSelectedPeriod(periodParam);
     }
   }, [location.search]);
@@ -68,8 +68,14 @@ function RankingPage(): React.ReactNode {
 
         <Routes>
           <Route path="/" element={<TopRankings period={selectedPeriod} />} />
-          <Route path="/new" element={<NewRankings period={selectedPeriod} />} />
-          <Route path="/all" element={<AllRankings period={selectedPeriod} />} />
+          <Route
+            path="/new"
+            element={<NewRankings period={selectedPeriod} />}
+          />
+          <Route
+            path="/all"
+            element={<AllRankings period={selectedPeriod} />}
+          />
         </Routes>
       </div>
     </AppLayout>

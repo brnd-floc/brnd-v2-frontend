@@ -14,6 +14,8 @@ export type Brand = {
   currentRanking?: number;
   stateScoreMonth: number;
   scoreMonth: number;
+  scoreDay: number;
+  stateScoreDay: number;
   rankingMonth: number;
   createdAt: string;
   updatedAt: string;
@@ -24,6 +26,11 @@ export type Brand = {
   banned: number;
   queryType?: number;
   fanCount: number;
+  ticker?: string;
+  contractAddress?: string;
+  guardianHandle?: string;
+  guardianFid?: number;
+  guardianPfp?: string;
 };
 
 export type Category = {

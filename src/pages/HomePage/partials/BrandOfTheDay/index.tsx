@@ -13,10 +13,7 @@ import { Brand, useBrandList } from "@/hooks/brands";
 
 // Utils
 import { getBrandScoreVariation } from "@/utils/brand";
-import {
-  calculateSmartPeriodScores,
-  processBrandsWithSmartScoring,
-} from "@/utils/smartPeriodScoring";
+import { calculateSmartPeriodScores } from "@/utils/smartPeriodScoring";
 
 // Assets
 import BrandOfTheDayImage from "@/assets/images/brand-of-the-day.svg?react";
@@ -43,7 +40,8 @@ function BrandOfTheDay() {
   const processedBrands = useMemo(() => {
     if (!data?.brands) return [];
     // Apply daily scoring to determine the true daily winner
-    return processBrandsWithSmartScoring(data.brands, "daily");
+    const sortedBrands = data.brands.sort((a, b) => b.scoreDay - a.scoreDay);
+    return sortedBrands;
   }, [data?.brands]);
 
   const getStateScoreForPeriod = useCallback((brand: Brand): number => {
@@ -91,7 +89,7 @@ function BrandOfTheDay() {
 
     // Show the actual brand card
     return (
-      <div className={styles.brand}>
+      <div className={styles.brand} onClick={(e) => e.stopPropagation()}>
         <BrandCard
           size={"l"}
           selected={true}
@@ -99,8 +97,10 @@ function BrandOfTheDay() {
           className={styles.brandCard}
           name={mainBrand.name}
           photoUrl={mainBrand.imageUrl}
-          score={data.brands[0].score}
-          onClick={() => handleClickCard(mainBrand.id)}
+          score={data.brands[0].scoreDay}
+          onClick={() => {
+            handleClickCard(mainBrand.id);
+          }}
           variation={getBrandScoreVariation(getStateScoreForPeriod(mainBrand))}
         />
       </div>
@@ -108,7 +108,12 @@ function BrandOfTheDay() {
   };
 
   return (
-    <div className={styles.feature}>
+    <div
+      onClick={() => {
+        navigate("/ranking?period=day");
+      }}
+      className={styles.feature}
+    >
       <div className={styles.image}>
         <BrandOfTheDayImage />
       </div>

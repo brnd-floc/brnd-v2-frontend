@@ -1,6 +1,7 @@
 // Dependencies
 import React, { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useConnect } from "wagmi";
 
 // StyleSheet
 import styles from "./Power.module.scss";
@@ -56,6 +57,7 @@ const Power: React.FC = () => {
   const userFid = authData?.fid;
 
   const navigate = useNavigate();
+  const { connect, connectors } = useConnect();
 
   // Use shared power level context
   const { setOptimisticLevel, getDisplayLevel } = usePowerLevel();
@@ -67,41 +69,30 @@ const Power: React.FC = () => {
     isPending,
     isConfirming,
     error,
-  } = useStoriesInMotion(
-    // onAuthorizeSuccess
-    () => {
-      console.log("Wallet authorized successfully!");
-      // Only reload levels list, not current level (that comes from /me)
-      if (userFid) {
-        loadLevelsList();
-      }
-    },
-    // onLevelUpSuccess
-    async (txData) => {
-      console.log("Level up successful!", txData);
-      const targetLevel = pendingLevelUp;
+  } = useStoriesInMotion(async (txData) => {
+    console.log("Level up successful!", txData);
+    const targetLevel = pendingLevelUp;
 
-      if (targetLevel !== null) {
-        // Optimistically update the shared level context immediately
-        console.log("Optimistically updating shared level to:", targetLevel);
-        setOptimisticLevel(targetLevel);
-        setPendingLevelUp(null);
-      }
-
-      setIsLevelingUp(false);
-
-      // Invalidate auth queries to refresh backend data (including brndPowerLevel)
-      queryClient.invalidateQueries({ queryKey: ["auth"] });
-
-      // Show success feedback immediately
-      sdk.haptics.notificationOccurred("success");
-
-      // Reload levels list to update completion status
-      if (userFid) {
-        await loadLevelsList();
-      }
+    if (targetLevel !== null) {
+      // Optimistically update the shared level context immediately
+      console.log("Optimistically updating shared level to:", targetLevel);
+      setOptimisticLevel(targetLevel);
+      setPendingLevelUp(null);
     }
-  );
+
+    setIsLevelingUp(false);
+
+    // Invalidate auth queries to refresh backend data (including brndPowerLevel)
+    queryClient.invalidateQueries({ queryKey: ["auth"] });
+
+    // Show success feedback immediately
+    sdk.haptics.notificationOccurred("success");
+
+    // Reload levels list to update completion status
+    if (userFid) {
+      await loadLevelsList();
+    }
+  });
 
   // Load levels list from backend (current level comes from /me endpoint via authData)
   const loadLevelsList = async () => {
@@ -567,6 +558,50 @@ const Power: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ["auth"] });
     }
   };
+
+  const handleConnectWallet = () => {
+    sdk.haptics.selectionChanged();
+    const farcasterConnector = connectors?.[0];
+    if (farcasterConnector) {
+      connect({ connector: farcasterConnector });
+    }
+  };
+
+  // Show connect wallet section if not connected
+  if (!isConnected) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.connectSection}>
+          <div className={styles.connectCard}>
+            <Typography
+              variant="geist"
+              weight="bold"
+              size={20}
+              className={styles.connectTitle}
+            >
+              Connect Your Wallet
+            </Typography>
+            <Typography
+              variant="geist"
+              weight="regular"
+              size={14}
+              className={styles.connectSubtitle}
+            >
+              Connect your wallet to view and manage your BRND Power levels
+            </Typography>
+            <button
+              onClick={handleConnectWallet}
+              className={styles.connectButton}
+            >
+              <Typography variant="geist" weight="bold" size={14}>
+                Connect Wallet
+              </Typography>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.container}>

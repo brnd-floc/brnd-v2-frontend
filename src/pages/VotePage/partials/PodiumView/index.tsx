@@ -11,9 +11,6 @@ import { useAuth } from "@/shared/hooks/auth";
 import { useStoriesInMotion } from "@/shared/hooks/contract/useStoriesInMotion";
 
 import QuestionMarkIcon from "@/shared/assets/icons/question-mark.svg?react";
-import VoteHashIcon from "@/shared/assets/icons/vote-hash.svg?react";
-import CheersIcon from "@/shared/assets/icons/cheers.svg?react";
-import ExternalLinkIconShare from "@/shared/assets/icons/external-link-icon-share.svg?react";
 
 // Components
 import Podium from "@/components/Podium";
@@ -41,29 +38,15 @@ export default function PodiumView({}: PodiumViewProps) {
   const navigate = useNavigate();
   const { openModal } = useModal();
   const { data: authData, updateAuthData } = useAuth();
+
   const { connect, connectors, error: connectError } = useConnect();
 
   const [isVotingOnChain, setIsVotingOnChain] = useState(false);
+  const [voteCompleted, setVoteCompleted] = useState(false);
   const [_voteCost, setVoteCost] = useState<string>("0");
   const [, setVotedBrands] = useState<Brand[] | null>(null);
   // Use ref to access current votedBrands in async callback
   const votedBrandsRef = useRef<Brand[] | null>(null);
-
-  // Share and claim state
-  const [isSharing, setIsSharing] = useState(false);
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [isClaiming, setIsClaiming] = useState(false);
-  const [claimData, setClaimData] = useState<{
-    castHash: string;
-    claimSignature: {
-      signature: string;
-      amount: string;
-      deadline: number;
-      nonce: number;
-      canClaim: boolean;
-    };
-    day: number;
-  } | null>(null);
 
   const {
     userInfo,
@@ -77,29 +60,17 @@ export default function PodiumView({}: PodiumViewProps) {
     isApproving,
     isVoting,
     error: contractError,
-    verifyShareAndGetClaimSignature,
-    executeClaimReward,
-    isPending: isClaimPending,
-    isConfirming: isClaimConfirming,
     isLoadingBrndBalance,
   } = useStoriesInMotion(
-    // onAuthorizeSuccess - after wallet authorization
-    (txData) => {
-      console.log("Wallet authorization successful!", txData);
-      // Don't navigate away yet - authorization is just the first step
-    },
     undefined, // onLevelUpSuccess
     // onVoteSuccess - after successful vote transaction
     async (txData) => {
-      console.log("✅ [PodiumView] Blockchain vote successful!", txData);
+      console.log("we are probably inside the onvote success callback", txData);
       sdk.haptics.notificationOccurred("success");
 
       const txHash = txData?.txHash;
 
       if (!txHash) {
-        console.error(
-          "❌ [PodiumView] No transaction hash in vote success data"
-        );
         setIsVotingOnChain(false);
         setVotedBrands(null);
         votedBrandsRef.current = null;
@@ -117,11 +88,6 @@ export default function PodiumView({}: PodiumViewProps) {
           ? [podiumBrands[1], podiumBrands[0], podiumBrands[2]] // [middle(1st), left(2nd), right(3rd)]
           : null;
 
-      console.log(
-        "THE BRANDS HERE ARE (Backend Format):",
-        brandsInBackendFormat
-      );
-
       // Calculate today's day number
       const now = Math.floor(Date.now() / 1000);
       const day = Math.floor(now / 86400);
@@ -130,6 +96,7 @@ export default function PodiumView({}: PodiumViewProps) {
       // This ensures UI updates instantly without waiting for backend
       // Include brands so VotePage doesn't need to fetch them
       updateAuthData({
+        ...authData,
         hasVotedToday: true,
         todaysVote:
           brandsInBackendFormat && brandsInBackendFormat.length >= 3
@@ -157,57 +124,19 @@ export default function PodiumView({}: PodiumViewProps) {
         },
       });
 
-      // Don't navigate - stay on same screen, just update UI
-      // Clear voting state but keep brands for display
+      // IMMEDIATELY clear all voting states to prevent stuck UI
       setIsVotingOnChain(false);
-    },
-    // onClaimSuccess - after successful claim transaction
-    async (txData) => {
-      console.log("✅ [PodiumView] Reward claim successful!", txData);
-      sdk.haptics.notificationOccurred("success");
+      setVoteCompleted(true); // Mark vote as completed
 
-      const claimTxHash = txData?.txHash;
-      if (!claimTxHash) {
-        console.error(
-          "❌ [PodiumView] No transaction hash in claim success data"
-        );
-        setIsClaiming(false);
-        return;
-      }
+      // Force immediate re-render and state transition
+      const currentUnix = Math.floor(Date.now() / 1000);
 
-      const castHash =
-        claimData?.castHash ||
-        authData?.todaysVoteStatus?.castHash ||
-        undefined;
-      const now = Math.floor(Date.now() / 1000);
-      const day = Math.floor(now / 86400);
-      const rewardAmount = claimData?.claimSignature?.amount;
-      const transactionHash =
-        authData?.todaysVoteStatus?.transactionHash ||
-        authData?.contextualTransaction?.transactionHash ||
-        undefined;
-
-      updateAuthData({
-        todaysVoteStatus: {
-          hasVoted: true,
-          hasShared: true,
-          hasClaimed: true,
-          voteId: transactionHash || authData?.todaysVoteStatus?.voteId || null, // Use transaction hash as vote ID
-          castHash: castHash || null,
-          transactionHash: transactionHash || null,
-          day: day,
-        },
-        contextualTransaction: {
-          transactionHash: claimTxHash,
-          transactionType: "claim",
-          rewardAmount: rewardAmount,
-          castHash: castHash,
-          day: day,
-        },
+      // Use requestAnimationFrame to ensure state updates are processed
+      requestAnimationFrame(() => {
+        setIsVotingOnChain(false);
+        setVoteCompleted(true);
+        navigate(`/vote/${currentUnix}`, { replace: true });
       });
-
-      setIsClaiming(false);
-      setClaimData(null);
     }
   );
 
@@ -218,6 +147,14 @@ export default function PodiumView({}: PodiumViewProps) {
       setVoteCost(parseFloat(formatUnits(cost, 18)).toFixed(2));
     }
   }, [userInfo, getVoteCost]);
+
+  // Monitor auth data changes to update local state
+  useEffect(() => {
+    if (authData?.todaysVoteStatus?.hasVoted && isVotingOnChain) {
+      setIsVotingOnChain(false);
+      setVoteCompleted(true);
+    }
+  }, [authData?.todaysVoteStatus?.hasVoted, isVotingOnChain]);
 
   // No need to check claim status - we use todaysVoteStatus from /me endpoint
 
@@ -334,10 +271,8 @@ export default function PodiumView({}: PodiumViewProps) {
    */
   const handleWalletConnection = useCallback(async () => {
     try {
-      console.log("connecting wallet");
       // Check if wallet is already connected
       if (isConnected) {
-        console.log("wallet already connected");
         return true;
       }
 
@@ -413,7 +348,6 @@ export default function PodiumView({}: PodiumViewProps) {
 
       try {
         const votingStatus = determineVotingStrategy();
-        console.log("votingStatus", votingStatus);
         // Podium component passes: [left(2nd), middle(1st), right(3rd)]
         // Backend expects: [1st, 2nd, 3rd]
         const brandIds: [number, number, number] = [
@@ -421,8 +355,6 @@ export default function PodiumView({}: PodiumViewProps) {
           brands[0].id, // 2nd place (left slot in UI)
           brands[2].id, // 3rd place (right slot in UI)
         ];
-
-        console.log(`Voting status:`, votingStatus);
 
         // In V4 contract: ALL voting requires BRND payment - no backend-only voting
         if (votingStatus.strategy !== "on-chain") {
@@ -432,6 +364,7 @@ export default function PodiumView({}: PodiumViewProps) {
 
         // All users must vote on-chain with BRND payment
         setIsVotingOnChain(true);
+        setVoteCompleted(false); // Reset completion state
 
         // Store brands for navigation after successful vote (both state and ref)
         setVotedBrands(brands);
@@ -447,14 +380,15 @@ export default function PodiumView({}: PodiumViewProps) {
         }
 
         // Submit on-chain vote - V4 contract handles authorization inline
-        console.log("Submitting blockchain vote with brand IDs:", brandIds);
         await voteOnChain(brandIds);
 
         // Success handling is now done in the onVoteSuccess callback
       } catch (error: any) {
         console.error("❌ [PodiumView] Voting error:", error);
 
+        // Always clear voting state on error to prevent stuck spinners
         setIsVotingOnChain(false);
+        setVoteCompleted(false);
         setVotedBrands(null);
         votedBrandsRef.current = null;
 
@@ -543,197 +477,11 @@ export default function PodiumView({}: PodiumViewProps) {
   }, [determineVotingStrategy, handleWalletConnection, navigate]);
 
   /**
-   * Handles sharing the cast on Farcaster
-   */
-  const handleShare = useCallback(async () => {
-    if (isSharing || isVerifying) return;
-
-    // Backend stores: brand1=1st, brand2=2nd, brand3=3rd
-    // Podium component expects: [left(2nd), middle(1st), right(3rd)]
-    const brands =
-      votedBrandsRef.current ||
-      (authData?.todaysVote?.brand1
-        ? [
-            authData.todaysVote.brand2!, // left slot (2nd place)
-            authData.todaysVote.brand1!, // middle slot (1st place)
-            authData.todaysVote.brand3!, // right slot (3rd place)
-          ]
-        : null);
-
-    if (!brands || brands.length < 3) {
-      openModal(ModalsIds.BOTTOM_ALERT, {
-        title: "Error",
-        content: <Typography>No brands available to share</Typography>,
-      });
-      return;
-    }
-
-    setIsSharing(true);
-
-    try {
-      const getProfileOrChannel = (brand: any) => {
-        return brand?.profile || brand?.channel || brand?.name || "Unknown";
-      };
-
-      const profile1 = getProfileOrChannel(brands[1]);
-      const profile2 = getProfileOrChannel(brands[0]);
-      const profile3 = getProfileOrChannel(brands[2]);
-
-      const castText = `I just created my @brnd podium of today:\n\n🥇${brands[1]?.name} - ${profile1}\n🥈${brands[0]?.name} - ${profile2}\n🥉${brands[2]?.name} - ${profile3}`;
-
-      const transactionHash =
-        authData?.todaysVoteStatus?.transactionHash ||
-        authData?.contextualTransaction?.transactionHash ||
-        "";
-      const embedUrl = `https://brnd.land?txHash=${transactionHash}`;
-
-      const castResponse = await sdk.actions.composeCast({
-        text: castText,
-        embeds: [embedUrl],
-      });
-
-      if (castResponse && castResponse.cast?.hash) {
-        setIsSharing(false);
-        setIsVerifying(true);
-
-        const castHash = castResponse.cast?.hash;
-        const voteId = transactionHash || ""; // Use transaction hash as vote ID
-
-        try {
-          const verificationResult = await verifyShareAndGetClaimSignature(
-            castHash,
-            voteId,
-            transactionHash || undefined
-          );
-
-          setClaimData({
-            castHash,
-            claimSignature: verificationResult.claimSignature,
-            day: verificationResult.day,
-          });
-
-          const now = Math.floor(Date.now() / 1000);
-          const day = Math.floor(now / 86400);
-
-          updateAuthData({
-            todaysVoteStatus: {
-              hasVoted: true,
-              hasShared: true,
-              hasClaimed: false,
-              voteId: transactionHash || null, // Use transaction hash as vote ID
-              castHash: castHash,
-              transactionHash: transactionHash || null,
-              day: day,
-            },
-            contextualTransaction: {
-              transactionHash: null,
-              transactionType: null,
-              castHash: castHash,
-              day: day,
-            },
-          });
-
-          setIsVerifying(false);
-        } catch (error: any) {
-          console.error("❌ [PodiumView] Share verification failed:", error);
-          setIsVerifying(false);
-          openModal(ModalsIds.BOTTOM_ALERT, {
-            title: "Share Verification Failed",
-            content: (
-              <Typography>
-                {error.message || "Failed to verify share. Please try again."}
-              </Typography>
-            ),
-          });
-        }
-      } else {
-        openModal(ModalsIds.BOTTOM_ALERT, {
-          title: "Share Failed",
-          content: (
-            <Typography>Share was not completed. Please try again.</Typography>
-          ),
-        });
-        setIsSharing(false);
-      }
-    } catch (error: any) {
-      console.error("❌ [PodiumView] Share error:", error);
-      openModal(ModalsIds.BOTTOM_ALERT, {
-        title: "Share Failed",
-        content: (
-          <Typography>Failed to share cast. Please try again.</Typography>
-        ),
-      });
-      setIsSharing(false);
-    }
-  }, [
-    isSharing,
-    isVerifying,
-    authData,
-    verifyShareAndGetClaimSignature,
-    updateAuthData,
-    openModal,
-  ]);
-
-  /**
-   * Handles claiming rewards
-   */
-  const handleClaim = useCallback(async () => {
-    if (!claimData || isClaiming || isClaimPending || isClaimConfirming) {
-      return;
-    }
-
-    setIsClaiming(true);
-
-    try {
-      await executeClaimReward(
-        claimData.castHash,
-        claimData.claimSignature,
-        claimData.day
-      );
-    } catch (error: any) {
-      console.error("❌ [PodiumView] Claim failed:", error);
-      setIsClaiming(false);
-      setClaimData(null); // Reset claim data so user can try again
-      openModal(ModalsIds.BOTTOM_ALERT, {
-        title: "Claim Failed",
-        content: (
-          <Typography>
-            {error.message || "Failed to claim reward. Please try again."}
-          </Typography>
-        ),
-      });
-    }
-  }, [
-    claimData,
-    isClaiming,
-    isClaimPending,
-    isClaimConfirming,
-    executeClaimReward,
-    openModal,
-  ]);
-
-  /**
    * Handles the button click from the Podium component.
-   * Checks voting status and either submits vote, shares, claims, or handles wallet/BRND actions.
+   * Only handles voting actions - sharing and claiming are handled by their respective components.
    */
   const handlePodiumButtonClick = useCallback(
     (brands: Brand[]) => {
-      // If user has shared, handle claim
-      if (
-        authData?.todaysVoteStatus?.hasShared &&
-        !authData?.todaysVoteStatus?.hasClaimed
-      ) {
-        handleClaim();
-        return;
-      }
-
-      // If user has voted, handle share
-      if (authData?.todaysVoteStatus?.hasVoted || hasVotedOnChain) {
-        handleShare();
-        return;
-      }
-
-      // Otherwise, handle vote
       const votingStatus = determineVotingStrategy();
 
       // If user needs to connect wallet or get BRND, handle that first
@@ -749,15 +497,7 @@ export default function PodiumView({}: PodiumViewProps) {
       // Otherwise, submit the vote
       handleSubmitVote(brands);
     },
-    [
-      authData,
-      hasVotedOnChain,
-      handleClaim,
-      handleShare,
-      determineVotingStrategy,
-      getNextAction,
-      handleSubmitVote,
-    ]
+    [determineVotingStrategy, getNextAction, handleSubmitVote]
   );
 
   /**
@@ -862,69 +602,6 @@ export default function PodiumView({}: PodiumViewProps) {
               : "Add your top brands on this podium"}
           </Typography>
 
-          {/* Show transaction chips - clean layout like CongratsView */}
-          {(authData?.todaysVoteStatus?.hasVoted ||
-            authData?.todaysVoteStatus?.hasShared ||
-            authData?.contextualTransaction?.transactionType === "claim") && (
-            <div className={styles.transactionsContainer}>
-              {/* Show vote transaction if available */}
-              {authData?.todaysVoteStatus?.transactionHash && (
-                <div className={styles.transactionChip}>
-                  <div className={styles.transactionHeader}>
-                    <span className={styles.transactionIcon}>
-                      <VoteHashIcon />
-                    </span>
-                    <span className={styles.transactionText}>
-                      Vote Txn:{" "}
-                      {authData.todaysVoteStatus.transactionHash.slice(0, 6)}...
-                      {authData.todaysVoteStatus.transactionHash.slice(-4)}
-                    </span>
-                    <a
-                      href={`https://basescan.org/tx/${authData.todaysVoteStatus.transactionHash}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={styles.txLink}
-                      title="View on Base Explorer"
-                    >
-                      <ExternalLinkIconShare />
-                    </a>
-                  </div>
-                </div>
-              )}
-
-              {/* Show claim transaction if available */}
-              {authData?.contextualTransaction?.transactionType === "claim" &&
-                authData?.contextualTransaction?.transactionHash && (
-                  <div className={styles.transactionChip}>
-                    <div className={styles.transactionHeader}>
-                      <span className={styles.transactionIcon}>
-                        <CheersIcon />
-                      </span>
-                      <span className={styles.transactionText}>
-                        Claim Txn:{" "}
-                        {authData.contextualTransaction.transactionHash.slice(
-                          0,
-                          6
-                        )}
-                        ...
-                        {authData.contextualTransaction.transactionHash.slice(
-                          -4
-                        )}
-                      </span>
-                      <a
-                        href={`https://basescan.org/tx/${authData.contextualTransaction.transactionHash}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={styles.txLink}
-                        title="View on Base Explorer"
-                      >
-                        <ExternalLinkIconShare />
-                      </a>
-                    </div>
-                  </div>
-                )}
-            </div>
-          )}
           <span onClick={handleClickHowToScore}>
             <Typography
               variant="geist"
@@ -1014,35 +691,16 @@ export default function PodiumView({}: PodiumViewProps) {
               : undefined
           }
           buttonLabel={(() => {
-            // If user has claimed, show claimed state
-            if (authData?.todaysVoteStatus?.hasClaimed) {
-              return "✅ Claimed";
+            // PRIORITY 1: If vote is completed locally, show success immediately
+            if (
+              voteCompleted ||
+              authData?.todaysVoteStatus?.hasVoted ||
+              hasVotedOnChain
+            ) {
+              return "✅ Voted Today";
             }
 
-            // If user has shared, show claim button
-            if (authData?.todaysVoteStatus?.hasShared) {
-              if (isClaiming || isClaimPending || isClaimConfirming) {
-                if (isClaimPending) return "⏳ Confirm in wallet...";
-                if (isClaimConfirming) return "🔄 Processing...";
-                return "💰 Claiming...";
-              }
-              if (claimData) {
-                const claimAmount = parseFloat(
-                  formatUnits(BigInt(claimData.claimSignature.amount), 18)
-                );
-                return `Claim ${claimAmount.toFixed(0)} $BRND`;
-              }
-              return "Claim";
-            }
-
-            // If user has voted, show share button
-            if (authData?.todaysVoteStatus?.hasVoted || hasVotedOnChain) {
-              if (isSharing) return "Sharing...";
-              if (isVerifying) return "Verifying Share";
-              return "Share now";
-            }
-
-            // Otherwise, show vote button with status
+            // Show vote button with status
             const nextAction = getNextAction();
             let buttonLabel = nextAction.label;
 
@@ -1095,7 +753,12 @@ export default function PodiumView({}: PodiumViewProps) {
               } else {
                 buttonLabel = nextAction.label;
               }
-            } else if (isVotingOnChain) {
+            } else if (
+              isVotingOnChain &&
+              !authData?.todaysVoteStatus?.hasVoted &&
+              !voteCompleted
+            ) {
+              // Only show voting states if we haven't completed the vote yet
               if (isPending) {
                 buttonLabel = "⏳ Confirm in wallet...";
               } else if (isConfirming) {
@@ -1108,22 +771,16 @@ export default function PodiumView({}: PodiumViewProps) {
             return buttonLabel;
           })()}
           buttonDisabled={(() => {
-            // If claimed, disable button
-            if (authData?.todaysVoteStatus?.hasClaimed) {
+            // PRIORITY 1: If vote is completed locally, disable button
+            if (
+              voteCompleted ||
+              authData?.todaysVoteStatus?.hasVoted ||
+              hasVotedOnChain
+            ) {
               return true;
             }
 
-            // If shared, disable only during claim operations
-            if (authData?.todaysVoteStatus?.hasShared) {
-              return isClaiming || isClaimPending || isClaimConfirming;
-            }
-
-            // If voted, disable only during share operations
-            if (authData?.todaysVoteStatus?.hasVoted || hasVotedOnChain) {
-              return isSharing || isVerifying;
-            }
-
-            // Otherwise, use vote button disabled logic
+            // Use vote button disabled logic
             let buttonDisabled = false;
             const hasApprovalError =
               contractError &&
@@ -1152,7 +809,12 @@ export default function PodiumView({}: PodiumViewProps) {
               buttonDisabled = false;
             } else if (isPending || isConfirming) {
               buttonDisabled = isPending || isConfirming;
-            } else if (isVotingOnChain) {
+            } else if (
+              isVotingOnChain &&
+              !authData?.todaysVoteStatus?.hasVoted &&
+              !voteCompleted
+            ) {
+              // Only disable if we're voting AND haven't completed yet
               buttonDisabled = true;
             }
 
@@ -1164,18 +826,20 @@ export default function PodiumView({}: PodiumViewProps) {
           })()}
         />
       ) : (
-        <Button
-          caption="Buy $BRND"
-          onClick={() => {
-            sdk.actions.swapToken({
-              sellToken:
-                "eip155:8453/erc20:0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-              buyToken:
-                "eip155:8453/erc20:0x41Ed0311640A5e489A90940b1c33433501a21B07",
-              sellAmount: "1000000",
-            });
-          }}
-        />
+        isConnected && (
+          <Button
+            caption="Buy $BRND"
+            onClick={() => {
+              sdk.actions.swapToken({
+                sellToken:
+                  "eip155:8453/erc20:0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+                buyToken:
+                  "eip155:8453/erc20:0x41Ed0311640A5e489A90940b1c33433501a21B07",
+                sellAmount: "1000000",
+              });
+            }}
+          />
+        )
       )}
     </div>
   );

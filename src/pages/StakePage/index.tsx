@@ -54,12 +54,32 @@ export default function StakePage() {
       setShowSuccess(true);
       setStakeAmount("");
 
-      // Clear any existing optimistic updates immediately
-      setOptimisticBrndBalance(null);
-      setOptimisticStakedAmount(null);
+      // Calculate optimistic balance updates using balances from before the transaction
+      const currentBalance = parseFloat(
+        txData.currentBrndBalance || brndBalance
+      );
+      const currentStaked = parseFloat(
+        txData.currentStakedAmount || stakedBrndAmount
+      );
+      const stakedAmount = parseFloat(txData.amount);
+
+      // Update balances optimistically:
+      // - BRND balance decreases by staked amount
+      // - Staked amount increases by staked amount
+      const newBalance = Math.max(0, currentBalance - stakedAmount);
+      const newStaked = currentStaked + stakedAmount;
+
+      setOptimisticBrndBalance(newBalance.toString());
+      setOptimisticStakedAmount(newStaked.toString());
 
       setTimeout(() => {
         setShowSuccess(false);
+        // Clear optimistic updates after a delay to allow RPC refetch to complete
+        // The real balances will have been updated by then
+        setTimeout(() => {
+          setOptimisticBrndBalance(null);
+          setOptimisticStakedAmount(null);
+        }, 2000);
       }, 5000);
     },
     // onWithdrawSuccess
@@ -70,12 +90,32 @@ export default function StakePage() {
       setShowSuccess(true);
       setWithdrawAmount("");
 
-      // Clear any existing optimistic updates immediately
-      setOptimisticBrndBalance(null);
-      setOptimisticStakedAmount(null);
+      // Calculate optimistic balance updates using balances from before the transaction
+      const currentBalance = parseFloat(
+        txData.currentBrndBalance || brndBalance
+      );
+      const currentStaked = parseFloat(
+        txData.currentStakedAmount || stakedBrndAmount
+      );
+      const withdrawnAmount = parseFloat(txData.shares);
+
+      // Update balances optimistically:
+      // - BRND balance increases by withdrawn amount
+      // - Staked amount decreases by withdrawn amount
+      const newBalance = currentBalance + withdrawnAmount;
+      const newStaked = Math.max(0, currentStaked - withdrawnAmount);
+
+      setOptimisticBrndBalance(newBalance.toString());
+      setOptimisticStakedAmount(newStaked.toString());
 
       setTimeout(() => {
         setShowSuccess(false);
+        // Clear optimistic updates after a delay to allow RPC refetch to complete
+        // The real balances will have been updated by then
+        setTimeout(() => {
+          setOptimisticBrndBalance(null);
+          setOptimisticStakedAmount(null);
+        }, 2000);
       }, 5000);
     }
   );
@@ -100,19 +140,50 @@ export default function StakePage() {
     }
   }, [isConnected, getSecondsUntilWithdrawable, activeTab]);
 
-  // Refresh balances when switching tabs to ensure latest data
+  // Only refresh balances on initial mount when connected
+  // Don't refresh on tab switch to avoid excessive RPC calls
   useEffect(() => {
     if (isConnected && refreshBrndBalances) {
-      // Clear optimistic updates when switching tabs
-      setOptimisticBrndBalance(null);
-      setOptimisticStakedAmount(null);
-
-      // Refresh balances
+      // Only refresh once when component mounts and wallet is connected
       refreshBrndBalances();
     }
-  }, [activeTab, isConnected, refreshBrndBalances]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isConnected]); // Only depend on isConnected, not activeTab
+
+  // Clear optimistic updates when real balances have been updated to match
+  // This ensures optimistic updates persist until RPC refetch completes
+  useEffect(() => {
+    if (!optimisticBrndBalance && !optimisticStakedAmount) return;
+
+    const optimisticBalance = parseFloat(optimisticBrndBalance || "0");
+    const optimisticStaked = parseFloat(optimisticStakedAmount || "0");
+    const realBalance = parseFloat(brndBalance || "0");
+    const realStaked = parseFloat(stakedBrndAmount || "0");
+
+    // If real balances are close to optimistic (within 0.01), clear optimistic updates
+    // This means the RPC refetch has completed
+    const balanceDiff = Math.abs(optimisticBalance - realBalance);
+    const stakedDiff = Math.abs(optimisticStaked - realStaked);
+    const threshold = 0.01;
+
+    if (balanceDiff < threshold && stakedDiff < threshold) {
+      setOptimisticBrndBalance(null);
+      setOptimisticStakedAmount(null);
+    }
+  }, [
+    brndBalance,
+    stakedBrndAmount,
+    optimisticBrndBalance,
+    optimisticStakedAmount,
+  ]);
 
   const handleStake = () => {
+    // Check if wallet is connected first
+    if (!isConnected) {
+      handleConnectWallet();
+      return;
+    }
+
     console.log(
       "inside the handleStake function",
       stakeAmount,
@@ -126,6 +197,12 @@ export default function StakePage() {
   };
 
   const handleWithdraw = () => {
+    // Check if wallet is connected first
+    if (!isConnected) {
+      handleConnectWallet();
+      return;
+    }
+
     if (!withdrawAmount || parseFloat(withdrawAmount) <= 0) return;
 
     const withdrawAmountNum = parseFloat(withdrawAmount);
@@ -278,7 +355,7 @@ export default function StakePage() {
                 >
                   <li style={{ marginBottom: 4 }}>
                     <Typography variant="geist" size={14}>
-                      Stake BRND to earn rewards via{" "}
+                      Stake BRND to level up - powered by{" "}
                       <span
                         className={styles.tellerLink}
                         onClick={() => {
@@ -293,12 +370,7 @@ export default function StakePage() {
                   </li>
                   <li style={{ marginBottom: 4 }}>
                     <Typography variant="geist" size={14}>
-                      Get vault shares representing your stake.
-                    </Typography>
-                  </li>
-                  <li style={{ marginBottom: 4 }}>
-                    <Typography variant="geist" size={14}>
-                      Unstake anytime to claim BRND + rewards.
+                      Unstake anytime to claim BRND.
                     </Typography>
                   </li>
                   <li>
@@ -317,7 +389,8 @@ export default function StakePage() {
               onClick={() => {
                 sdk.haptics.selectionChanged();
                 setActiveTab("stake");
-                // Clear success message when switching tabs
+                // Only clear success message when switching tabs
+                // Don't clear optimistic updates - let them persist until real balances update
                 setShowSuccess(false);
               }}
               className={`${styles.tab} ${
@@ -331,7 +404,8 @@ export default function StakePage() {
               onClick={() => {
                 sdk.haptics.selectionChanged();
                 setActiveTab("withdraw");
-                // Clear success message when switching tabs
+                // Only clear success message when switching tabs
+                // Don't clear optimistic updates - let them persist until real balances update
                 setShowSuccess(false);
               }}
               className={`${styles.tab} ${
@@ -396,7 +470,9 @@ export default function StakePage() {
                 <Button
                   variant="primary"
                   caption={
-                    isPending
+                    !isConnected
+                      ? "🔗 Connect Wallet"
+                      : isPending
                       ? "CONFIRM IN WALLET..."
                       : isConfirming
                       ? "PROCESSING..."
@@ -404,6 +480,15 @@ export default function StakePage() {
                   }
                   onClick={handleStake}
                   loading={isConfirming}
+                  disabled={
+                    isConnected &&
+                    (isPending ||
+                      isConfirming ||
+                      !stakeAmount ||
+                      parseFloat(stakeAmount) <= 0 ||
+                      parseFloat(stakeAmount) >
+                        parseFloat(getDisplayBrndBalance()))
+                  }
                 />
               </div>
             ) : (
@@ -491,7 +576,9 @@ export default function StakePage() {
                 <Button
                   variant="primary"
                   caption={
-                    isPending
+                    !isConnected
+                      ? "🔗 Connect Wallet"
+                      : isPending
                       ? "CONFIRM IN WALLET..."
                       : isConfirming
                       ? "PROCESSING..."
@@ -499,15 +586,16 @@ export default function StakePage() {
                   }
                   onClick={handleWithdraw}
                   disabled={
-                    isPending ||
-                    isConfirming ||
-                    !withdrawAmount ||
-                    parseFloat(withdrawAmount) <= 0 ||
-                    parseFloat(withdrawAmount) >
-                      parseFloat(getDisplayStakedAmount()) ||
-                    isLoadingBrndBalances ||
-                    !isWithdrawAvailable() ||
-                    isLoadingWithdrawDelayInfo
+                    isConnected &&
+                    (isPending ||
+                      isConfirming ||
+                      !withdrawAmount ||
+                      parseFloat(withdrawAmount) <= 0 ||
+                      parseFloat(withdrawAmount) >
+                        parseFloat(getDisplayStakedAmount()) ||
+                      isLoadingBrndBalances ||
+                      !isWithdrawAvailable() ||
+                      isLoadingWithdrawDelayInfo)
                   }
                   loading={isConfirming}
                 />

@@ -98,20 +98,69 @@ function PublicPodiumsFeed() {
   );
 
   /**
-   * Format time ago display
+   * Format time ago display (UTC-based)
+   * Handles clock skew by treating future dates (within 10 minutes) as "Just now"
    */
-  const getTimeAgo = useCallback((date: string) => {
-    const now = new Date();
-    const created = new Date(date);
-    const diffInHours = Math.floor(
-      (now.getTime() - created.getTime()) / (1000 * 60 * 60)
-    );
+  const getTimeAgo = useCallback((dateStr: string) => {
+    // Current time in UTC (timestamp in ms)
+    const nowUtc = Date.now();
 
-    if (diffInHours < 1) return "Just now";
-    if (diffInHours < 24) return `${diffInHours}h ago`;
+    // --- DEBUG LOGGING START ---
+    // (You can remove these logs once we confirm the fix works)
+
+    // 1. Normalize: Replace SQL space separator with ISO 'T'
+    // Postgres often sends "2025-12-16 14:00:00" -> We need "2025-12-16T14:00:00"
+    let normalizedDate = dateStr.replace(" ", "T");
+
+    // 2. Force UTC: If it doesn't end in Z, append it.
+    // This stops the browser from assuming it's Local Time (Chile Time).
+    if (!normalizedDate.endsWith("Z")) {
+      normalizedDate += "Z";
+    }
+
+    // Parse the date string - ensure it's treated as UTC
+    const createdUtc = new Date(normalizedDate).getTime();
+
+    // Calculate difference in milliseconds (both are UTC)
+    let diffInMs = nowUtc - createdUtc;
+
+    // Handle negative differences (future dates) due to clock skew
+    // If the date is in the future but within 10 minutes, treat as "Just now"
+    // This accounts for reasonable clock differences between server and client
+    const CLOCK_SKEW_THRESHOLD = 10 * 60 * 1000; // 10 minutes in milliseconds
+
+    if (diffInMs < 0) {
+      // If it's a small future difference (likely clock skew), treat as "Just now"
+      if (Math.abs(diffInMs) <= CLOCK_SKEW_THRESHOLD) {
+        return "Just now";
+      }
+      // For larger future differences, clamp to 0 to avoid showing negative time
+      diffInMs = 0;
+    }
+
+    const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
     const diffInDays = Math.floor(diffInHours / 24);
+
+    if (diffInMinutes < 1) return "Just now";
+    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+    if (diffInHours < 24) {
+      const remainingMinutes = diffInMinutes % 60;
+      if (remainingMinutes === 0) {
+        return `${diffInHours}h ago`;
+      }
+      return `${diffInHours}h ${remainingMinutes}m ago`;
+    }
     if (diffInDays < 7) return `${diffInDays}d ago`;
-    return created.toLocaleDateString();
+
+    // Use UTC date for formatting
+    const createdDate = new Date(createdUtc);
+    return createdDate.toLocaleDateString(undefined, {
+      timeZone: "UTC",
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
   }, []);
 
   useEffect(() => {
@@ -226,18 +275,35 @@ function PublicPodiumsFeed() {
                   <div className={styles.paymentInfo}>
                     {podium.brndPaidWhenCreatingPodium !== null &&
                       podium.brndPaidWhenCreatingPodium !== undefined && (
-                        <Typography size={12} className={styles.paidAmount}>
-                          Paid {podium.brndPaidWhenCreatingPodium} $BRND
-                        </Typography>
+                        <span
+                          onClick={() => {
+                            sdk.actions.openUrl({
+                              url: `https://basescan.org/tx/${podium.transactionHash}`,
+                            });
+                          }}
+                        >
+                          <Typography size={12} className={styles.paidAmount}>
+                            Paid {podium.brndPaidWhenCreatingPodium} $BRND
+                          </Typography>
+                        </span>
                       )}
                     {podium.claimedAt && podium.rewardAmount && (
-                      <Typography size={12} className={styles.claimedAmount}>
-                        Claimed{" "}
-                        {Math.floor(
-                          Number(podium.brndPaidWhenCreatingPodium) * 10
-                        )}{" "}
-                        $BRND
-                      </Typography>
+                      <span
+                        onClick={() => {
+                          sdk.actions.openUrl({
+                            url: `https://basescan.org/tx/${podium.claimTxHash}`,
+                          });
+                        }}
+                      >
+                        {" "}
+                        <Typography size={12} className={styles.claimedAmount}>
+                          Claimed{" "}
+                          {Math.floor(
+                            Number(podium.brndPaidWhenCreatingPodium) * 10
+                          )}{" "}
+                          $BRND
+                        </Typography>
+                      </span>
                     )}
                   </div>
                 </div>

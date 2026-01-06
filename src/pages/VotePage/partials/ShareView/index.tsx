@@ -1,7 +1,13 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { formatUnits } from "viem";
 import sdk from "@farcaster/miniapp-sdk";
+
+import { useAccount, useReadContract } from "wagmi";
+import {
+  BRND_SEASON_2_CONFIG,
+  BRND_SEASON_2_CONFIG_ABI,
+} from "@/config/contracts";
 
 // Components
 import Podium from "@/components/Podium";
@@ -32,8 +38,30 @@ export default function ShareView({
   navigateToView,
   transactionHash,
 }: ShareViewProps) {
+  const [
+    manualVerificationMessageDisplay,
+    setManualVerificationMessageDisplay,
+  ] = useState(false);
   const navigate = useNavigate();
   const { data: authData, updateAuthData } = useAuth();
+
+  const { address: connectedWallet } = useAccount();
+  const userFid = authData?.fid ? BigInt(authData.fid) : undefined;
+
+  const { data: authorizedWallets } = useReadContract({
+    address: BRND_SEASON_2_CONFIG.CONTRACT,
+    abi: BRND_SEASON_2_CONFIG_ABI,
+    functionName: "getUserWallets",
+    args: userFid ? [userFid] : undefined,
+    query: {
+      enabled: !!userFid,
+    },
+  });
+
+  const rewardRecipient = (authorizedWallets as `0x${string}`[])?.[0];
+  const isWalletMismatch =
+    rewardRecipient &&
+    rewardRecipient.toLowerCase() !== connectedWallet?.toLowerCase();
 
   const {
     verifyShareAndGetClaimSignature,
@@ -47,14 +75,10 @@ export default function ShareView({
     undefined, // onVoteSuccess
     // onClaimSuccess
     async (txData) => {
-      console.log("✅ [ShareView] Reward claim successful!", txData);
       sdk.haptics.notificationOccurred("success");
 
       const claimTxHash = txData?.txHash;
       if (!claimTxHash) {
-        console.error(
-          "❌ [ShareView] No transaction hash in claim success data"
-        );
         return;
       }
 
@@ -108,6 +132,10 @@ export default function ShareView({
   const [isVerifying, setIsVerifying] = useState(false);
   const [isClaiming, setIsClaiming] = useState(false);
   const [shareError, setShareError] = useState<string | null>(null);
+  const [hasSharedManually, setHasSharedManually] = useState(false);
+  const [isFarcasterClient, setIsFarcasterClient] = useState<boolean | null>(
+    null
+  );
   const [claimData, setClaimData] = useState<{
     castHash: string;
     claimSignature: {
@@ -118,7 +146,28 @@ export default function ShareView({
       canClaim: boolean;
     };
     day: number;
+    recipientAddress: string;
   } | null>(null);
+
+  /**
+   * Detect if we're in a Farcaster client on component mount
+   */
+  useEffect(() => {
+    const detectPlatform = async () => {
+      try {
+        const context = await sdk.context;
+        const clientFid = context.client.clientFid;
+        // Farcaster clientFid = 9152, TBA clientFid = 309857
+        const isFarcaster = clientFid === 9152;
+        setIsFarcasterClient(isFarcaster);
+      } catch (error) {
+        // If SDK fails, assume non-Farcaster
+        setIsFarcasterClient(false);
+      }
+    };
+
+    detectPlatform();
+  }, []);
 
   /**
    * Handles the click event for the "Skip" button.
@@ -132,84 +181,192 @@ export default function ShareView({
   }, [currentVoteId, navigate]);
 
   /**
+   * Handles manual share confirmation for non-Farcaster clients
+   */
+  const handleManualShareConfirmation = useCallback(async () => {
+    if (isVerifying) return;
+
+    setIsVerifying(true);
+    setShareError(null);
+
+    try {
+      // Use transaction hash as the vote ID since backend now uses txHash as primary key
+      const voteIdForVerification = transactionHash;
+
+      // Get the actual clientFid for the platform
+      const context = await sdk.context;
+      const clientFid = context.client.clientFid;
+
+      // For non-Farcaster (TBA = 309857), we pass empty castHash
+      // Backend will search for shares containing the vote hash
+      const verificationResult = await verifyShareAndGetClaimSignature(
+        "", // Empty castHash for manual verification
+        voteIdForVerification || "", // Use transaction hash as vote ID
+        transactionHash || "",
+        rewardRecipient,
+        clientFid // Pass actual clientFid (309857 for TBA, etc.)
+      );
+
+      // Store claim data for the claim button
+      setClaimData({
+        castHash: verificationResult.castHash, // No specific cast hash for manual shares
+        claimSignature: verificationResult.claimSignature,
+        day: verificationResult.day,
+        recipientAddress: rewardRecipient || connectedWallet!,
+      });
+
+      // Calculate today's day number
+      const now = Math.floor(Date.now() / 1000);
+      const day = Math.floor(now / 86400);
+
+      // Optimistically update auth context immediately
+      updateAuthData({
+        todaysVoteStatus: {
+          hasVoted: true,
+          hasShared: true,
+          hasClaimed: false,
+          voteId: transactionHash || null,
+          castHash: verificationResult.castHash, // No specific cast hash for manual shares
+          transactionHash: transactionHash || "",
+          day: day,
+        },
+        contextualTransaction: {
+          transactionHash: null,
+          transactionType: null,
+          castHash: "",
+          day: day,
+        },
+      });
+
+      setIsVerifying(false);
+    } catch (error: any) {
+      // Always clear all loading states on error
+      setIsVerifying(false);
+      setIsSharing(false);
+      setManualVerificationMessageDisplay(false);
+      setShareError(
+        error.message ||
+          "Share not found. Please make sure you shared and try again."
+      );
+      // Reset manual share state so user can try again
+      setHasSharedManually(false);
+    }
+  }, [
+    currentVoteId,
+    transactionHash,
+    verifyShareAndGetClaimSignature,
+    isVerifying,
+    rewardRecipient,
+    connectedWallet,
+    updateAuthData,
+    authData,
+  ]);
+
+  /**
    * Handles the unified sharing logic with verification.
    */
   const handleClickShare = useCallback(async () => {
     if (isSharing || isVerifying) return; // Prevent double-clicks
 
+    // Farcaster flow continues as before
     setIsSharing(true);
     setShareError(null);
 
     try {
       // Safely extract profile/channel info
+      // Safely extract profile/channel info
       const getProfileOrChannel = (brand: any) => {
-        return brand?.profile || brand?.channel || brand?.name || "Unknown";
+        // Priority: profile first, then channel
+        if (brand?.profile) {
+          const profile = brand.profile;
+          // If profile starts with "@", remove it; otherwise add it
+          return profile.startsWith("@") ? profile : `@${profile}`;
+        }
+
+        if (brand?.channel) {
+          const channel = brand.channel;
+          // If channel starts with "/", keep it; otherwise add it
+          return channel.startsWith("/") ? channel : `/${channel}`;
+        }
+
+        return brand?.name;
       };
 
-      const profile1 = getProfileOrChannel(currentBrands[1]);
-      const profile2 = getProfileOrChannel(currentBrands[0]);
-      const profile3 = getProfileOrChannel(currentBrands[2]);
+      const formattedBrand1 = getProfileOrChannel(currentBrands[1]);
+      const formattedBrand2 = getProfileOrChannel(currentBrands[0]);
+      const formattedBrand3 = getProfileOrChannel(currentBrands[2]);
 
-      const castText = `I just created my @brnd podium of today:\n\n🥇${
-        currentBrands[1]?.name?.toLowerCase?.() || currentBrands[1]?.name
-      } - ${
-        typeof profile1 === "string" ? profile1.toLowerCase() : profile1
-      }\n🥈${
-        currentBrands[0]?.name?.toLowerCase?.() || currentBrands[0]?.name
-      } - ${
-        typeof profile2 === "string" ? profile2.toLowerCase() : profile2
-      }\n🥉${
-        currentBrands[2]?.name?.toLowerCase?.() || currentBrands[2]?.name
-      } - ${typeof profile3 === "string" ? profile3.toLowerCase() : profile3}`;
+      const castText = `I just created my @BRND podium of today:\n\n🥇${
+        currentBrands[1]?.name
+      } ${formattedBrand1 ? `- ${formattedBrand1}` : ""}\n🥈${
+        currentBrands[0]?.name
+      } ${formattedBrand2 ? `- ${formattedBrand2}` : ""}\n🥉${
+        currentBrands[2]?.name
+      } ${formattedBrand3 ? `- ${formattedBrand3}` : ""}`;
 
-      // Use the correct embed URL that matches backend expectation
-      const embedUrl = `https://brnd.land?txHash=${transactionHash}`;
-
+      // Build Farcaster embed URL from env, stripping trailing slash
+      const embedBase = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+      const voteHash = transactionHash;
+      if (!voteHash) {
+        return;
+      }
+      const embedUrl = `${embedBase}/embeds/podium/${voteHash}`;
       // Compose cast with standardized text and embed
-      const castResponse = await sdk.actions.composeCast({
+
+      // Add timeout to prevent infinite hanging, but only for non-Farcaster clients
+      const castPromise = sdk.actions.composeCast({
         text: castText,
         embeds: [embedUrl],
       });
 
-      // If cast was successful and we have a hash, verify share
-      if (castResponse && castResponse.cast?.hash) {
-        // Update state to show verification is happening
+      let castResponse;
+      if (isFarcasterClient === true) {
+        // For Farcaster, don't use timeout - wait for proper response
+        try {
+          castResponse = await castPromise;
+        } catch (error) {
+          castResponse = null;
+        }
+      } else {
+        // For TBA/other clients, use timeout to prevent hanging
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("composeCast timeout")), 5000)
+        );
+
+        try {
+          castResponse = await Promise.race([castPromise, timeoutPromise]);
+        } catch (error) {
+          castResponse = null; // This will trigger the TBA flow
+        }
+      }
+
+      // If cast was successful and we have a hash, verify share immediately for Farcaster
+      if (castResponse && (castResponse as any).cast?.hash) {
+        // For Farcaster, immediately start verification (no intermediate button)
         setIsSharing(false);
         setIsVerifying(true);
 
-        const castHash = castResponse.cast?.hash;
-        console.log("✅ [ShareView] Cast shared successfully", {
-          castHash,
-          voteId: currentVoteId,
-        });
-
+        const castHash = (castResponse as any).cast?.hash;
         // Verify share and get claim signature (does not execute transaction)
         try {
-          console.log("🔐 [ShareView] Verifying share...", {
-            castHash,
-            voteId: currentVoteId,
-            transactionHash,
-          });
-
           // Use transaction hash as the vote ID since backend now uses txHash as primary key
-          const voteIdForVerification = transactionHash || "";
+          const voteIdForVerification = transactionHash;
+          const contextFid = (await sdk.context).client.clientFid || "";
 
           const verificationResult = await verifyShareAndGetClaimSignature(
             castHash,
             voteIdForVerification,
-            transactionHash
+            transactionHash,
+            rewardRecipient, // Pass the authorized wallet as recipient
+            Number(contextFid)
           );
-
-          console.log("✅ [ShareView] Share verified successfully", {
-            amount: verificationResult.amount,
-            day: verificationResult.day,
-          });
 
           // Store claim data for the claim button
           setClaimData({
             castHash,
             claimSignature: verificationResult.claimSignature,
             day: verificationResult.day,
+            recipientAddress: rewardRecipient || connectedWallet!,
           });
 
           // Calculate today's day number
@@ -245,23 +402,26 @@ export default function ShareView({
           // via todaysVoteStatus.castHash after the auth query refreshes
         } catch (error: any) {
           console.error("❌ [ShareView] Share verification failed:", error);
+          // Always clear all loading states on error
+          setIsSharing(false);
           setIsVerifying(false);
           setShareError(
             error.message || "Failed to verify share. Please try again."
           );
         }
       } else {
-        console.warn(
-          "📤 [ShareView] Cast response missing hash:",
-          castResponse
-        );
-        setShareError("Share was not completed. Please try again.");
+        // THIS MEANS THAT THE CAST WAS SHARED VIA OTHER CLIENTS (NOT FARCASTER)
+        // WE NEED TO VERIFY THE SHARE MANUALLY
+        await new Promise((resolve) => setTimeout(resolve, 1111));
         setIsSharing(false);
+        setHasSharedManually(true);
       }
     } catch (error) {
       console.error("📤 [ShareView] Share error:", error);
-      setShareError("Failed to share cast. Please try again.");
+      // Always clear all loading states on error
       setIsSharing(false);
+      setIsVerifying(false);
+      setShareError("Failed to share cast. Please try again.");
     }
   }, [
     currentBrands,
@@ -270,6 +430,13 @@ export default function ShareView({
     verifyShareAndGetClaimSignature,
     isSharing,
     isVerifying,
+    rewardRecipient,
+    connectedWallet,
+    updateAuthData,
+    authData,
+    isFarcasterClient,
+    hasSharedManually,
+    handleManualShareConfirmation,
   ]);
 
   /**
@@ -284,23 +451,20 @@ export default function ShareView({
     setShareError(null);
 
     try {
-      console.log("💰 [ShareView] Executing claim reward transaction...", {
-        castHash: claimData.castHash,
-        amount: claimData.claimSignature.amount,
-        day: claimData.day,
-      });
-
       await executeClaimReward(
         claimData.castHash,
         claimData.claimSignature,
-        claimData.day
+        claimData.day,
+        claimData.recipientAddress // Pass stored recipient
       );
 
-      console.log("✅ [ShareView] Claim reward transaction submitted");
       // Note: Navigation to CongratsView happens in onClaimSuccess callback
     } catch (error: any) {
       console.error("❌ [ShareView] Claim reward failed:", error);
+      // Always clear all loading states on error
       setIsClaiming(false);
+      setIsSharing(false);
+      setIsVerifying(false);
       setShareError(
         error.message || "Failed to claim reward. Please try again."
       );
@@ -344,6 +508,12 @@ export default function ShareView({
       if (isClaimConfirming) return "🔄 Processing...";
       return "Claiming...";
     }
+
+    // Handle non-Farcaster manual sharing flow
+    if (hasSharedManually && isFarcasterClient !== true) {
+      return "Verify Share";
+    }
+
     return "Share now";
   };
 
@@ -385,9 +555,25 @@ export default function ShareView({
           lineHeight={16}
           textAlign={"center"}
         >
-          Share your podium to unlock 10x BRND rewards
+          {isFarcasterClient === false && !hasSharedManually
+            ? "Share your podium, then click below to verify"
+            : "Share your podium to unlock 10x BRND rewards"}
         </Typography>
       </div>
+      {/* Show verifying status for manual verification */}
+      {isVerifying && manualVerificationMessageDisplay && (
+        <div className={styles.verificationMessage}>
+          <Typography
+            variant={"geist"}
+            weight={"medium"}
+            size={14}
+            lineHeight={18}
+            textAlign={"center"}
+          >
+            🔄 Verifying your share...
+          </Typography>
+        </div>
+      )}
       {/* Show claim ready status */}
       {claimData &&
         !isVerifying &&
@@ -454,20 +640,55 @@ export default function ShareView({
           />
 
           <div className={styles.action}>
-            <Button
-              caption={getButtonState()}
-              className={styles.button}
-              iconLeft={
-                isLoading ? (
-                  <LoaderIndicator size={16} />
-                ) : showClaimButton ? undefined : (
-                  <ShareIcon />
-                )
-              }
-              onClick={showClaimButton ? handleClickClaim : handleClickShare}
-              disabled={isLoading && !showClaimButton}
-            />
+            {manualVerificationMessageDisplay ? (
+              <Button
+                caption={isVerifying ? "Verifying Share" : "Verify share"}
+                onClick={handleManualShareConfirmation}
+                className={styles.button}
+                iconLeft={
+                  isVerifying ? <LoaderIndicator size={16} /> : undefined
+                }
+                disabled={isVerifying}
+              />
+            ) : (
+              <Button
+                caption={getButtonState()}
+                className={styles.button}
+                iconLeft={
+                  isLoading ? (
+                    <LoaderIndicator size={16} />
+                  ) : showClaimButton ? undefined : hasSharedManually &&
+                    isFarcasterClient !== true ? undefined : (
+                    <ShareIcon />
+                  )
+                }
+                onClick={
+                  showClaimButton
+                    ? handleClickClaim
+                    : hasSharedManually && isFarcasterClient !== true
+                    ? handleManualShareConfirmation
+                    : handleClickShare
+                }
+                disabled={isLoading && !showClaimButton}
+              />
+            )}
           </div>
+          {claimData && isWalletMismatch && (
+            <div className={styles.walletWarning}>
+              <Typography
+                variant={"geist"}
+                weight={"medium"}
+                size={12}
+                lineHeight={16}
+                textAlign={"center"}
+              >
+                ⚠️ Rewards will be sent to your registered wallet:{" "}
+                {`${rewardRecipient.slice(0, 6)}...${rewardRecipient.slice(
+                  -4
+                )}`}
+              </Typography>
+            </div>
+          )}
         </div>
       </div>
       <div className={styles.action}>

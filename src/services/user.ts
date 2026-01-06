@@ -163,6 +163,8 @@ export interface AirdropCheckResponse {
       currentMultiplier: number;
       maxMultiplier: number;
       completed: boolean;
+      details: any;
+      nextTier: any;
       progress: {
         current: number;
         required: number;

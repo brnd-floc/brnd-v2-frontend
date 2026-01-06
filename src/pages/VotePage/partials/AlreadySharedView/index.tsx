@@ -7,6 +7,12 @@ import Typography from "@/components/Typography";
 import Button from "@/components/Button";
 import LoaderIndicator from "@/shared/components/LoaderIndicator";
 
+import { useAccount, useReadContract } from "wagmi";
+import {
+  BRND_SEASON_2_CONFIG,
+  BRND_SEASON_2_CONFIG_ABI,
+} from "@/config/contracts";
+
 // Hooks
 import { useStoriesInMotion } from "@/shared/hooks/contract/useStoriesInMotion";
 import { useAuth } from "@/shared/hooks/auth";
@@ -33,6 +39,24 @@ export default function AlreadySharedView({
 }: AlreadySharedViewProps) {
   const { data: authData, updateAuthData } = useAuth();
 
+  const { address: connectedWallet } = useAccount();
+  const userFid = authData?.fid ? BigInt(authData.fid) : undefined;
+
+  const { data: authorizedWallets } = useReadContract({
+    address: BRND_SEASON_2_CONFIG.CONTRACT,
+    abi: BRND_SEASON_2_CONFIG_ABI,
+    functionName: "getUserWallets",
+    args: userFid ? [userFid] : undefined,
+    query: {
+      enabled: !!userFid,
+    },
+  });
+
+  const rewardRecipient = (authorizedWallets as `0x${string}`[])?.[0];
+  const isWalletMismatch =
+    rewardRecipient &&
+    rewardRecipient.toLowerCase() !== connectedWallet?.toLowerCase();
+
   const {
     getClaimSignatureForSharedVote,
     executeClaimReward,
@@ -40,12 +64,10 @@ export default function AlreadySharedView({
     isConfirming: isClaimConfirming,
     error: contractError,
   } = useStoriesInMotion(
-    undefined, // onAuthorizeSuccess
     undefined, // onLevelUpSuccess
     undefined, // onVoteSuccess
     // onClaimSuccess
     async (txData) => {
-      console.log("✅ [AlreadySharedView] Reward claim successful!", txData);
       sdk.haptics.notificationOccurred("success");
 
       const claimTxHash = txData?.txHash;
@@ -128,6 +150,7 @@ export default function AlreadySharedView({
       canClaim: boolean;
     };
     day: number;
+    recipientAddress: string;
   } | null>(null);
 
   // Note: Continue button removed as this component is for claiming rewards
@@ -151,28 +174,17 @@ export default function AlreadySharedView({
       setClaimError(null);
 
       try {
-        console.log(
-          "💰 [AlreadySharedView] Executing claim reward transaction...",
-          {
-            castHash: claimData.castHash,
-            amount: claimData.claimSignature.amount,
-            day: claimData.day,
-          }
-        );
-
         await executeClaimReward(
           claimData.castHash,
           claimData.claimSignature,
-          claimData.day
+          claimData.day,
+          claimData.recipientAddress // ADD THIS
         );
-
-        console.log(
-          "✅ [AlreadySharedView] Claim reward transaction submitted"
-        );
-        // Note: Navigation/refresh happens in onClaimSuccess callback
       } catch (error: any) {
         console.error("❌ [AlreadySharedView] Claim reward failed:", error);
+        // Always clear all loading states on error
         setIsClaiming(false);
+        setIsLoadingClaimData(false);
         setClaimError(
           error.message || "Failed to claim reward. Please try again."
         );
@@ -190,28 +202,23 @@ export default function AlreadySharedView({
     setClaimError(null);
 
     try {
-      console.log("🔐 [AlreadySharedView] Fetching claim signature...", {
-        voteId: currentVoteId,
-        transactionHash,
-      });
+      const context = await sdk.context;
+      const clientFid = context.client.clientFid;
 
       const result = await getClaimSignatureForSharedVote(
         currentVoteId,
-        transactionHash
+        transactionHash || "",
+        rewardRecipient, // ADD THIS (3rd param)
+        clientFid
       );
 
-      console.log("✅ [AlreadySharedView] Claim signature received", {
-        hasClaimSignature: !!result.claimSignature,
-        amount: result.amount,
-        day: result.day,
-        castHash: result.castHash,
-      });
-
       if (result.claimSignature && result.claimSignature.canClaim) {
+        const recipient = rewardRecipient || connectedWallet!;
         const newClaimData = {
           castHash: result.castHash || "",
           claimSignature: result.claimSignature,
           day: result.day,
+          recipientAddress: recipient, // ADD THIS
         };
         setClaimData(newClaimData);
         setIsLoadingClaimData(false);
@@ -221,10 +228,8 @@ export default function AlreadySharedView({
         await executeClaimReward(
           newClaimData.castHash,
           newClaimData.claimSignature,
-          newClaimData.day
-        );
-        console.log(
-          "✅ [AlreadySharedView] Claim reward transaction submitted"
+          newClaimData.day,
+          newClaimData.recipientAddress // ADD THIS
         );
       } else {
         throw new Error("Cannot claim - already claimed or not eligible");
@@ -234,6 +239,7 @@ export default function AlreadySharedView({
         "❌ [AlreadySharedView] Failed to get claim signature:",
         error
       );
+      // Always clear all loading states on error
       setIsLoadingClaimData(false);
       setIsClaiming(false);
       setClaimError(
@@ -250,6 +256,8 @@ export default function AlreadySharedView({
     isClaimPending,
     isClaimConfirming,
     isLoadingClaimData,
+    rewardRecipient, // ADD
+    connectedWallet, // ADD
   ]);
 
   // Determine button state
@@ -394,6 +402,23 @@ export default function AlreadySharedView({
               disabled={isLoading || !!hasClaimed}
             />
           </div>
+          {isWalletMismatch && rewardRecipient && (
+            <div className={styles.walletWarning}>
+              <Typography
+                variant={"geist"}
+                weight={"medium"}
+                size={12}
+                lineHeight={16}
+                textAlign={"center"}
+              >
+                ⚠️ You voted through another miniapp client using that wallet.
+                Your daily rewards will be sent to your registered wallet:{" "}
+                {`${rewardRecipient.slice(0, 6)}...${rewardRecipient.slice(
+                  -4
+                )}`}
+              </Typography>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -2,7 +2,7 @@
 import { request } from "./api";
 
 // Configuration
-import { ADMIN_SERVICE } from "@/config/api";
+import { ADMIN_SERVICE, AIRDROP_SERVICE } from "@/config/api";
 
 /* =======================================
    = = = = = = = = = = = = = = = = = = = =
@@ -23,6 +23,12 @@ export interface BrandFormData {
   channel: string;
   queryType: number;
   channelOrProfile?: string;
+  handle?: string;
+  fid?: number;
+  walletAddress?: string;
+  contractAddress?: string;
+  ticker?: string;
+  isEditing?: boolean;
 }
 
 /* =======================================
@@ -51,19 +57,24 @@ export const getDeploymentInfo = async (): Promise<any> =>
 
 /**
  * Prepares brand metadata and uploads to IPFS.
- * This function should be called before creating the brand on-chain.
+ * This function now does validation AND IPFS upload in one call.
+ * Should be called before proceeding to confirmation step.
  *
  * @param {BrandFormData} brandData - The data for creating the new brand
- * @returns {Promise<{ metadataHash: string; handle: string; fid: number; walletAddress: string }>}
- *   A promise that resolves with the IPFS hash and other data needed for on-chain creation
+ * @returns {Promise<{ success: boolean; valid: boolean; metadataHash?: string; handle?: string; fid?: number; walletAddress?: string; conflicts?: string[]; message?: string }>}
+ *   A promise that resolves with validation result and IPFS hash if valid
  */
 export const prepareBrandMetadata = async (
   brandData: BrandFormData
 ): Promise<{
-  metadataHash: string;
-  handle: string;
-  fid: number;
-  walletAddress: string;
+  success: boolean;
+  valid: boolean;
+  metadataHash?: string;
+  handle?: string;
+  fid?: number;
+  walletAddress?: string;
+  conflicts?: string[];
+  message?: string;
 }> =>
   await request(`${ADMIN_SERVICE}/brands/prepare-metadata`, {
     method: "POST",
@@ -141,5 +152,16 @@ export const fixWeeklyScores = async (): Promise<any> =>
  */
 export const takeAirdropSnapshotAndCreateMerkleRoot = async (): Promise<any> =>
   await request(`${ADMIN_SERVICE}/airdrop-snapshot`, {
+    method: "GET",
+  });
+
+/**
+ * Recalculates all users' airdrop leaderboard scores.
+ * This function should be called to refresh the leaderboard calculations.
+ *
+ * @returns {Promise<any>} A promise that resolves with the recalculation result
+ */
+export const recalculateAllUsers = async (): Promise<any> =>
+  await request(`${AIRDROP_SERVICE}/recalculate-all-users`, {
     method: "GET",
   });

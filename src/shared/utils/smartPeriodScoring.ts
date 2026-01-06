@@ -71,7 +71,9 @@ export const getCurrentMonthStart = (): Date => {
  */
 export const getCurrentDayStart = (): Date => {
   const now = new Date();
-  const dayStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0));
+  const dayStart = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0)
+  );
   const deploymentDate = getDeploymentDate();
 
   // Don't go before deployment
@@ -169,7 +171,10 @@ export const calculateSmartPeriodScores = (
 
       // Estimate daily score as a fraction based on hours since midnight
       // Daily scores should be much smaller than weekly/monthly
-      const dailyFraction = Math.min(1, hoursSinceDayStart / (24 * totalDaysSinceDeployment));
+      const dailyFraction = Math.min(
+        1,
+        hoursSinceDayStart / (24 * totalDaysSinceDeployment)
+      );
       const estimatedDailyScore = Math.round(brand.score * dailyFraction);
 
       // For daily, we don't have backend daily scores, so we use our estimation
@@ -178,7 +183,9 @@ export const calculateSmartPeriodScores = (
 
       return {
         score: Math.max(1, estimatedDailyScore * recentActivityMultiplier),
-        stateScore: Math.round(brand.stateScore * dailyFraction * recentActivityMultiplier),
+        stateScore: Math.round(
+          brand.stateScore * dailyFraction * recentActivityMultiplier
+        ),
         ranking: parseInt(brand.ranking || "0"),
       };
     }

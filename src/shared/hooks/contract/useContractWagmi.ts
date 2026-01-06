@@ -79,6 +79,10 @@ export const useContractWagmi = (
     args: userAddress ? [userAddress] : undefined,
     query: {
       enabled: !!userAddress,
+      refetchInterval: false,
+      refetchOnMount: false,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
     },
   });
 
@@ -94,6 +98,10 @@ export const useContractWagmi = (
     args: userAddress ? [userAddress] : undefined,
     query: {
       enabled: !!userAddress,
+      refetchInterval: false,
+      refetchOnMount: false,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
     },
   });
 
@@ -109,6 +117,10 @@ export const useContractWagmi = (
     args: vaultShares ? [vaultShares as bigint] : undefined,
     query: {
       enabled: !!vaultShares,
+      refetchInterval: false,
+      refetchOnMount: false,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
     },
   });
 
@@ -123,6 +135,10 @@ export const useContractWagmi = (
     functionName: "withdrawDelayTimeSeconds",
     query: {
       enabled: !!userAddress,
+      refetchInterval: false,
+      refetchOnMount: false,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
     },
   });
 
@@ -138,6 +154,10 @@ export const useContractWagmi = (
     args: userAddress ? [userAddress] : undefined,
     query: {
       enabled: !!userAddress,
+      refetchInterval: false,
+      refetchOnMount: false,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
     },
   });
 
@@ -153,6 +173,10 @@ export const useContractWagmi = (
     args: userAddress ? [userAddress] : undefined,
     query: {
       enabled: !!userAddress,
+      refetchInterval: false,
+      refetchOnMount: false,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
     },
   });
 
@@ -193,6 +217,10 @@ export const useContractWagmi = (
         : undefined,
       query: {
         enabled: !!userAddress,
+        refetchInterval: false,
+        refetchOnMount: false,
+        refetchOnWindowFocus: false,
+        refetchOnReconnect: false,
       },
     }
   );
@@ -204,6 +232,10 @@ export const useContractWagmi = (
     functionName: "asset",
     query: {
       enabled: !!userAddress,
+      refetchInterval: false,
+      refetchOnMount: false,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
     },
   });
 
@@ -536,22 +568,26 @@ export const useContractWagmi = (
       }
 
       try {
-        // Stake successful - refresh balances
+        // Store current balances BEFORE refetch for optimistic updates
+        const currentBrndBalance = brndBalance ? formatUnits(brndBalance as bigint, 18) : "0";
+        const currentStakedAmount = stakedBrndAmount ? formatUnits(stakedBrndAmount as bigint, 18) : "0";
 
-        // Refresh balances
-        await refetchBrndBalance();
-        await refetchVaultShares();
-        await refetchStakedAmount();
-        await refetchAllowance();
-
-        // Trigger callback
+        // Trigger callback FIRST with old balances for optimistic updates
         if (onStakeSuccess) {
           onStakeSuccess({
             amount: lastStakeParams.amount,
             txHash: receipt.transactionHash,
             blockNumber: Number(receipt.blockNumber),
+            currentBrndBalance,
+            currentStakedAmount,
           });
         }
+
+        // Then refresh balances from RPC
+        await refetchBrndBalance();
+        await refetchVaultShares();
+        await refetchStakedAmount();
+        await refetchAllowance();
 
         setLastStakeParams(null);
         setLastOperation(null);
@@ -590,21 +626,25 @@ export const useContractWagmi = (
       }
 
       try {
-        // Withdraw successful - refresh balances
+        // Store current balances BEFORE refetch for optimistic updates
+        const currentBrndBalance = brndBalance ? formatUnits(brndBalance as bigint, 18) : "0";
+        const currentStakedAmount = stakedBrndAmount ? formatUnits(stakedBrndAmount as bigint, 18) : "0";
 
-        // Refresh balances
-        await refetchBrndBalance();
-        await refetchVaultShares();
-        await refetchStakedAmount();
-
-        // Trigger callback
+        // Trigger callback FIRST with old balances for optimistic updates
         if (onWithdrawSuccess) {
           onWithdrawSuccess({
             shares: lastWithdrawParams.shares,
             txHash: receipt.transactionHash,
             blockNumber: Number(receipt.blockNumber),
+            currentBrndBalance,
+            currentStakedAmount,
           });
         }
+
+        // Then refresh balances from RPC
+        await refetchBrndBalance();
+        await refetchVaultShares();
+        await refetchStakedAmount();
 
         setLastWithdrawParams(null);
         setLastOperation(null);

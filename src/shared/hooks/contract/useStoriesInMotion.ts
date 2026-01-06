@@ -71,11 +71,11 @@ export interface StakeInfo {
 }
 
 export const useStoriesInMotion = (
-  _onAuthorizeSuccess?: (txData: any) => void, // Deprecated - authorization now happens automatically in vote() and levelUpBrndPower()
   onLevelUpSuccess?: (txData: any) => void,
   onVoteSuccess?: (txData: any) => void,
   onClaimSuccess?: (txData: any) => void,
-  onBrandCreateSuccess?: (txData: any) => void
+  onBrandCreateSuccess?: (txData: any) => void,
+  onBrandUpdateSuccess?: (txData: any) => void
 ) => {
   const { address: userAddress, isConnected, chainId } = useAccount();
   const { switchChain } = useSwitchChain();
@@ -106,10 +106,17 @@ export const useStoriesInMotion = (
     fid: number;
     walletAddress: string;
   } | null>(null);
+  const [pendingBrandUpdateData, setPendingBrandUpdateData] = useState<{
+    brandId: number;
+    metadataHash: string;
+    fid: number;
+    walletAddress: string;
+  } | null>(null);
 
   // Get FID from auth context
   const { data: authData } = useAuth();
   const userFid = authData?.fid ? Number(authData.fid) : null;
+  const userPowerLevel = authData?.brndPowerLevel;
 
   // Check if user is on correct network
   const isCorrectNetwork = chainId === BRND_SEASON_2_CONFIG.CHAIN_ID;
@@ -122,11 +129,8 @@ export const useStoriesInMotion = (
   } = useReadContract({
     address: BRND_SEASON_2_CONFIG.CONTRACT,
     abi: BRND_SEASON_2_CONFIG_ABI,
-    functionName: "getUserInfoByWallet",
-    args: userAddress ? [userAddress] : undefined,
-    query: {
-      enabled: !!userAddress && isCorrectNetwork,
-    },
+    functionName: "getUserInfo",
+    args: userFid ? [BigInt(userFid)] : undefined,
   });
 
   // Get BRND balance
@@ -196,26 +200,24 @@ export const useStoriesInMotion = (
   });
 
   // Get vote cost based on power level (V5 contract logic)
-  const getVoteCost = useCallback((powerLevel: number): bigint => {
-    // V5 contract: getVoteCost(uint8 brndPowerLevel)
-    // if powerLevel == 0, return BASE_VOTE_COST (100 BRND)
-    // if powerLevel == 1, return LEVEL_1_VOTE_COST (150 BRND) - Special case!
-    // else return BASE_VOTE_COST * powerLevel (Level 2+: 100 * level)
-    if (powerLevel === 0) return parseUnits("100", 18); // BASE_VOTE_COST = 100 BRND
-    if (powerLevel === 1) return parseUnits("150", 18); // LEVEL_1_VOTE_COST = 150 BRND
-    return parseUnits((powerLevel * 100).toString(), 18); // Level 2+: 100 * level
+  const getVoteCost = useCallback((powerLevel?: number): bigint => {
+    if (powerLevel === undefined || powerLevel === null) return 0n;
+    if (powerLevel === 0) return parseUnits("100", 18); // BASE_VOTE_COST
+    if (powerLevel === 1) return parseUnits("150", 18); // LEVEL_1_VOTE_COST
+    return parseUnits((powerLevel * 100).toString(), 18);
   }, []);
 
   // Check if wallet is authorized (has FID linked)
-  const { data: authorizedFid } = useReadContract({
-    address: BRND_SEASON_2_CONFIG.CONTRACT,
-    abi: BRND_SEASON_2_CONFIG_ABI,
-    functionName: "authorizedFidOf",
-    args: userAddress ? [userAddress] : undefined,
-    query: {
-      enabled: !!userAddress && isCorrectNetwork,
-    },
-  });
+  const { data: authorizedFid, refetch: refetchAuthorizedFid } =
+    useReadContract({
+      address: BRND_SEASON_2_CONFIG.CONTRACT,
+      abi: BRND_SEASON_2_CONFIG_ABI,
+      functionName: "authorizedFidOf",
+      args: userAddress ? [userAddress] : undefined,
+      query: {
+        enabled: !!userAddress && isCorrectNetwork,
+      },
+    });
 
   // Switch to Base network
   const switchToBase = useCallback(async () => {
@@ -303,8 +305,9 @@ export const useStoriesInMotion = (
     async (
       castHash: string,
       voteId: string,
-      recipientAddress?: string,
-      transactionHash?: string
+      recipientAddress: string,
+      transactionHash: string,
+      castedFrom: number
     ) => {
       const { getFarcasterToken } = await import("@/shared/utils/auth");
       getFarcasterToken(); // Ensure token is available
@@ -324,6 +327,7 @@ export const useStoriesInMotion = (
           canClaim: boolean;
         } | null;
         note?: string;
+        castHash: string;
       }>(`${BRAND_SERVICE}/verify-share`, {
         method: "POST",
         body: {
@@ -331,11 +335,9 @@ export const useStoriesInMotion = (
           voteId,
           recipientAddress: recipientAddress || userAddress,
           transactionHash,
+          castedFrom,
         },
       });
-
-      // Response received, validate claim signature data
-
       return response;
     },
     [userAddress]
@@ -346,8 +348,13 @@ export const useStoriesInMotion = (
     async (
       voteId: string,
       recipientAddress?: string,
-      transactionHash?: string
+      transactionHash?: string,
+      castedFrom?: number
     ) => {
+      if (!castedFrom) {
+        throw new Error("Casted from is required to claim reward");
+      }
+
       const { getFarcasterToken } = await import("@/shared/utils/auth");
       getFarcasterToken(); // Ensure token is available
       // Request claim signature for already shared vote
@@ -375,6 +382,7 @@ export const useStoriesInMotion = (
           voteId,
           recipientAddress: recipientAddress || userAddress,
           transactionHash,
+          castedFrom,
         },
       });
 
@@ -485,8 +493,7 @@ export const useStoriesInMotion = (
       console.log("✅ [Vote] Wallet connected", { userAddress });
 
       try {
-        const currentUserInfo = userInfo as any;
-        const powerLevel = currentUserInfo ? Number(currentUserInfo[1]) : 1;
+        const powerLevel = userPowerLevel;
         const voteCost = getVoteCost(powerLevel);
         console.log("📊 [Vote] Vote cost calculated", {
           powerLevel,
@@ -537,7 +544,7 @@ export const useStoriesInMotion = (
             );
             console.log("📥 [Vote] Received vote authorization response", {
               hasAuthData: !!voteAuth.authData,
-              authDataPreview: voteAuth.authData?.substring(0, 20) + "...",
+              authDataPreview: voteAuth.authData,
               message: voteAuth.message,
             });
 
@@ -604,7 +611,7 @@ export const useStoriesInMotion = (
         console.log("🔍 [Vote] Final transaction details:", {
           contract: BRND_SEASON_2_CONFIG.CONTRACT,
           brandIds,
-          authData: authData.substring(0, 20) + "...",
+          authData: authData,
           authDataLength: authData.length,
           chainId: BRND_SEASON_2_CONFIG.CHAIN_ID,
         });
@@ -778,21 +785,123 @@ export const useStoriesInMotion = (
     [userAddress, switchToBase, writeContract]
   );
 
+  const updateBrandOnChain = useCallback(
+    async (
+      brandId: number,
+      metadataHash: string,
+      fid: number,
+      walletAddress: string
+    ) => {
+      console.log("🔄 [UpdateBrand] Starting brand update on-chain", {
+        brandId,
+        metadataHash,
+        fid,
+        walletAddress,
+      });
+      setError(null);
+      await switchToBase();
+
+      if (!userAddress) {
+        setError("Wallet not connected");
+        throw new Error("Wallet not connected");
+      }
+
+      // Validate inputs
+      if (!brandId || brandId <= 0) {
+        setError("Valid brand ID is required");
+        throw new Error("Valid brand ID is required");
+      }
+
+      if (!metadataHash || metadataHash.trim() === "") {
+        setError("Metadata hash (IPFS) is required");
+        throw new Error("Metadata hash (IPFS) is required");
+      }
+
+      if (!fid || fid <= 0) {
+        setError("Valid FID is required");
+        throw new Error("Valid FID is required");
+      }
+
+      // Validate wallet address format
+      if (!walletAddress || !walletAddress.match(/^0x[a-fA-F0-9]{40}$/)) {
+        setError("Invalid wallet address format");
+        throw new Error("Invalid wallet address format");
+      }
+
+      try {
+        setLastOperation("updateBrand");
+        setPendingBrandUpdateData({
+          brandId,
+          metadataHash,
+          fid,
+          walletAddress,
+        });
+
+        console.log("📤 [UpdateBrand] Sending transaction to contract", {
+          contract: BRND_SEASON_2_CONFIG.CONTRACT,
+          brandId,
+          metadataHash,
+          fid,
+          walletAddress,
+          chainId: BRND_SEASON_2_CONFIG.CHAIN_ID,
+        });
+
+        // Ensure proper type casting
+        const result = await writeContract({
+          address: BRND_SEASON_2_CONFIG.CONTRACT as `0x${string}`,
+          abi: BRND_SEASON_2_CONFIG_ABI,
+          functionName: "updateBrand",
+          args: [
+            brandId as number,
+            metadataHash,
+            BigInt(fid),
+            walletAddress as `0x${string}`,
+          ],
+          chainId: BRND_SEASON_2_CONFIG.CHAIN_ID,
+        });
+
+        console.log(
+          "✅ [UpdateBrand] Brand update transaction submitted successfully",
+          { result }
+        );
+
+        return result;
+      } catch (error: any) {
+        console.error("❌ [UpdateBrand] Transaction failed:", error);
+        console.error("❌ [UpdateBrand] Error details:", {
+          message: error.message,
+          cause: error.cause,
+          stack: error.stack,
+        });
+        setError(error.message || "Brand update failed");
+        setPendingBrandUpdateData(null);
+        throw error;
+      }
+    },
+    [userAddress, switchToBase, writeContract]
+  );
+
   // Verify share and get claim signature (does not execute transaction)
   const verifyShareAndGetClaimSignature = useCallback(
-    async (castHash: string, voteId: string, transactionHash?: string) => {
+    async (
+      castHash: string,
+      voteId: string,
+      transactionHash: string,
+      recipientOverride: string,
+      castedFrom: number
+    ) => {
       setError(null);
 
       if (!userAddress || !userFid) {
         throw new Error("Wallet not authorized");
       }
 
-      if (!castHash || castHash.trim() === "") {
-        throw new Error("Cast hash is required to claim reward");
-      }
-
       if (!voteId || voteId.trim() === "") {
         throw new Error("Vote ID is required to claim reward");
+      }
+
+      if (!castedFrom || castedFrom <= 0) {
+        throw new Error("Casted from is required to claim reward");
       }
 
       console.log(
@@ -802,14 +911,16 @@ export const useStoriesInMotion = (
           voteId,
           recipientAddress: userAddress,
           transactionHash,
+          castedFrom,
         }
       );
 
       const verifyData = await getClaimRewardSignature(
         castHash,
         voteId,
-        userAddress,
-        transactionHash
+        recipientOverride || userAddress, // Use override if provided
+        transactionHash,
+        castedFrom
       );
 
       console.log("📥 [ClaimReward] Received verify-share response", {
@@ -833,6 +944,7 @@ export const useStoriesInMotion = (
         claimSignature: verifyData.claimSignature,
         day: verifyData.day,
         amount: verifyData.claimSignature.amount,
+        castHash: verifyData.castHash,
       };
     },
     [userAddress, userFid, getClaimRewardSignature]
@@ -841,7 +953,16 @@ export const useStoriesInMotion = (
   // Get claim signature for already shared vote (without castHash)
   // Note: voteId is always a UUID string from the vote data
   const getClaimSignatureForSharedVoteWrapper = useCallback(
-    async (voteId: string, transactionHash?: string) => {
+    async (
+      voteId: string,
+      transactionHash: string,
+      recipientOverride: string,
+      castedFrom: number
+    ) => {
+      if (!castedFrom) {
+        throw new Error("Casted from is required to claim reward");
+      }
+
       setError(null);
 
       if (!userAddress || !userFid) {
@@ -858,13 +979,15 @@ export const useStoriesInMotion = (
           voteId, // UUID string (e.g., "6f8ab718-a65d-4f12-aee5-c3e8ce74f8b7")
           recipientAddress: userAddress,
           transactionHash,
+          castedFrom,
         }
       );
 
       const verifyData = await getClaimSignatureForSharedVote(
         voteId,
-        userAddress,
-        transactionHash
+        recipientOverride || userAddress,
+        transactionHash,
+        castedFrom
       );
 
       console.log("📥 [ClaimReward] Received claim signature for shared vote", {
@@ -902,7 +1025,8 @@ export const useStoriesInMotion = (
         nonce: number;
         canClaim: boolean;
       },
-      day: number
+      day: number,
+      recipient: string
     ) => {
       console.log(
         `🔐 [ClaimReward] ===== STARTING CLAIM REWARD EXECUTION =====`
@@ -914,6 +1038,8 @@ export const useStoriesInMotion = (
       console.log(`   - amount: ${claimSignature.amount}`);
       console.log(`   - amount type: ${typeof claimSignature.amount}`);
       console.log(`   - deadline: ${claimSignature.deadline}`);
+      console.log(`   - recipient: ${recipient}`);
+      console.log(`   - connectedWallet: ${userAddress}`);
       console.log(
         `   - deadline (readable): ${new Date(
           claimSignature.deadline * 1000
@@ -921,7 +1047,6 @@ export const useStoriesInMotion = (
       );
       console.log(`   - nonce: ${claimSignature.nonce}`);
       console.log(`   - day: ${day}`);
-      console.log(`   - recipient (userAddress): ${userAddress}`);
       console.log(`   - fid: ${userFid}`);
 
       setError(null);
@@ -950,7 +1075,7 @@ export const useStoriesInMotion = (
 
         console.log("📝 [ClaimReward] Contract call arguments:");
         const args = [
-          userAddress, // recipient
+          recipient, // recipient
           claimSignature.amount, // amount
           userFid, // fid
           day, // day
@@ -1014,27 +1139,40 @@ export const useStoriesInMotion = (
         throw error;
       }
     },
-    [userAddress, userFid, switchToBase, writeContract]
+    [userFid, switchToBase, writeContract]
   );
 
   // Claim reward with signature (legacy - combines verification and execution)
   // Contract signature: claimReward(address recipient, uint256 amount, uint256 fid, uint256 day, string castHash, uint256 deadline, bytes signature)
   const claimReward = useCallback(
-    async (castHash: string, voteId: string, transactionHash?: string) => {
+    async (
+      castHash: string,
+      voteId: string,
+      transactionHash: string,
+      recipient: string,
+      castedFrom: number
+    ) => {
       try {
         const { claimSignature, day } = await verifyShareAndGetClaimSignature(
           castHash,
           voteId,
-          transactionHash
+          transactionHash,
+          recipient,
+          castedFrom
         );
-        await executeClaimReward(castHash, claimSignature, day);
+        await executeClaimReward(
+          castHash,
+          claimSignature,
+          day,
+          recipient || userAddress! // Pass recipient
+        );
       } catch (error: any) {
         console.error("❌ [ClaimReward] Claim reward failed:", error);
         setError(error.message || "Claim reward failed");
         throw error;
       }
     },
-    [verifyShareAndGetClaimSignature, executeClaimReward]
+    [verifyShareAndGetClaimSignature, executeClaimReward, userAddress]
   );
 
   // Handle transaction errors - clear operation state on error
@@ -1205,6 +1343,16 @@ export const useStoriesInMotion = (
           setPendingVoteBrandIds(null);
           setPendingVoteAuthData(null);
           console.log("🧹 [Vote] Cleared pending vote data");
+
+          // Refresh authorization data since voting may have authorized the wallet
+          setTimeout(() => {
+            refetchUserInfo();
+            refetchAuthorizedFid();
+            console.log(
+              "🔄 [Vote] Refreshed user info and authorization status after vote"
+            );
+          }, 1000);
+
           onVoteSuccess?.(txData);
           break;
         case "claimReward":
@@ -1234,6 +1382,30 @@ export const useStoriesInMotion = (
           setPendingBrandCreateData(null);
           onBrandCreateSuccess?.(brandCreateTxData);
           break;
+        case "updateBrand":
+          console.log("✅ [UpdateBrand] Brand update transaction confirmed", {
+            txHash: receipt.transactionHash,
+            blockNumber: Number(receipt.blockNumber),
+            brandData: pendingBrandUpdateData,
+          });
+          // Extract brandId from event logs if available
+          const brandUpdatedEvent = receipt.logs?.find((log: any) => {
+            // Try to decode BrandUpdated event
+            try {
+              // Event signature: BrandUpdated(uint16 indexed brandId, string newMetadataHash, uint256 newFid, address newWalletAddress)
+              return log.topics && log.topics.length > 0;
+            } catch {
+              return false;
+            }
+          });
+          const brandUpdateTxData = {
+            ...txData,
+            brandData: pendingBrandUpdateData,
+            event: brandUpdatedEvent,
+          };
+          setPendingBrandUpdateData(null);
+          onBrandUpdateSuccess?.(brandUpdateTxData);
+          break;
       }
 
       setLastOperation(null);
@@ -1253,11 +1425,14 @@ export const useStoriesInMotion = (
     onVoteSuccess,
     onClaimSuccess,
     onBrandCreateSuccess,
+    onBrandUpdateSuccess,
     pendingBrandCreateData,
+    pendingBrandUpdateData,
     refetchUserInfo,
     refetchBrndBalance,
     refetchAllowance,
     refetchVotedToday,
+    refetchAuthorizedFid,
   ]);
 
   // Parse user info
@@ -1316,6 +1491,7 @@ export const useStoriesInMotion = (
     isApproving: lastOperation === "approve",
     isVoting: lastOperation === "vote",
     isCreatingBrand: lastOperation === "createBrand",
+    isUpdatingBrand: lastOperation === "updateBrand",
 
     // Loading states
     isLoadingUserInfo,
@@ -1334,6 +1510,7 @@ export const useStoriesInMotion = (
     getRewardAmount,
     getBrand,
     createBrandOnChain,
+    updateBrandOnChain,
 
     // Backend integration
     getPowerLevelInfo,
@@ -1346,6 +1523,7 @@ export const useStoriesInMotion = (
       refetchBrndBalance();
       refetchAllowance();
       refetchVotedToday();
+      refetchAuthorizedFid();
     },
   };
 };

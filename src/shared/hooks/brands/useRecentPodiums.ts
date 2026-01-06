@@ -8,8 +8,6 @@ import { getRecentPodiums } from "@/services/brands";
  * Hook for fetching recent podiums with pagination
  */
 export const useRecentPodiums = (page: number = 1, limit: number = 20) => {
-  console.log("THE PAGE HERE IS", page);
-  console.log("THE LIMIT HERE IS", limit);
   return useQuery({
     queryKey: ["recent-podiums", page, limit],
     queryFn: async () => {
@@ -17,7 +15,11 @@ export const useRecentPodiums = (page: number = 1, limit: number = 20) => {
       // Transform response to match component expectations
       return response;
     },
-    staleTime: 2 * 60 * 1000, // Consider data fresh for 2 minutes
+    staleTime: Infinity, // Never consider data stale - cache indefinitely
+    gcTime: Infinity, // Keep cached data indefinitely (formerly cacheTime)
+    refetchOnMount: false, // Don't refetch when component mounts if data exists
+    refetchOnWindowFocus: false, // Don't refetch when window regains focus
+    refetchOnReconnect: false, // Don't refetch when network reconnects
     placeholderData: keepPreviousData, // Keep previous data while loading new page
   });
 };

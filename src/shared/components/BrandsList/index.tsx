@@ -1,5 +1,5 @@
 // Dependencies
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import classNames from "clsx";
 import { useNavigate } from "react-router-dom";
@@ -53,7 +53,9 @@ export default function BrandsList({
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selected, setSelected] = useState<Brand | null>(null);
+  const [displayBrands, setDisplayBrands] = useState<Brand[]>([]);
   const [pageId, setPageId] = useState<number>(1);
+  const knownBrandIds = useRef<Set<string>>(new Set());
 
   const { data, isLoading, isFetching, refetch } = useBrandList(
     config.order,
@@ -86,10 +88,12 @@ export default function BrandsList({
    */
   const getScoreForPeriod = (brand: Brand): number => {
     switch (config.period) {
+      case "day":
+        return brand.scoreDay;
       case "week":
         return brand.scoreWeek;
       case "month":
-        return brand.scoreMonth || brand.scoreWeek; // Fallback to week if month not available
+        return brand.scoreMonth || brand.scoreWeek;
       case "all":
       default:
         return brand.score;
@@ -98,49 +102,75 @@ export default function BrandsList({
 
   const getStateScoreForPeriod = (brand: Brand): number => {
     switch (config.period) {
+      case "day":
+        return brand.scoreDay;
       case "week":
         return brand.stateScoreWeek;
       case "month":
-        return brand.stateScoreMonth || brand.stateScoreWeek; // Fallback to week if month not available
+        return brand.stateScoreMonth || brand.stateScoreWeek;
       case "all":
       default:
         return brand.stateScore;
     }
   };
 
+  // Fetch data when page or search changes
   useEffect(() => {
     refetch();
   }, [pageId, searchQuery]);
 
+  // Reset state when search query changes
   useEffect(() => {
     setPageId(1);
+    setDisplayBrands([]);
+    knownBrandIds.current = new Set();
     if (selected) {
       setSelected(null);
     }
   }, [searchQuery]);
 
+  // Disable body scroll while component is mounted
   useEffect(() => {
-    // Disable scroll on body when component mounts
     document.body.style.overflow = "hidden";
-
-    // Re-enable scroll on body when component unmounts
     return () => {
       document.body.style.overflow = "auto";
     };
   }, []);
 
-  // Sort brands before rendering to avoid visual glitches
-  const sortedBrands = data.brands.sort(() => Math.random() - 0.5);
+  // Process incoming brands: shuffle new ones BEFORE rendering
+  useEffect(() => {
+    if (data.brands.length === 0) {
+      return;
+    }
+
+    // Find brands we haven't seen yet
+    const newBrands = data.brands.filter(
+      (brand) => !knownBrandIds.current.has(brand.id.toString())
+    );
+
+    if (newBrands.length > 0) {
+      // Shuffle new brands before adding them
+      const shuffledNew = [...newBrands].sort(() => Math.random() - 0.5);
+
+      // Mark them as known
+      shuffledNew.forEach((brand) =>
+        knownBrandIds.current.add(brand.id.toString())
+      );
+
+      // Append to existing display list
+      setDisplayBrands((prev) => [...prev, ...shuffledNew]);
+    }
+  }, [data.brands]);
 
   const renderList = () =>
-    data.brands.length > 0 ? (
+    displayBrands.length > 0 ? (
       <div
         onScroll={handleScrollList}
         className={classNames(styles.scroll, className)}
       >
         <ul className={styles.list}>
-          {sortedBrands.map((brand, index) => (
-            <li key={`--brand-item-${index.toString()}`}>
+          {displayBrands.map((brand, index) => (
+            <li key={`--brand-item-${brand.id}`}>
               <BrandCard
                 name={brand.name}
                 photoUrl={brand.imageUrl}
@@ -151,17 +181,16 @@ export default function BrandsList({
                     ? "center"
                     : "right"
                 }
-                score={getScoreForPeriod(brand)} // NEW: Dynamic score
+                score={getScoreForPeriod(brand)}
                 variation={getBrandScoreVariation(
                   getStateScoreForPeriod(brand)
-                )} // NEW: Dynamic variation
+                )}
                 disabled={!!value.find((e) => e === brand.id)}
                 {...(isSelectable
                   ? {
                       selected: selected?.id === brand.id,
                       onClick: () => {
                         sdk.haptics.selectionChanged();
-                        // setSelected(selected?.id === brand.id ? null : brand);
                         onSelect?.(brand);
                       },
                     }
@@ -194,7 +223,7 @@ export default function BrandsList({
 
   // Show loader during initial load or when fetching with no existing data
   const shouldShowLoader =
-    isLoading || (isFetching && data.brands.length === 0);
+    isLoading || (isFetching && displayBrands.length === 0);
 
   return (
     <div className={styles.layout}>

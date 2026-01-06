@@ -149,26 +149,22 @@ function VotePage(): React.ReactNode {
       brandData?.brand3
     );
 
-    // PRIORITY 1: If we have vote status AND brand data, show the state immediately
-    // This handles both optimistic updates (with brands) and backend data
-    // Skip ALL loading checks - we have everything we need to determine the state
-    // This must come BEFORE any loading checks to ensure immediate UI update
+    // CRITICAL FIX: If we have vote status from optimistic update, proceed to state determination
+    // regardless of loading state. This prevents getting stuck in loading after vote transaction.
     if (status?.hasVoted && hasBrandData) {
-      // We have everything we need - proceed directly to state determination below
-      // The state checks below (lines 200, 213, 236) will catch the correct state
-    }
-    // PRIORITY 2: Only show loading if we're actually loading and don't have the data we need
-    else if (authLoading && !hasBrandData) {
-      // If we're loading auth data AND no brands, show loading
+      // We have both vote status and brands - proceed directly to state determination
+      // This handles optimistic updates that include brand data
+    } else if (authLoading && !hasBrandData && !status?.hasVoted) {
+      // Only show loading if we're loading auth data AND no brands available AND no vote status
       return { type: "loading" };
-    } else if (status?.hasVoted && !hasBrandData) {
-      // If we have vote status but no brand data
-      // Only show loading if we're actually fetching fallback data
-      if (needsFallbackData && fallbackLoading) {
-        return { type: "loading" };
-      }
-      // If we don't have brands and we're not fetching, we might be in a race condition
-      // But we should still try to show a state rather than infinite loading
+    } else if (
+      status?.hasVoted &&
+      !hasBrandData &&
+      needsFallbackData &&
+      fallbackLoading
+    ) {
+      // Show loading only if we're actively fetching fallback data
+      return { type: "loading" };
     }
 
     // Extract transaction hashes from user data
