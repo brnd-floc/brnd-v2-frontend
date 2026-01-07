@@ -11,11 +11,14 @@ import styles from "./PublicPodiumsFeed.module.scss";
 // Hooks
 import { useRecentPodiums } from "@/hooks/brands";
 import { Brand } from "@/hooks/brands";
+import { usePodiumCollectibles } from "@/shared/hooks/contract/usePodiumCollectibles";
+import { useAuth } from "@/shared/hooks/auth";
 
 // Utils
 import { getBrandScoreVariation } from "@/utils/brand";
 import { sdk } from "@farcaster/miniapp-sdk";
 import LoaderIndicator from "@/shared/components/LoaderIndicator";
+import Button from "@/shared/components/Button";
 
 function PublicPodiumsFeed() {
   const navigate = useNavigate();
@@ -23,12 +26,69 @@ function PublicPodiumsFeed() {
   const [allPodiums, setAllPodiums] = useState<any[]>([]); // Accumulate all podiums
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false); // NEW: Track initialization
+  const [processingPodiumId, setProcessingPodiumId] = useState<string | null>(
+    null
+  );
   const limit = 20;
 
   const { data, isLoading, isFetching, error, refetch } = useRecentPodiums(
     currentPage,
     limit
   );
+
+  // Get current user's FID for filtering
+  const { data: authData } = useAuth();
+  const userFid = authData?.fid ? Number(authData.fid) : null;
+
+  // Podium collectibles hook
+  const {
+    claimPodium,
+    buyPodium,
+    isClaimingPodium,
+    isBuyingPodium,
+    isApproving,
+    isPending,
+    isConfirming,
+    error: contractError,
+    refreshData,
+  } = usePodiumCollectibles(
+    (txData) => {
+      // Claim success callback
+      console.log("✅ Podium claimed successfully!", txData);
+      setProcessingPodiumId(null);
+      refreshData();
+      // Optionally refetch podiums to show updated state
+      refetch();
+    },
+    (txData) => {
+      // Buy success callback
+      console.log("✅ Podium bought successfully!", txData);
+      setProcessingPodiumId(null);
+      refreshData();
+      // Optionally refetch podiums to show updated state
+      refetch();
+    }
+  );
+
+  // Clear processing state when transaction completes (success or error)
+  useEffect(() => {
+    if (!isPending && !isConfirming && !isApproving && processingPodiumId) {
+      // Small delay to allow success callbacks to run first
+      const timer = setTimeout(() => {
+        if (!isClaimingPodium && !isBuyingPodium) {
+          setProcessingPodiumId(null);
+        }
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [
+    isPending,
+    isConfirming,
+    isApproving,
+    isClaimingPodium,
+    isBuyingPodium,
+    processingPodiumId,
+  ]);
 
   /**
    * Initialize component with first page data on mount
@@ -226,7 +286,6 @@ function PublicPodiumsFeed() {
       </div>
     );
   }
-
   return (
     <div className={styles.layout}>
       {/* Scrollable container with automatic loading */}
@@ -235,6 +294,25 @@ function PublicPodiumsFeed() {
           {allPodiums.map((podium) => {
             // Convert brand1, brand2, brand3 to array for mapping
             const brands = [podium.brand1, podium.brand2, podium.brand3];
+
+            // Determine if podium is already minted (has tokenId)
+            const isMinted = podium.id !== null;
+            const tokenId = podium.id ? Number(podium.id) : null;
+            const brandIds: [number, number, number] = [
+              podium.brand1?.id || 0,
+              podium.brand2?.id || 0,
+              podium.brand3?.id || 0,
+            ];
+
+            // Check if user created this podium (only creators can claim)
+
+            const userCreatedPodium = userFid && podium.user?.fid === userFid;
+
+            // Check if this podium is currently being processed
+            const isProcessing = processingPodiumId === podium.transactionHash;
+            const isButtonDisabled =
+              isProcessing || isPending || isConfirming || isApproving;
+
             return (
               <div key={podium.transactionHash} className={styles.podiumItem}>
                 {/* User info header */}
@@ -334,6 +412,76 @@ function PublicPodiumsFeed() {
                       ))}
                     </div>
                   </div>
+                </div>
+                <div className={styles.podiumFooter}>
+                  {!isMinted && userCreatedPodium ? (
+                    // Show "Claim" button only if user created this podium and it's not minted yet
+                    <div>
+                      <Button
+                        caption={
+                          isProcessing && isClaimingPodium
+                            ? "Claiming..."
+                            : isApproving
+                            ? "Approving..."
+                            : isConfirming
+                            ? "Confirming..."
+                            : "Claim Podium"
+                        }
+                        variant="primary"
+                        disabled={isButtonDisabled}
+                        onClick={async () => {
+                          if (isButtonDisabled) return;
+
+                          try {
+                            setProcessingPodiumId(podium.transactionHash);
+                            await claimPodium(brandIds);
+                          } catch (error) {
+                            console.error("Failed to claim podium:", error);
+                            setProcessingPodiumId(null);
+                          }
+                        }}
+                      />
+                      {contractError && isProcessing && (
+                        <Typography size={12} className={styles.errorText}>
+                          {contractError}
+                        </Typography>
+                      )}
+                    </div>
+                  ) : false ? (
+                    // Show "Buy" button if podium is already minted (anyone can buy)
+                    <div>
+                      <Button
+                        caption={
+                          isProcessing && isBuyingPodium
+                            ? "Buying..."
+                            : isApproving
+                            ? "Approving..."
+                            : isConfirming
+                            ? "Confirming..."
+                            : "Buy Podium"
+                        }
+                        variant="primary"
+                        disabled={isButtonDisabled}
+                        onClick={async () => {
+                          if (isButtonDisabled || !tokenId) return;
+
+                          try {
+                            setProcessingPodiumId(podium.transactionHash);
+                            await buyPodium(tokenId);
+                          } catch (error) {
+                            console.error("Failed to buy podium:", error);
+                            setProcessingPodiumId(null);
+                          }
+                        }}
+                      />
+                      {contractError && isProcessing && (
+                        <Typography size={12} className={styles.errorText}>
+                          {contractError}
+                        </Typography>
+                      )}
+                    </div>
+                  ) : null}
+                  {/* No button shown if podium is not minted and user didn't create it */}
                 </div>
               </div>
             );

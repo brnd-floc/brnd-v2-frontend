@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: calc(100vh - 240px); // Match BrandsList height for proper scrolling
+  height: calc(100vh); // Match BrandsList height for proper scrolling
   overflow: hidden; // Prevent outer scroll
 }
 
@@ -240,4 +240,16 @@
   .endOfList {
     padding: 16px 12px;
   }
+}
+
+.podiumFooter {
+  margin: 16px 0 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.errorText {
+  color: #ff6b6b;
+  margin-top: 4px;
 }

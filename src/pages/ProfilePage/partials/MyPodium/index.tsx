@@ -1,5 +1,5 @@
 // Dependencies
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { formatDistanceToNow } from "date-fns/formatDistanceToNow";
 import { useNavigate } from "react-router-dom";
 
@@ -7,8 +7,9 @@ import { useNavigate } from "react-router-dom";
 import styles from "./MyPodium.module.scss";
 
 // Hooks
-import { useMyVoteHistory } from "@/hooks/user"; // Updated import - no longer need useAuth
-// Removed: import { useAuth } from '@/hooks/auth';
+import { useMyVoteHistory } from "@/hooks/user";
+import { usePodiumCollectibles } from "@/shared/hooks/contract/usePodiumCollectibles";
+import { useAuth } from "@/shared/hooks/auth";
 
 // Components
 import BrandCard from "@/components/cards/BrandCard";
@@ -22,6 +23,9 @@ import Button from "@/shared/components/Button";
 function MyPodium() {
   const navigate = useNavigate();
   const [pageId, setPageId] = useState<number>(1);
+  const [processingPodiumId, setProcessingPodiumId] = useState<string | null>(
+    null
+  );
 
   const {
     data: history,
@@ -31,9 +35,74 @@ function MyPodium() {
     error,
   } = useMyVoteHistory(pageId, 15);
 
+  // Get current user's FID
+  const { data: authData } = useAuth();
+  const userFid = authData?.fid ? Number(authData.fid) : null;
+
+  // Podium collectibles hook
+  const {
+    claimPodium,
+    isArrangementMinted,
+    isClaimingPodium,
+    isApproving,
+    isPending,
+    isConfirming,
+    error: contractError,
+    refreshData,
+  } = usePodiumCollectibles(
+    (txData) => {
+      // Claim success callback
+      console.log("✅ Podium claimed successfully!", txData);
+      setProcessingPodiumId(null);
+      refreshData();
+      refetch();
+    }
+  );
+
   useEffect(() => {
     refetch();
   }, [pageId, refetch]);
+
+  // Clear processing state when transaction completes
+  useEffect(() => {
+    if (!isPending && !isConfirming && !isApproving && processingPodiumId) {
+      const timer = setTimeout(() => {
+        if (!isClaimingPodium) {
+          setProcessingPodiumId(null);
+        }
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [
+    isPending,
+    isConfirming,
+    isApproving,
+    isClaimingPodium,
+    processingPodiumId,
+  ]);
+
+  // Handle claim podium
+  const handleClaimPodium = useCallback(
+    async (podiumId: string, brandIds: [number, number, number]) => {
+      if (!userFid) return;
+
+      try {
+        // Check if already minted
+        const isMinted = await isArrangementMinted(brandIds);
+        if (isMinted) {
+          console.log("Podium already minted");
+          return;
+        }
+
+        setProcessingPodiumId(podiumId);
+        await claimPodium(brandIds);
+      } catch (error) {
+        console.error("Failed to claim podium:", error);
+        setProcessingPodiumId(null);
+      }
+    },
+    [userFid, isArrangementMinted, claimPodium]
+  );
 
   /**
    * Handles the scroll event of the list for infinite loading.
@@ -169,6 +238,42 @@ function MyPodium() {
                           addSuffix: true,
                         })}
                   </Typography>
+                  {/* Claim Podium Button */}
+                  <div className={styles.claimButton}>
+                    <Button
+                      caption={
+                        processingPodiumId === history.data[date].id &&
+                        isClaimingPodium
+                          ? "Claiming..."
+                          : isApproving
+                          ? "Approving..."
+                          : isConfirming
+                          ? "Confirming..."
+                          : "Claim Podium"
+                      }
+                      variant="primary"
+                      disabled={
+                        processingPodiumId === history.data[date].id ||
+                        isPending ||
+                        isConfirming ||
+                        isApproving
+                      }
+                      onClick={() => {
+                        const brandIds: [number, number, number] = [
+                          history.data[date].brand1.id,
+                          history.data[date].brand2.id,
+                          history.data[date].brand3.id,
+                        ];
+                        handleClaimPodium(history.data[date].id, brandIds);
+                      }}
+                    />
+                    {contractError &&
+                      processingPodiumId === history.data[date].id && (
+                        <Typography size={12} className={styles.errorText}>
+                          {contractError}
+                        </Typography>
+                      )}
+                  </div>
                 </div>
               </li>
             ))}

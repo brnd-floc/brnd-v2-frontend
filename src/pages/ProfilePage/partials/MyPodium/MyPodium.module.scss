@@ -82,6 +82,20 @@
   color: rgba(255, 255, 255, 0.9);
 }
 
+.claimButton {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+  margin-top: 8px;
+}
+
+.errorText {
+  color: #ff6b6b;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
 .actions {
   display: flex;
   gap: 8px;
@@ -198,7 +212,15 @@
   }
 
   .data {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
     padding-top: 8px;
+  }
+
+  .claimButton {
+    width: 100%;
+    align-items: flex-start;
   }
 
   .action {

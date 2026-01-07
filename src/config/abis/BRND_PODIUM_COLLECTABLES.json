@@ -1,0 +1,662 @@
+[
+  {
+    "type": "function",
+    "name": "getArrangementHash",
+    "stateMutability": "pure",
+    "inputs": [
+      {
+        "name": "brandIds",
+        "type": "uint16[3]",
+        "internalType": "uint16[3]"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "getCurrentPrice",
+    "stateMutability": "view",
+    "inputs": [
+      {
+        "name": "arrangementHash",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "price",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "isArrangementMinted",
+    "stateMutability": "view",
+    "inputs": [
+      {
+        "name": "brandIds",
+        "type": "uint16[3]",
+        "internalType": "uint16[3]"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "getTokenIdForArrangement",
+    "stateMutability": "view",
+    "inputs": [
+      {
+        "name": "brandIds",
+        "type": "uint16[3]",
+        "internalType": "uint16[3]"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "getPodium",
+    "stateMutability": "view",
+    "inputs": [
+      {
+        "name": "tokenId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "brandIds",
+        "type": "uint16[3]",
+        "internalType": "uint16[3]"
+      },
+      {
+        "name": "genesisCreatorFid",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "ownerFid",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "claimCount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "currentPrice",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "totalFeesEarned",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "createdAt",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "getClaimableBalances",
+    "stateMutability": "view",
+    "inputs": [
+      {
+        "name": "fid",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "proceeds",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "royalties",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "totalPodiums",
+    "stateMutability": "view",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "claimPodium",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      {
+        "name": "brandIds",
+        "type": "uint16[3]",
+        "internalType": "uint16[3]"
+      },
+      {
+        "name": "fid",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "deadline",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "signature",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "tokenId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "buyPodium",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      {
+        "name": "tokenId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "buyerFid",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "deadline",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "signature",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": []
+  },
+  {
+    "type": "function",
+    "name": "claimRepeatFees",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      {
+        "name": "tokenId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "feeAmount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "deadline",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "signature",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": []
+  },
+  {
+    "type": "function",
+    "name": "claimProceeds",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      {
+        "name": "fid",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": []
+  },
+  {
+    "type": "function",
+    "name": "claimRoyalties",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      {
+        "name": "fid",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": []
+  },
+  {
+    "type": "function",
+    "name": "claimAll",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      {
+        "name": "fid",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": []
+  },
+  {
+    "type": "function",
+    "name": "arrangementToTokenId",
+    "stateMutability": "view",
+    "inputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "podiumData",
+    "stateMutability": "view",
+    "inputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "brandIds",
+        "type": "uint16[3]",
+        "internalType": "uint16[3]"
+      },
+      {
+        "name": "genesisCreatorFid",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "ownerFid",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "claimCount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "lastSalePrice",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "totalFeesEarned",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "createdAt",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "BASE_PRICE",
+    "stateMutability": "view",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "PRICE_INCREMENT",
+    "stateMutability": "view",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "BRND_TOKEN",
+    "stateMutability": "view",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract IBRND"
+      }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "SEASON2",
+    "stateMutability": "view",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract IBRNDSeason2"
+      }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "PodiumMinted",
+    "inputs": [
+      {
+        "name": "tokenId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "arrangementHash",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "ownerFid",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "brandIds",
+        "type": "uint16[3]",
+        "indexed": false,
+        "internalType": "uint16[3]"
+      },
+      {
+        "name": "price",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "wallet",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "PodiumBought",
+    "inputs": [
+      {
+        "name": "tokenId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "newOwnerFid",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "previousOwnerFid",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "price",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "sellerProceeds",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "genesisRoyalty",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "protocolFee",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "FeesClaimed",
+    "inputs": [
+      {
+        "name": "tokenId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "ownerFid",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "wallet",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "ProceedsClaimed",
+    "inputs": [
+      {
+        "name": "fid",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "wallet",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "RoyaltiesClaimed",
+    "inputs": [
+      {
+        "name": "fid",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "wallet",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "function",
+    "name": "ownerOf",
+    "stateMutability": "view",
+    "inputs": [
+      {
+        "name": "tokenId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "balanceOf",
+    "stateMutability": "view",
+    "inputs": [
+      {
+        "name": "owner",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "tokenOfOwnerByIndex",
+    "stateMutability": "view",
+    "inputs": [
+      {
+        "name": "owner",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "index",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "totalSupply",
+    "stateMutability": "view",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  }
+]
+
