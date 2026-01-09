@@ -16,6 +16,7 @@ import { BrandRankingsProvider } from "../contexts/BrandRankingsContext";
 
 // Components
 import NotificationPrompt from "@/shared/components/NotificationPrompt";
+import NotInMiniappPage from "@/pages/NotInMiniappPage";
 
 // Farcaster Miniapp Init
 import sdk from "@farcaster/miniapp-sdk";
@@ -90,6 +91,7 @@ export function AppProvider(): JSX.Element {
   const [isInitialized, setIsInitialized] = useState(false);
   const [showAddMiniappPrompt, setShowAddMiniappPrompt] = useState(false);
   const [userFid, setUserFid] = useState<number | null>(null);
+  const [isNotInMiniapp, setIsNotInMiniapp] = useState(false);
 
   // Auth data state - replaces React Query in useAuth
   const [authData, setAuthData] = useState<
@@ -158,6 +160,14 @@ export function AppProvider(): JSX.Element {
 
         // Load miniapp context (user profile, etc.)
         const context = await sdk.context;
+
+        // Check if we're actually in a miniapp context
+        if (!context || !context.user) {
+          setIsNotInMiniapp(true);
+          setIsInitialized(true);
+          return;
+        }
+
         setMiniappContext(context);
 
         // Store user FID for later use
@@ -200,6 +210,8 @@ export function AppProvider(): JSX.Element {
           checkAndShowAddMiniappPrompt(context.user?.fid);
         }, 1000);
       } catch (error) {
+        // If SDK calls fail, we're likely not in a miniapp context
+        setIsNotInMiniapp(true);
         setIsInitialized(false);
       }
     }
@@ -316,6 +328,11 @@ export function AppProvider(): JSX.Element {
       updateAuthData,
     ]
   );
+
+  // If not in miniapp context, show landing page
+  if (isNotInMiniapp) {
+    return <NotInMiniappPage />;
+  }
 
   return (
     <AuthContext.Provider value={contextValue}>
