@@ -1,0 +1,45 @@
+/**
+ * CSS Variables for Landing Page
+ * These must remain as CSS variables (not SCSS variables) because:
+ * - JavaScript animations may reference them
+ * - They allow runtime theming
+ * - They're used in calc() functions
+ */
+
+:root {
+  // Colors
+  --background: #000000;
+  --foreground: #ffffff;
+  --border: #463659;
+  --border-hover: #57446e;
+  
+  // Brand gradient
+  --brand-gradient: linear-gradient(90deg, #FFF100 0%, #FF0000 33%, #0C00FF 66%, #00FF00 100%);
+  
+  // Font families
+  --font-sans: 'Geist-Regular', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-display: 'Druk Wide Web', 'Druk Wide', 'Druk Text Wide Web', 'Druk Text Wide', sans-serif;
+  --font-druk: 'Druk Cond Web', 'Druk Condensed', sans-serif;
+  
+  // Zinc colors (for text, borders, etc.)
+  --zinc-50: #fafafa;
+  --zinc-100: #f4f4f5;
+  --zinc-200: #e4e4e7;
+  --zinc-300: #d4d4d8;
+  --zinc-400: #a1a1aa;
+  --zinc-500: #71717a;
+  --zinc-600: #52525b;
+  --zinc-700: #3f3f46;
+  --zinc-800: #27272a;
+  --zinc-900: #18181b;
+  --zinc-950: #0a0a0a;
+  
+  // Background colors
+  --background-primary: #1D1D1D;
+  --background-secondary: #2D223A;
+  
+  // Border colors
+  --border-color: #463659;
+  --border-primary: #463659;
+  --border-primary-hover: #57446e;
+}

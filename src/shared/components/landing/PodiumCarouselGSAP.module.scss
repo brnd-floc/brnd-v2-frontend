@@ -1,0 +1,389 @@
+@import "@/styles/index.scss";
+
+.section {
+  position: relative;
+  z-index: 20;
+  padding-top: 4rem;
+  padding-bottom: 4rem;
+  overflow: hidden;
+}
+
+.container {
+  width: 100%;
+}
+
+.title {
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 2rem;
+  font-family: var(--font-display, 'Inter', sans-serif);
+  text-transform: uppercase;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+.loadingSection {
+  position: relative;
+  padding-top: 8rem;
+  padding-bottom: 8rem;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+  overflow: hidden;
+  background-color: #18181b;
+}
+
+.loadingContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 5rem;
+  padding-bottom: 5rem;
+}
+
+.spinner {
+  height: 2rem;
+  width: 2rem;
+  animation: spin 1s linear infinite;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-top-color: white;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.sliderContainer {
+  position: relative;
+  width: 100%;
+  height: 500px;
+  overflow: hidden;
+
+  @include sm {
+    height: 600px;
+  }
+
+  @include md {
+    height: 750px;
+  }
+}
+
+.gradientTop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 200px;
+  z-index: 50;
+  pointer-events: none;
+}
+
+.gradientBottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 300px;
+  z-index: 50;
+  pointer-events: none;
+}
+
+.podiumCard {
+  position: absolute;
+  top: 35%;
+  left: 50%;
+  height: 350px;
+  width: calc(100vw - 3rem);
+  border-radius: 1.5rem;
+  overflow: hidden;
+  background-color: #0a0a0a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transform: translate3d(-50%, -50%, 0);
+  opacity: 0;
+
+  @include sm {
+    height: 400px;
+    width: 400px;
+  }
+
+  @include md {
+    height: 450px;
+    width: 500px;
+  }
+
+  @include lg {
+    width: 600px;
+  }
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+  padding-top: 1.25rem;
+  padding-bottom: 0.75rem;
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.userPhoto {
+  height: 2.5rem;
+  width: 2.5rem;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.userPlaceholder {
+  display: flex;
+  height: 2.5rem;
+  width: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: #27272a;
+  font-size: 0.875rem;
+  color: #71717a;
+}
+
+.username {
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+}
+
+.date {
+  font-size: 0.875rem;
+  color: #71717a;
+  font-family: monospace;
+}
+
+.podiumVisual {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0.5rem;
+  flex: 1;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  padding-bottom: 1rem;
+  padding-top: 0.5rem;
+
+  @include sm {
+    gap: 0.75rem;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    padding-bottom: 1.5rem;
+  }
+}
+
+.podiumColumn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.podiumBase {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-radius: 0.75rem 0.75rem 0 0;
+  padding: 1px;
+}
+
+.podiumInner {
+  width: 100%;
+  height: 100%;
+  border-radius: 10px 10px 0 0;
+  background-color: #0a0a0a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 0.25rem;
+  padding-bottom: 0.5rem;
+}
+
+.brandImageContainer {
+  border-radius: 0.5rem;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.brandImageContainer2nd {
+  width: 60px;
+  height: 60px;
+
+  @include sm {
+    width: 80px;
+    height: 80px;
+  }
+
+  @include md {
+    width: 100px;
+    height: 100px;
+  }
+}
+
+.brandImageContainer1st {
+  width: 60px;
+  height: 60px;
+
+  @include sm {
+    width: 80px;
+    height: 80px;
+  }
+
+  @include md {
+    width: 100px;
+    height: 100px;
+  }
+}
+
+.brandImageContainer3rd {
+  width: 60px;
+  height: 60px;
+
+  @include sm {
+    width: 80px;
+    height: 80px;
+  }
+
+  @include md {
+    width: 100px;
+    height: 100px;
+  }
+}
+
+.brandImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.brandPlaceholder {
+  width: 100%;
+  height: 100%;
+  background-color: #27272a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: #52525b;
+}
+
+.rankNumber {
+  font-size: 1.5rem;
+  font-weight: 900;
+  font-family: var(--font-display, 'Inter', sans-serif);
+  margin-top: auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+
+  @include sm {
+    font-size: 2.25rem;
+  }
+
+  @include md {
+    font-size: 3rem;
+  }
+}
+
+.rankNumber1st {
+  background: linear-gradient(to bottom, #fde047, #eab308);
+}
+
+.rankNumber2nd {
+  background: linear-gradient(to bottom, #e5e7eb, #9ca3af);
+}
+
+.rankNumber3rd {
+  background: linear-gradient(to bottom, #fb923c, #ea580c);
+}
+
+.brandName {
+  font-size: 0.625rem;
+  text-align: center;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  width: 100%;
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+  font-weight: 500;
+
+  @include md {
+    font-size: 0.75rem;
+  }
+}
+
+.brandName1st {
+  color: #d4d4d8;
+}
+
+.brandName2nd {
+  color: #a1a1aa;
+}
+
+.brandName3rd {
+  color: #a1a1aa;
+}
+
+.podium2nd {
+  width: 70px;
+  height: 140px;
+
+  @include sm {
+    width: 90px;
+    height: 180px;
+  }
+
+  @include md {
+    width: 110px;
+    height: 220px;
+  }
+}
+
+.podium1st {
+  width: 70px;
+  height: 170px;
+
+  @include sm {
+    width: 90px;
+    height: 220px;
+  }
+
+  @include md {
+    width: 110px;
+    height: 280px;
+  }
+}
+
+.podium3rd {
+  width: 70px;
+  height: 120px;
+
+  @include sm {
+    width: 90px;
+    height: 150px;
+  }
+
+  @include md {
+    width: 110px;
+    height: 180px;
+  }
+}
+
+.podiumGradient {
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.5), rgba(0, 0, 0, 0.8));
+}

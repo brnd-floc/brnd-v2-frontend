@@ -1,0 +1,13 @@
+{
+  "landing": {
+    "hero": {
+      "headline": "EL ESCENARIO ONCHAIN PARA LAS MEJORES MARCAS",
+      "subheadline": "",
+      "openMiniapp": "Abrir Miniapp",
+      "goToDashboard": "Ir al Dashboard"
+    },
+    "footer": {
+      "rights": "© {year} BRND. Todos los derechos reservados."
+    }
+  }
+}

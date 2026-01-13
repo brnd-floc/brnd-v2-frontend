@@ -1,0 +1,175 @@
+@import "@/styles/index.scss";
+
+.section {
+  background-color: black;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+  padding-top: 6rem;
+  padding-bottom: 6rem;
+}
+
+.container {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 56rem;
+}
+
+.title {
+  margin-bottom: 2rem;
+  text-align: center;
+  font-family: var(--font-display, 'Inter', sans-serif);
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  line-height: 1.25;
+  color: white;
+
+  @include sm {
+    font-size: 1.5rem;
+    margin-bottom: 4rem;
+  }
+
+  @include md {
+    font-size: 1.875rem;
+  }
+
+  @include lg {
+    font-size: 2.25rem;
+  }
+}
+
+.tabsContainer {
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+
+  @include md {
+    margin-bottom: 3rem;
+    gap: 2rem;
+  }
+}
+
+.tab {
+  position: relative;
+  padding-bottom: 0.5rem;
+  font-family: var(--font-sans, 'Inter', sans-serif);
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: color 0.2s;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #71717a;
+
+  @include sm {
+    font-size: 0.875rem;
+  }
+
+  @include md {
+    font-size: 1.25rem;
+  }
+
+  @include lg {
+    font-size: 1.5rem;
+  }
+
+  &:hover:not(.active) {
+    color: #d4d4d8;
+  }
+
+  &.active {
+    color: white;
+  }
+}
+
+.tabIndicator {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  width: 100%;
+  background-color: #BFFF00;
+}
+
+.tabLabelShort {
+  @include sm {
+    display: none;
+  }
+}
+
+.tabLabelFull {
+  display: none;
+
+  @include sm {
+    display: inline;
+  }
+}
+
+.contentList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  padding-left: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  @include md {
+    padding-left: 1rem;
+    gap: 1.5rem;
+  }
+}
+
+.contentItem {
+  display: flex;
+  gap: 0.5rem;
+
+  @include md {
+    gap: 0.75rem;
+  }
+}
+
+.bullet {
+  margin-top: 0.5rem;
+  height: 0.375rem;
+  width: 0.375rem;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background-color: white;
+
+  @include md {
+    margin-top: 0.75rem;
+    height: 0.5rem;
+    width: 0.5rem;
+  }
+}
+
+.contentText {
+  font-family: var(--font-sans, 'Inter', sans-serif);
+  font-size: 0.875rem;
+  line-height: 1.75;
+  color: white;
+
+  @include sm {
+    font-size: 1rem;
+  }
+
+  @include md {
+    font-size: 1.125rem;
+  }
+
+  @include lg {
+    font-size: 1.5rem;
+  }
+}
+
+.contentTitle {
+  font-weight: 500;
+}
+
+.contentDescription {
+  color: #d4d4d8;
+}

@@ -1,39 +1,77 @@
 /**
- * Mixin for mobile devices
- * Applies styles for screens with a maximum width of 390px
+ * Breakpoint mixins matching Tailwind CSS defaults
+ * sm: 640px, md: 768px, lg: 1024px, xl: 1280px, 2xl: 1536px
  */
+
+// Mobile-first approach (default styles apply to mobile)
+// No mixin needed for base mobile styles
+
+/**
+ * Small devices (landscape phones, 640px and up)
+ */
+@mixin sm {
+  @media (min-width: 640px) {
+    @content;
+  }
+}
+
+/**
+ * Medium devices (tablets, 768px and up)
+ */
+@mixin md {
+  @media (min-width: 768px) {
+    @content;
+  }
+}
+
+/**
+ * Large devices (desktops, 1024px and up)
+ */
+@mixin lg {
+  @media (min-width: 1024px) {
+    @content;
+  }
+}
+
+/**
+ * Extra large devices (large desktops, 1280px and up)
+ */
+@mixin xl {
+  @media (min-width: 1280px) {
+    @content;
+  }
+}
+
+/**
+ * 2X Large devices (larger desktops, 1536px and up)
+ */
+@mixin xl2 {
+  @media (min-width: 1536px) {
+    @content;
+  }
+}
+
+// Legacy mixins for backward compatibility
 @mixin isMobile {
-  @media (max-width: 390px) {
+  @media (max-width: 639px) {
     @content;
   }
 }
 
-/**
- * Mixin for tablet devices
- * Applies styles for screens with a width between 391px and 834px
- */
 @mixin isTablet {
-  @media (min-width: 391px) and (max-width: 834px) {
+  @media (min-width: 640px) and (max-width: 1023px) {
     @content;
   }
 }
 
-/**
- * Mixin for medium desktop devices
- * Applies styles for screens with a width between 835px and 1280px
- */
 @mixin isDesktopM {
-  @media (min-width: 835px) and (max-width: 1280px) {
+  @media (min-width: 1024px) and (max-width: 1279px) {
     @content;
   }
 }
 
-/**
- * Mixin for large desktop devices
- * Applies styles for screens with a minimum width of 1281px
- */
 @mixin isDesktopL {
-  @media (min-width: 1281px) {
+  @media (min-width: 1280px) {
     @content;
   }
 }
