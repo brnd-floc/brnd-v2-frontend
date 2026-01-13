@@ -1,50 +1,103 @@
-// Dependencies
 import React, { useState, useEffect, useRef } from "react";
 import classNames from "clsx";
 import { motion } from "framer-motion";
-
-// Types
+import sdk from "@farcaster/miniapp-sdk";
 import { BaseModalProps } from "../../types";
-
-// Components
 import Typography from "@/shared/components/Typography";
 import Button from "@/shared/components/Button";
-
-// Assets
 import Podium1Icon from "@/shared/assets/icons/podium-1.svg?react";
 import Podium2Icon from "@/shared/assets/icons/podium-2.svg?react";
 import Podium3Icon from "@/shared/assets/icons/podium-3.svg?react";
-
-// StyleSheet
+import { usePodiumCollectibles } from "@/shared/hooks/contract/usePodiumCollectibles";
+import {
+  PodiumBrand,
+  CollectibleData,
+  ActivityEvent,
+} from "@/shared/types/collectibles";
+import { request } from "@/services/api";
+import { BLOCKCHAIN_SERVICE } from "@/config/api";
 import styles from "./PodiumDetailModal.module.scss";
-import sdk from "@farcaster/miniapp-sdk";
 
-export type PodiumDetailModalData = {
-  brand1?: {
-    id: number;
-    name: string;
-    imageUrl?: string;
-  };
-  brand2?: {
-    id: number;
-    name: string;
-    imageUrl?: string;
-  };
-  brand3?: {
-    id: number;
-    name: string;
-    imageUrl?: string;
-  };
+const formatPrice = (priceStr: string | null): string => {
+  if (!priceStr) return "1M";
+  const priceInBrnd = Number(priceStr) / 1e18;
+  if (priceInBrnd >= 1000000) {
+    const millions = priceInBrnd / 1000000;
+    return millions % 1 === 0 ? `${millions}M` : `${millions.toFixed(1)}M`;
+  } else if (priceInBrnd >= 1000) {
+    const thousands = priceInBrnd / 1000;
+    return thousands % 1 === 0 ? `${thousands}K` : `${thousands.toFixed(1)}K`;
+  }
+  return priceInBrnd.toFixed(0);
 };
 
 export const PodiumDetailModal: React.FC<
   BaseModalProps<PodiumDetailModalData>
-> = ({ handleClose, brand1, brand2, brand3 }) => {
+> = ({ handleClose, brand1, brand2, brand3, collectibleData }) => {
   const [activeTab, setActiveTab] = useState<"traits" | "activity">("traits");
   const [indicatorWidth, setIndicatorWidth] = useState<number>(0);
   const [indicatorOffset, setIndicatorOffset] = useState<number>(0);
+  const [activityHistory, setActivityHistory] = useState<ActivityEvent[]>([]);
+  const [loadingActivity, setLoadingActivity] = useState(false);
   const traitsTabRef = useRef<HTMLButtonElement>(null);
   const activityTabRef = useRef<HTMLButtonElement>(null);
+
+  const {
+    claimPodium,
+    buyPodium,
+    isClaimingPodium,
+    isBuyingPodium,
+    isApproving,
+    isConfirming,
+    error: txError,
+    brndBalance,
+  } = usePodiumCollectibles(
+    (txData) => {
+      console.log("🎉 Podium claimed!", txData);
+      sdk.haptics.notificationOccurred("success");
+      handleClose?.();
+    },
+    (txData) => {
+      console.log("🎉 Podium bought!", txData);
+      sdk.haptics.notificationOccurred("success");
+      handleClose?.();
+    }
+  );
+
+  const isMinted = collectibleData.isCollectible;
+  const tokenId = collectibleData.tokenId;
+  const currentPrice = collectibleData.price || "1000000000000000000000000";
+  const totalFeesEarned = collectibleData.totalFeesEarned || "0";
+  const creator = collectibleData.genesisCreatorUsername;
+  const owner = collectibleData.ownerUsername;
+  const podiumId = `${brand1?.id ?? 0}-${brand2?.id ?? 0}-${brand3?.id ?? 0}`;
+
+  // Fetch activity when tab changes to activity
+  useEffect(() => {
+    if (
+      activeTab === "activity" &&
+      isMinted &&
+      tokenId &&
+      activityHistory.length === 0
+    ) {
+      setLoadingActivity(true);
+      request<ActivityEvent[]>(
+        `${BLOCKCHAIN_SERVICE}/collectible-activity/${tokenId}`,
+        {
+          method: "GET",
+        }
+      )
+        .then((data) => {
+          setActivityHistory(data || []);
+        })
+        .catch((err) => {
+          console.error("Failed to fetch activity:", err);
+        })
+        .finally(() => {
+          setLoadingActivity(false);
+        });
+    }
+  }, [activeTab, isMinted, tokenId, activityHistory.length]);
 
   useEffect(() => {
     const updateIndicator = () => {
@@ -55,7 +108,6 @@ export const PodiumDetailModal: React.FC<
         setIndicatorOffset(activeTabRef.current.offsetLeft);
       }
     };
-
     updateIndicator();
     window.addEventListener("resize", updateIndicator);
     return () => window.removeEventListener("resize", updateIndicator);
@@ -66,33 +118,68 @@ export const PodiumDetailModal: React.FC<
     setActiveTab(tab);
   };
 
+  const handleBuyOrMint = async () => {
+    sdk.haptics.impactOccurred("medium");
+    if (isMinted && tokenId) {
+      await buyPodium(tokenId);
+    } else {
+      const brandIds: [number, number, number] = [
+        brand1.id,
+        brand2.id,
+        brand3.id,
+      ];
+      await claimPodium(brandIds);
+    }
+  };
+
+  const isPending =
+    isClaimingPodium || isBuyingPodium || isApproving || isConfirming;
+
+  const getButtonText = (): string => {
+    if (isApproving) return "Approving...";
+    if (isConfirming) return "Confirming...";
+    if (isClaimingPodium) return "Minting...";
+    if (isBuyingPodium) return "Buying...";
+    return isMinted ? "Buy Now" : "Mint Now";
+  };
+
+  const formatEventType = (type: string): string => {
+    const labels: Record<string, string> = { mint: "Mint", sale: "Sale" };
+    return labels[type] || type;
+  };
+
+  const truncateAddress = (address: string): string => {
+    if (!address || address.length < 10) return address || "—";
+    return `${address.slice(0, 4)}..${address.slice(-4)}`;
+  };
+
   return (
     <div className={styles.container}>
-      {/* Podium Display Section */}
-      <div className={styles.podiumDisplay}>
-        <button
-          className={styles.closePodiumButton}
-          onClick={handleClose}
-          aria-label="Close podium"
+      {/* Close Button */}
+      <button
+        className={styles.closeButton}
+        onClick={handleClose}
+        aria-label="Close modal"
+      >
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
         >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 16 16"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M12 4L4 12M4 4L12 12"
-              stroke="white"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
+          <path
+            d="M18 6L6 18M6 6L18 18"
+            stroke="white"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </button>
+      {/* Podium Display */}
+      <div className={styles.podiumDisplay}>
         <div className={styles.podiumContainer}>
-          {/* 2nd Place (Left) */}
           <div className={styles.podiumItem}>
             {brand2?.imageUrl ? (
               <img
@@ -101,25 +188,20 @@ export const PodiumDetailModal: React.FC<
                 className={styles.brandImage}
               />
             ) : (
-              <div
-                className={styles.imagePlaceholder}
-                style={{ backgroundColor: "#8A60E3" }}
-              />
+              <div className={styles.imagePlaceholder} />
             )}
             <div className={styles.numberContainer}>
               <Podium2Icon className={styles.numberIcon} />
             </div>
             <Typography
               variant="geist"
-              weight="bold"
+              weight="medium"
               size={14}
               className={styles.podiumLabel}
             >
-              {brand2?.name || "Degen"}
+              {brand2?.name ?? "—"}
             </Typography>
           </div>
-
-          {/* 1st Place (Center) */}
           <div className={classNames(styles.podiumItem, styles.firstPlace)}>
             {brand1?.imageUrl ? (
               <img
@@ -128,25 +210,20 @@ export const PodiumDetailModal: React.FC<
                 className={styles.brandImage}
               />
             ) : (
-              <div
-                className={styles.imagePlaceholder}
-                style={{ backgroundColor: "#FF6B6B" }}
-              />
+              <div className={styles.imagePlaceholder} />
             )}
             <div className={styles.numberContainer}>
               <Podium1Icon className={styles.numberIcon} />
             </div>
             <Typography
               variant="geist"
-              weight="bold"
+              weight="medium"
               size={14}
               className={styles.podiumLabel}
             >
-              {brand1?.name || "FLOC*"}
+              {brand1?.name ?? "—"}
             </Typography>
           </div>
-
-          {/* 3rd Place (Right) */}
           <div className={classNames(styles.podiumItem, styles.thirdPlace)}>
             {brand3?.imageUrl ? (
               <img
@@ -155,21 +232,18 @@ export const PodiumDetailModal: React.FC<
                 className={styles.brandImage}
               />
             ) : (
-              <div
-                className={styles.imagePlaceholder}
-                style={{ backgroundColor: "#4ECDC4" }}
-              />
+              <div className={styles.imagePlaceholder} />
             )}
             <div className={styles.numberContainer}>
               <Podium3Icon className={styles.numberIcon} />
             </div>
             <Typography
               variant="geist"
-              weight="bold"
+              weight="medium"
               size={14}
               className={styles.podiumLabel}
             >
-              {brand3?.name || "Poolsuite"}
+              {brand3?.name ?? "—"}
             </Typography>
           </div>
         </div>
@@ -179,7 +253,7 @@ export const PodiumDetailModal: React.FC<
       <div className={styles.valueBenefits}>
         <div className={styles.valueBox}>
           <Typography variant="geist" weight="bold" size={24} lineHeight={28}>
-            1M
+            {formatPrice(currentPrice)}
           </Typography>
           <Typography
             variant="geist"
@@ -201,7 +275,7 @@ export const PodiumDetailModal: React.FC<
         </div>
         <div className={styles.benefitsBox}>
           <Typography variant="geist" weight="bold" size={24} lineHeight={28}>
-            1.2K
+            {formatPrice(totalFeesEarned)}
           </Typography>
           <Typography
             variant="geist"
@@ -223,7 +297,7 @@ export const PodiumDetailModal: React.FC<
         </div>
       </div>
 
-      {/* BRND Podium Information */}
+      {/* Podium Info */}
       <div className={styles.podiumInfo}>
         <div className={styles.podiumInfoHeader}>
           <Typography variant="druk" weight="wide" size={18} lineHeight={22}>
@@ -236,7 +310,7 @@ export const PodiumDetailModal: React.FC<
             lineHeight={16}
             className={styles.podiumId}
           >
-            10-34-300
+            {podiumId}
           </Typography>
         </div>
         <div className={styles.podiumInfoMeta}>
@@ -246,7 +320,7 @@ export const PodiumDetailModal: React.FC<
             size={12}
             lineHeight={16}
           >
-            OWNER @esdotge
+            OWNER {isMinted && owner ? `@${owner}` : "—"}
           </Typography>
           <Typography
             variant="geist"
@@ -255,7 +329,7 @@ export const PodiumDetailModal: React.FC<
             lineHeight={16}
             className={styles.nftNumber}
           >
-            NFT #111
+            {isMinted && tokenId ? `NFT #${tokenId}` : "Not Minted"}
           </Typography>
         </div>
         <Typography
@@ -269,275 +343,201 @@ export const PodiumDetailModal: React.FC<
           is a signal of taste, influence, and participation in the evolving
           BRND network.
         </Typography>
-        <div>
-          {/* Tabs */}
-          <div className={styles.tabs}>
-            <button
-              ref={traitsTabRef}
-              className={classNames(
-                styles.tab,
-                activeTab === "traits" && styles.active
-              )}
-              onClick={() => handleTabClick("traits")}
-            >
-              <Typography
-                variant="druk"
-                weight="wide"
-                size={14}
-                lineHeight={18}
-              >
-                TRAITS
-              </Typography>
-            </button>
-            <button
-              ref={activityTabRef}
-              className={classNames(
-                styles.tab,
-                activeTab === "activity" && styles.active
-              )}
-              onClick={() => handleTabClick("activity")}
-            >
-              <Typography
-                variant="druk"
-                weight="wide"
-                size={14}
-                lineHeight={18}
-              >
-                ACTIVITY
-              </Typography>
-            </button>
-            <motion.div
-              className={styles.tabIndicator}
-              initial={{ x: indicatorOffset, width: indicatorWidth }}
-              animate={{ x: indicatorOffset, width: indicatorWidth }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            />
-          </div>
+      </div>
 
-          {/* Tab Content */}
-          <div className={styles.tabContent}>
-            {activeTab === "traits" ? (
-              <div className={styles.traitsContent}>
-                <div className={styles.inputField}>
-                  <Typography
-                    variant="geist"
-                    weight="regular"
-                    size={12}
-                    className={styles.inputLabel}
-                  >
-                    CREATOR
-                  </Typography>
-                  <div className={styles.inputValue}>
-                    <Typography variant="geist" weight="medium" size={14}>
-                      @jpfraneto
-                    </Typography>
-                  </div>
-                </div>
-                <div className={styles.inputField}>
-                  <Typography
-                    variant="geist"
-                    weight="regular"
-                    size={12}
-                    className={styles.inputLabel}
-                  >
-                    SEASON
-                  </Typography>
-                  <div className={styles.inputValue}>
-                    <Typography variant="geist" weight="medium" size={14}>
-                      2
-                    </Typography>
-                  </div>
-                </div>
-                <div className={styles.traitBoxes}>
-                  <div className={styles.traitBox}>
-                    <Typography
-                      variant="geist"
-                      weight="bold"
-                      size={12}
-                      lineHeight={16}
-                    >
-                      P1
-                    </Typography>
-                    <Typography
-                      variant="geist"
-                      weight="regular"
-                      size={10}
-                      lineHeight={14}
-                    >
-                      {brand1?.name || "FLOC*"}
-                    </Typography>
-                  </div>
-                  <div className={styles.traitBox}>
-                    <Typography
-                      variant="geist"
-                      weight="bold"
-                      size={12}
-                      lineHeight={16}
-                    >
-                      P2
-                    </Typography>
-                    <Typography
-                      variant="geist"
-                      weight="regular"
-                      size={10}
-                      lineHeight={14}
-                    >
-                      {brand2?.name || "Degen"}
-                    </Typography>
-                  </div>
-                  <div className={styles.traitBox}>
-                    <Typography
-                      variant="geist"
-                      weight="bold"
-                      size={12}
-                      lineHeight={16}
-                    >
-                      P3
-                    </Typography>
-                    <Typography
-                      variant="geist"
-                      weight="regular"
-                      size={10}
-                      lineHeight={14}
-                    >
-                      {brand3?.name || "Poolsuite"}
-                    </Typography>
-                  </div>
-                </div>
+      {/* Tabs */}
+      <div className={styles.tabs}>
+        <button
+          ref={traitsTabRef}
+          className={classNames(
+            styles.tab,
+            activeTab === "traits" && styles.active
+          )}
+          onClick={() => handleTabClick("traits")}
+        >
+          <Typography variant="druk" weight="wide" size={14} lineHeight={18}>
+            TRAITS
+          </Typography>
+        </button>
+        <button
+          ref={activityTabRef}
+          className={classNames(
+            styles.tab,
+            activeTab === "activity" && styles.active
+          )}
+          onClick={() => handleTabClick("activity")}
+        >
+          <Typography variant="druk" weight="wide" size={14} lineHeight={18}>
+            ACTIVITY
+          </Typography>
+        </button>
+        <motion.div
+          className={styles.tabIndicator}
+          initial={{ x: indicatorOffset, width: indicatorWidth }}
+          animate={{ x: indicatorOffset, width: indicatorWidth }}
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        />
+      </div>
+
+      {/* Tab Content */}
+      <div className={styles.tabContent}>
+        {activeTab === "traits" ? (
+          <div className={styles.traitsContent}>
+            <div className={styles.inputField}>
+              <Typography
+                variant="geist"
+                weight="regular"
+                size={12}
+                className={styles.inputLabel}
+              >
+                CREATOR
+              </Typography>
+              <div className={styles.inputValue}>
+                <Typography variant="geist" weight="medium" size={14}>
+                  {isMinted && creator ? `@${creator}` : "—"}
+                </Typography>
+              </div>
+            </div>
+            <div className={styles.inputField}>
+              <Typography
+                variant="geist"
+                weight="regular"
+                size={12}
+                className={styles.inputLabel}
+              >
+                SEASON
+              </Typography>
+              <div className={styles.inputValue}>
+                <Typography variant="geist" weight="medium" size={14}>
+                  2
+                </Typography>
+              </div>
+            </div>
+            <div className={styles.traitBoxes}>
+              <div className={styles.traitBox}>
+                <Typography
+                  variant="geist"
+                  weight="bold"
+                  size={12}
+                  lineHeight={16}
+                >
+                  P1
+                </Typography>
+                <Typography
+                  variant="geist"
+                  weight="regular"
+                  size={10}
+                  lineHeight={14}
+                >
+                  {brand1?.name ?? "—"}
+                </Typography>
+              </div>
+              <div className={styles.traitBox}>
+                <Typography
+                  variant="geist"
+                  weight="bold"
+                  size={12}
+                  lineHeight={16}
+                >
+                  P2
+                </Typography>
+                <Typography
+                  variant="geist"
+                  weight="regular"
+                  size={10}
+                  lineHeight={14}
+                >
+                  {brand2?.name ?? "—"}
+                </Typography>
+              </div>
+              <div className={styles.traitBox}>
+                <Typography
+                  variant="geist"
+                  weight="bold"
+                  size={12}
+                  lineHeight={16}
+                >
+                  P3
+                </Typography>
+                <Typography
+                  variant="geist"
+                  weight="regular"
+                  size={10}
+                  lineHeight={14}
+                >
+                  {brand3?.name ?? "—"}
+                </Typography>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className={styles.activityContent}>
+            {loadingActivity ? (
+              <div className={styles.emptyActivity}>
+                <Typography variant="geist" weight="regular" size={12}>
+                  Loading...
+                </Typography>
               </div>
             ) : (
-              <div className={styles.activityContent}>
-                <div className={styles.activityTable}>
-                  <div className={styles.tableHeader}>
-                    <Typography
-                      variant="geist"
-                      weight="bold"
-                      size={12}
-                      lineHeight={16}
-                    >
-                      EVENT
-                    </Typography>
-                    <Typography
-                      variant="geist"
-                      weight="bold"
-                      size={12}
-                      lineHeight={16}
-                    >
-                      PRICE
-                    </Typography>
-                    <Typography
-                      variant="geist"
-                      weight="bold"
-                      size={12}
-                      lineHeight={16}
-                    >
-                      FROM
-                    </Typography>
-                  </div>
-                  <div className={styles.tableRow}>
-                    <Typography
-                      variant="geist"
-                      weight="regular"
-                      size={12}
-                      lineHeight={16}
-                    >
-                      Sale
-                    </Typography>
-                    <Typography
-                      variant="geist"
-                      weight="regular"
-                      size={12}
-                      lineHeight={16}
-                    >
-                      0.0222 BRND
-                    </Typography>
-                    <Typography
-                      variant="geist"
-                      weight="regular"
-                      size={12}
-                      lineHeight={16}
-                    >
-                      0xF9..1F96
-                    </Typography>
-                  </div>
-                  <div className={styles.tableRow}>
-                    <Typography
-                      variant="geist"
-                      weight="regular"
-                      size={12}
-                      lineHeight={16}
-                    >
-                      Item Offer
-                    </Typography>
-                    <Typography
-                      variant="geist"
-                      weight="regular"
-                      size={12}
-                      lineHeight={16}
-                    >
-                      0.0222 BRND
-                    </Typography>
-                    <Typography
-                      variant="geist"
-                      weight="regular"
-                      size={12}
-                      lineHeight={16}
-                    >
-                      0xF9..1F96
-                    </Typography>
-                  </div>
-                  <div className={styles.tableRow}>
-                    <Typography
-                      variant="geist"
-                      weight="regular"
-                      size={12}
-                      lineHeight={16}
-                    >
-                      Listing
-                    </Typography>
-                    <Typography
-                      variant="geist"
-                      weight="regular"
-                      size={12}
-                      lineHeight={16}
-                    >
-                      0.0222 BRND
-                    </Typography>
-                    <Typography
-                      variant="geist"
-                      weight="regular"
-                      size={12}
-                      lineHeight={16}
-                    >
-                      0xF9..1F96
-                    </Typography>
-                  </div>
-                  <div className={styles.tableRow}>
-                    <Typography
-                      variant="geist"
-                      weight="regular"
-                      size={12}
-                      lineHeight={16}
-                    >
-                      Transfer
-                    </Typography>
-                    <Typography
-                      variant="geist"
-                      weight="regular"
-                      size={12}
-                      lineHeight={16}
-                    >
-                      0.0222 BRND
-                    </Typography>
-                    <Typography
-                      variant="geist"
-                      weight="regular"
-                      size={12}
-                      lineHeight={16}
-                    >
-                      0xF9..1F96
-                    </Typography>
-                  </div>
+              <div className={styles.activityTable}>
+                <div className={styles.tableHeader}>
+                  <Typography
+                    variant="geist"
+                    weight="bold"
+                    size={12}
+                    lineHeight={16}
+                  >
+                    EVENT
+                  </Typography>
+                  <Typography
+                    variant="geist"
+                    weight="bold"
+                    size={12}
+                    lineHeight={16}
+                  >
+                    PRICE
+                  </Typography>
+                  <Typography
+                    variant="geist"
+                    weight="bold"
+                    size={12}
+                    lineHeight={16}
+                  >
+                    FROM
+                  </Typography>
+                </div>
+                {activityHistory.length > 0 ? (
+                  activityHistory.map((event, index) => (
+                    <div key={index} className={styles.tableRow}>
+                      <Typography
+                        variant="geist"
+                        weight="regular"
+                        size={12}
+                        lineHeight={16}
+                      >
+                        {formatEventType(event.eventType)}
+                      </Typography>
+                      <Typography
+                        variant="geist"
+                        weight="regular"
+                        size={12}
+                        lineHeight={16}
+                      >
+                        {event.price ? `${formatPrice(event.price)} BRND` : "—"}
+                      </Typography>
+                      <Typography
+                        variant="geist"
+                        weight="regular"
+                        size={12}
+                        lineHeight={16}
+                      >
+                        {event.fromUser?.username
+                          ? `@${event.fromUser.username}`
+                          : truncateAddress(event.fromWallet)}
+                      </Typography>
+                    </div>
+                  ))
+                ) : isMinted ? (
                   <div className={styles.tableRow}>
                     <Typography
                       variant="geist"
@@ -553,7 +553,7 @@ export const PodiumDetailModal: React.FC<
                       size={12}
                       lineHeight={16}
                     >
-                      -
+                      —
                     </Typography>
                     <Typography
                       variant="geist"
@@ -561,44 +561,79 @@ export const PodiumDetailModal: React.FC<
                       size={12}
                       lineHeight={16}
                     >
-                      NullAddress
+                      {creator ? `@${creator}` : "—"}
                     </Typography>
                   </div>
-                </div>
+                ) : (
+                  <div className={styles.emptyActivity}>
+                    <Typography variant="geist" weight="regular" size={12}>
+                      No activity yet
+                    </Typography>
+                  </div>
+                )}
               </div>
             )}
           </div>
-        </div>
+        )}
       </div>
 
-      {/* Buy Now Section */}
-      <div className={styles.buySection}>
-        <div className={styles.buySectionContent}>
+      {/* Error */}
+      {txError && (
+        <div className={styles.errorSection}>
           <Typography
             variant="geist"
             weight="regular"
             size={12}
-            lineHeight={16}
-            className={styles.buyLabel}
+            className={styles.errorText}
           >
-            BUY FOR
-          </Typography>
-          <Typography
-            variant="druk"
-            weight="wide"
-            size={24}
-            lineHeight={28}
-            className={styles.buyPrice}
-          >
-            2M $BRND
+            {txError}
           </Typography>
         </div>
+      )}
 
-        <button onClick={() => {}} className={styles.buyNowButton}>
-          <Typography variant="geist" weight="bold" size={14} lineHeight={18}>
-            Buy Now
-          </Typography>
-        </button>
+      {/* Buy Section */}
+      <div className={styles.buySection}>
+        <Typography
+          variant="geist"
+          weight="regular"
+          size={12}
+          lineHeight={16}
+          className={styles.buyLabel}
+        >
+          {isMinted ? "BUY FOR" : "MINT FOR"}
+        </Typography>
+        <Typography
+          variant="druk"
+          weight="wide"
+          size={24}
+          lineHeight={28}
+          className={styles.buyPrice}
+        >
+          {formatPrice(currentPrice)} $BRND
+        </Typography>
+        <Button
+          variant="primary"
+          caption={getButtonText()}
+          className={classNames(
+            styles.buyNowButton,
+            isPending && styles.pending
+          )}
+          onClick={handleBuyOrMint}
+          disabled={isPending}
+        />
+        <Typography
+          variant="geist"
+          weight="regular"
+          size={10}
+          lineHeight={14}
+          className={styles.balanceInfo}
+        >
+          Your balance:{" "}
+          {formatPrice(
+            brndBalance ? (Number(brndBalance) * 1e18).toString() : "0"
+          )}{" "}
+          $BRND
+        </Typography>
       </div>
     </div>
   );

@@ -1,25 +1,15 @@
-// Dependencies
 import { useEffect, useState, useCallback } from "react";
-import { formatDistanceToNow } from "date-fns/formatDistanceToNow";
 import { useNavigate } from "react-router-dom";
-
-// StyleSheet
 import styles from "./MyPodium.module.scss";
-
-// Hooks
 import { useMyVoteHistory } from "@/hooks/user";
 import { usePodiumCollectibles } from "@/shared/hooks/contract/usePodiumCollectibles";
 import { useAuth } from "@/shared/hooks/auth";
-
-// Components
-import BrandCard from "@/components/cards/BrandCard";
 import Typography from "@/components/Typography";
 import IndividualPodium from "@/shared/components/IndividualPodium";
-
-// Utils
-import { getBrandScoreVariation } from "@/shared/utils/brand";
 import LoaderIndicator from "@/shared/components/LoaderIndicator";
 import Button from "@/shared/components/Button";
+import { CollectibleData, VoteHistoryItem } from "@/shared/types/collectibles";
+import { UserVoteHistory } from "@/shared/hooks/user/types";
 
 function MyPodium() {
   const navigate = useNavigate();
@@ -35,38 +25,41 @@ function MyPodium() {
     isLoading,
     error,
   } = useMyVoteHistory(pageId, 15);
-
-  // Get current user's FID
   const { data: authData } = useAuth();
   const userFid = authData?.fid ? Number(authData.fid) : null;
 
-  // Podium collectibles hook
   const {
     claimPodium,
-    isArrangementMinted,
+    buyPodium,
     isClaimingPodium,
+    isBuyingPodium,
     isApproving,
     isPending,
     isConfirming,
-    error: contractError,
     refreshData,
-  } = usePodiumCollectibles((txData) => {
-    // Claim success callback
-    console.log("✅ Podium claimed successfully!", txData);
-    setProcessingPodiumId(null);
-    refreshData();
-    refetch();
-  });
+  } = usePodiumCollectibles(
+    (txData) => {
+      console.log("✅ Podium claimed!", txData);
+      setProcessingPodiumId(null);
+      refreshData();
+      refetch();
+    },
+    (txData) => {
+      console.log("✅ Podium bought!", txData);
+      setProcessingPodiumId(null);
+      refreshData();
+      refetch();
+    }
+  );
 
   useEffect(() => {
     refetch();
   }, [pageId, refetch]);
 
-  // Clear processing state when transaction completes
   useEffect(() => {
     if (!isPending && !isConfirming && !isApproving && processingPodiumId) {
       const timer = setTimeout(() => {
-        if (!isClaimingPodium) {
+        if (!isClaimingPodium && !isBuyingPodium) {
           setProcessingPodiumId(null);
         }
       }, 1000);
@@ -77,62 +70,83 @@ function MyPodium() {
     isConfirming,
     isApproving,
     isClaimingPodium,
+    isBuyingPodium,
     processingPodiumId,
   ]);
 
-  // Handle claim podium
-  const handleClaimPodium = useCallback(
+  const handleMintPodium = useCallback(
     async (podiumId: string, brandIds: [number, number, number]) => {
       if (!userFid) return;
-
       try {
-        // Check if already minted
-        const isMinted = await isArrangementMinted(brandIds);
-        if (isMinted) {
-          console.log("Podium already minted");
-          return;
-        }
-
         setProcessingPodiumId(podiumId);
         await claimPodium(brandIds);
       } catch (error) {
-        console.error("Failed to claim podium:", error);
+        console.error("Failed to mint podium:", error);
         setProcessingPodiumId(null);
       }
     },
-    [userFid, isArrangementMinted, claimPodium]
+    [userFid, claimPodium]
   );
 
-  /**
-   * Handles the scroll event of the list for infinite loading.
-   *
-   * @param {React.UIEvent<HTMLDivElement>} e - The scroll event.
-   */
+  const handleBuyPodium = useCallback(
+    async (podiumId: string, tokenId: number) => {
+      if (!userFid) return;
+      try {
+        setProcessingPodiumId(podiumId);
+        await buyPodium(tokenId);
+      } catch (error) {
+        console.error("Failed to buy podium:", error);
+        setProcessingPodiumId(null);
+      }
+    },
+    [userFid, buyPodium]
+  );
+
   const handleScrollList = (e: React.UIEvent<HTMLDivElement>) => {
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
     const calc = scrollTop + clientHeight + 50;
     if (calc >= scrollHeight && !isFetching && history) {
-      const totalItems = Object.keys(history.data).length;
-      if (totalItems < history.count) {
-        setPageId((prev) => prev + 1);
-      }
+      setPageId((prev) => prev + 1);
     }
   };
 
-  // Loading state for initial load
+  // Transform vote to collectible data
+  // Note: UserVoteHistory may have collectible fields at runtime even though they're not in the type
+  const toCollectibleData = (
+    vote: UserVoteHistory & {
+      isCollectible?: boolean;
+      collectibleTokenId?: number | null;
+      collectiblePrice?: string | null;
+      collectibleClaimCount?: number;
+      collectibleGenesisCreatorFid?: number | null;
+      collectibleGenesisCreatorUsername?: string | null;
+      collectibleOwnerFid?: number | null;
+      collectibleOwnerUsername?: string | null;
+      collectibleTotalFeesEarned?: string;
+    }
+  ): CollectibleData => ({
+    isCollectible: (vote as any).isCollectible ?? false,
+    tokenId: (vote as any).collectibleTokenId ?? null,
+    price: (vote as any).collectiblePrice || "1000000000000000000000000", // 1M BRND default
+    claimCount: (vote as any).collectibleClaimCount ?? 0,
+    genesisCreatorFid: (vote as any).collectibleGenesisCreatorFid ?? null,
+    genesisCreatorUsername:
+      (vote as any).collectibleGenesisCreatorUsername ?? null,
+    ownerFid: (vote as any).collectibleOwnerFid ?? null,
+    ownerUsername: (vote as any).collectibleOwnerUsername ?? null,
+    totalFeesEarned: (vote as any).collectibleTotalFeesEarned ?? "0",
+  });
+
   if (isLoading && pageId === 1) {
     return (
       <div className={styles.layout}>
         <div className={styles.loading}>
-          <Typography>
-            <LoaderIndicator />
-          </Typography>
+          <LoaderIndicator />
         </div>
       </div>
     );
   }
 
-  // Error state
   if (error) {
     return (
       <div className={styles.layout}>
@@ -140,7 +154,6 @@ function MyPodium() {
           <Typography size={14} weight="medium">
             Failed to load your podiums
           </Typography>
-
           <Button
             caption="Try Again"
             variant="primary"
@@ -151,15 +164,14 @@ function MyPodium() {
     );
   }
 
-  // Empty state - no podiums yet
   if (history && Object.keys(history.data).length === 0) {
     return (
       <div className={styles.emptyLayout}>
         <div className={styles.empty}>
-          <Typography size={16} weight={"regular"} lineHeight={20}>
+          <Typography size={16} weight="regular" lineHeight={20}>
             Nothing here yet
           </Typography>
-          <Typography size={16} weight={"regular"} lineHeight={20}>
+          <Typography size={16} weight="regular" lineHeight={20}>
             Start voting to see your personal brand rankings!
           </Typography>
           <div className={styles.center}>
@@ -179,39 +191,42 @@ function MyPodium() {
       {history && (
         <div className={styles.view} onScroll={handleScrollList}>
           <ul className={styles.list}>
-            {Object.keys(history.data).map((date, index) => {
-              const podiumData = history.data[date];
+            {Object.values(history.data).map((vote: UserVoteHistory) => {
+              const collectibleData = toCollectibleData(vote);
+              const brandIds: [number, number, number] = [
+                vote.brand1.id,
+                vote.brand2.id,
+                vote.brand3.id,
+              ];
+              const isProcessing = processingPodiumId === vote.id;
+              const collectibleTokenId = (vote as any).collectibleTokenId;
+
               return (
-                <li
-                  key={`--podium-key-${index.toString()}`}
-                  className={styles.item}
-                >
+                <li key={vote.id} className={styles.item}>
                   <IndividualPodium
-                    brand1={podiumData.brand1}
-                    brand2={podiumData.brand2}
-                    brand3={podiumData.brand3}
-                    creator="@jpfraneto"
-                    owner="@esdotge"
-                    price="10000 $BRND"
+                    brand1={vote.brand1}
+                    brand2={vote.brand2}
+                    brand3={vote.brand3}
+                    collectibleData={collectibleData}
+                    onMintClick={() => handleMintPodium(vote.id, brandIds)}
                     onBuyClick={() => {
-                      const brandIds: [number, number, number] = [
-                        podiumData.brand1.id,
-                        podiumData.brand2.id,
-                        podiumData.brand3.id,
-                      ];
-                      handleClaimPodium(podiumData.id, brandIds);
+                      if (collectibleTokenId) {
+                        handleBuyPodium(vote.id, collectibleTokenId);
+                      }
                     }}
+                    isPending={
+                      isProcessing && (isPending || isConfirming || isApproving)
+                    }
                   />
                 </li>
               );
             })}
           </ul>
 
-          {/* Loading indicator for pagination */}
           {isFetching && pageId > 1 && (
             <div className={styles.loadingMore}>
               <Typography size={12} className={styles.loadingText}>
-                Loading more podiums...
+                Loading more...
               </Typography>
             </div>
           )}

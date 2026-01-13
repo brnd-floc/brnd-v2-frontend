@@ -1,115 +1,100 @@
-// Dependencies
 import React from "react";
 import classNames from "clsx";
-
-// StyleSheet
 import styles from "./IndividualPodium.module.scss";
-
-// Components
 import Typography from "@/shared/components/Typography";
-import Button from "@/shared/components/Button";
-
-// Assets
 import Podium1Icon from "@/shared/assets/icons/podium-1.svg?react";
 import Podium2Icon from "@/shared/assets/icons/podium-2.svg?react";
 import Podium3Icon from "@/shared/assets/icons/podium-3.svg?react";
-
-// Hooks
 import { useModal } from "@/shared/hooks/ui/useModal";
 import { ModalsIds } from "@/shared/providers/ModalProvider/types";
-
-interface Brand {
-  id: number;
-  name: string;
-  imageUrl?: string;
-}
+import { PodiumBrand, CollectibleData } from "@/shared/types/collectibles";
 
 interface IndividualPodiumProps {
   className?: string;
-  brand1?: Brand;
-  brand2?: Brand;
-  brand3?: Brand;
-  creator?: string;
-  owner?: string;
-  price?: string;
+  brand1: PodiumBrand;
+  brand2: PodiumBrand;
+  brand3: PodiumBrand;
+  collectibleData: CollectibleData;
+  onMintClick?: () => void;
   onBuyClick?: () => void;
+  isPending?: boolean;
 }
+
+// Format large numbers (1000000 -> "1M", 1200000 -> "1.2M")
+const formatPrice = (priceStr: string | null): string => {
+  if (!priceStr) return "1M";
+  // Price comes in wei (18 decimals), convert to BRND
+  const priceInBrnd = Number(priceStr) / 1e18;
+  if (priceInBrnd >= 1000000) {
+    const millions = priceInBrnd / 1000000;
+    return millions % 1 === 0 ? `${millions}M` : `${millions.toFixed(1)}M`;
+  } else if (priceInBrnd >= 1000) {
+    const thousands = priceInBrnd / 1000;
+    return thousands % 1 === 0 ? `${thousands}K` : `${thousands.toFixed(1)}K`;
+  }
+  return priceInBrnd.toFixed(0);
+};
 
 const IndividualPodium: React.FC<IndividualPodiumProps> = ({
   className,
   brand1,
   brand2,
   brand3,
-  creator = "@jpfraneto",
-  owner = "@esdotge",
-  price = "10000 $BRND",
+  collectibleData,
+  onMintClick,
   onBuyClick,
+  isPending = false,
 }) => {
   const { openModal } = useModal();
 
+  const isMinted = collectibleData.isCollectible;
+  const displayPrice = `${formatPrice(collectibleData.price)} $BRND`;
+  const creator = collectibleData.genesisCreatorUsername;
+  const owner = collectibleData.ownerUsername;
+
   const handleArrowClick = () => {
     openModal(ModalsIds.PODIUM_DETAIL, {
-      brand1: brand1
-        ? { id: brand1.id, name: brand1.name, imageUrl: brand1.imageUrl }
-        : undefined,
-      brand2: brand2
-        ? { id: brand2.id, name: brand2.name, imageUrl: brand2.imageUrl }
-        : undefined,
-      brand3: brand3
-        ? { id: brand3.id, name: brand3.name, imageUrl: brand3.imageUrl }
-        : undefined,
+      brand1,
+      brand2,
+      brand3,
+      collectibleData,
     });
   };
 
-  // Use provided brands or fallback to hardcoded data
-  // Order: 2nd place, 1st place, 3rd place (left to right)
+  const handleActionClick = () => {
+    if (isPending) return;
+    if (isMinted) {
+      onBuyClick?.();
+    } else {
+      onMintClick?.();
+    }
+  };
+
   const podiumBrands = [
-    {
-      brand: brand2,
-      name: brand2?.name || "Degen",
-      color: "#8A60E3",
-      icon: Podium2Icon,
-      place: "second",
-    },
-    {
-      brand: brand1,
-      name: brand1?.name || "FLOC*",
-      color: "#FF6B6B",
-      icon: Podium1Icon,
-      place: "first",
-    },
-    {
-      brand: brand3,
-      name: brand3?.name || "Poolsuite",
-      color: "#4ECDC4",
-      icon: Podium3Icon,
-      place: "third",
-    },
+    { brand: brand2, icon: Podium2Icon, place: "second" as const },
+    { brand: brand1, icon: Podium1Icon, place: "first" as const },
+    { brand: brand3, icon: Podium3Icon, place: "third" as const },
   ];
 
   return (
     <div className={classNames(styles.container, className)}>
-      {/* Podium Elements */}
       <div className={styles.podiumSection}>
         <div className={styles.podiumContainer}>
-          {podiumBrands.map((brand, index) => {
-            const IconComponent = brand.icon;
+          {podiumBrands.map((item, index) => {
+            const IconComponent = item.icon;
             return (
               <div
                 key={`podium-${index}`}
-                className={classNames(styles.podiumItem, styles[brand.place])}
+                className={classNames(styles.podiumItem, styles[item.place])}
               >
-                {brand.brand?.imageUrl ? (
+                {item.brand?.imageUrl ? (
                   <img
-                    src={brand.brand.imageUrl}
-                    alt={brand.name}
+                    src={item.brand.imageUrl}
+                    alt={item.brand.name}
                     className={styles.brandImage}
                   />
                 ) : (
-                  <div
-                    className={styles.imagePlaceholder}
-                    style={{ backgroundColor: brand.color }}
-                  />
+                  <div className={styles.imagePlaceholder} />
                 )}
                 <div className={styles.numberContainer}>
                   <IconComponent className={styles.numberIcon} />
@@ -120,7 +105,6 @@ const IndividualPodium: React.FC<IndividualPodiumProps> = ({
         </div>
       </div>
 
-      {/* Details Section */}
       <div className={styles.detailsSection}>
         <div className={styles.infoTop}>
           <div className={styles.creatorItem}>
@@ -140,7 +124,7 @@ const IndividualPodium: React.FC<IndividualPodiumProps> = ({
               lineHeight={16}
               className={styles.value}
             >
-              {creator}
+              {isMinted && creator ? `@${creator}` : "—"}
             </Typography>
           </div>
           <div className={styles.ownerItem}>
@@ -160,7 +144,7 @@ const IndividualPodium: React.FC<IndividualPodiumProps> = ({
               lineHeight={16}
               className={styles.value}
             >
-              {owner}
+              {isMinted && owner ? `@${owner}` : "—"}
             </Typography>
           </div>
         </div>
@@ -173,20 +157,25 @@ const IndividualPodium: React.FC<IndividualPodiumProps> = ({
             lineHeight={13}
             className={styles.price}
           >
-            {price}
+            {displayPrice}
           </Typography>
           <button
-            className={styles.buyButton}
-            onClick={onBuyClick || (() => {})}
+            className={classNames(
+              styles.actionButton,
+              isMinted ? styles.buyButton : styles.mintButton,
+              isPending && styles.pending
+            )}
+            onClick={handleActionClick}
+            disabled={isPending}
           >
             <Typography
               variant="geist"
               weight="bold"
               size={14}
               lineHeight={18}
-              className={styles.buyButtonText}
+              className={styles.actionButtonText}
             >
-              Buy
+              {isPending ? "..." : isMinted ? "Buy" : "Mint"}
             </Typography>
           </button>
           <Typography
@@ -196,23 +185,16 @@ const IndividualPodium: React.FC<IndividualPodiumProps> = ({
             lineHeight={13}
             className={styles.priceHidden}
           >
-            {price}
+            {displayPrice}
           </Typography>
         </div>
       </div>
 
-      {/* Arrow Button */}
       <div className={styles.arrowSection}>
         <button className={styles.arrowButton} onClick={handleArrowClick}>
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
             <path
-              d="M15 6L9 12L15 18"
+              d="M9 6L15 12L9 18"
               stroke="white"
               strokeWidth="2"
               strokeLinecap="round"

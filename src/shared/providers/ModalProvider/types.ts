@@ -1,14 +1,15 @@
-import { Brand } from '../../hooks/brands';
+import { Brand } from "../../hooks/brands";
+import { CollectibleData, PodiumBrand } from "../../types/collectibles";
 
 /**
  * Enum representing the different types of modal identifiers.
  */
 export enum ModalsIds {
-  ERROR = 'ERROR',
-  BOTTOM_ALERT = 'BOTTOM_ALERT',
-  SHARE_BRAND = 'SHARE_BRAND',
-  PERKS = 'PERKS',
-  PODIUM_DETAIL = 'PODIUM_DETAIL'
+  ERROR = "ERROR",
+  BOTTOM_ALERT = "BOTTOM_ALERT",
+  SHARE_BRAND = "SHARE_BRAND",
+  PERKS = "PERKS",
+  PODIUM_DETAIL = "PODIUM_DETAIL",
 }
 
 /**
@@ -60,8 +61,8 @@ export type ErrorModalData = {
  * @property {string} id - The unique identifier for the brand to be shared.
  */
 export type ShareBrandModalData = {
-  id: Brand['id'];
-}
+  id: Brand["id"];
+};
 
 /**
  * Type representing the data structure for a bottom alert.
@@ -83,19 +84,8 @@ export type PerksModalData = {};
  * Type representing the data structure for the podium detail modal.
  */
 export type PodiumDetailModalData = {
-  brand1?: {
-    id: number;
-    name: string;
-    imageUrl?: string;
-  };
-  brand2?: {
-    id: number;
-    name: string;
-    imageUrl?: string;
-  };
-  brand3?: {
-    id: number;
-    name: string;
-    imageUrl?: string;
-  };
+  brand1: PodiumBrand;
+  brand2: PodiumBrand;
+  brand3: PodiumBrand;
+  collectibleData: CollectibleData;
 };

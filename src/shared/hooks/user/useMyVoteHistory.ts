@@ -3,9 +3,15 @@ import { UserVoteHistory } from "./types";
 import { getMyVoteHistory } from "@/services/user";
 import { useQuery } from "@tanstack/react-query";
 
+export interface VoteHistoryResponse {
+  count: number;
+  data: Record<string, UserVoteHistory>;
+}
 /**
  * Hook for fetching the current user's vote history.
  * Uses authentication to identify the user automatically.
+ *
+ *
  */
 export const useMyVoteHistory = (pageId: number = 1, limit: number = 15) => {
   const votesRef = useRef<Record<string, UserVoteHistory>>({});

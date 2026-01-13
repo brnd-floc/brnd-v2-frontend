@@ -316,10 +316,44 @@
   order: 0;
   flex-grow: 0;
   transition: opacity 0.2s ease;
-  transform: rotate(180deg);
 }
 
 .arrowIcon {
   width: 24px;
   height: 24px;
+}
+
+.actionButton {
+  padding: 8px 24px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 80px;
+
+  &:hover {
+    transform: scale(1.02);
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.buyButton {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%);
+}
+
+.mintButton {
+  background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+}
+
+.pending {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.actionButtonText {
+  color: white;
 }
