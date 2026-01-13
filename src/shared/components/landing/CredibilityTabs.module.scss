@@ -23,6 +23,7 @@
   text-transform: uppercase;
   line-height: 1.25;
   color: white;
+  @include textGradientLight;
 
   @include sm {
     font-size: 1.5rem;

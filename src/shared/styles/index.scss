@@ -6,3 +6,12 @@
   width: 100%;
   max-width: 100%;
 }
+
+@mixin textGradientLight {
+  background:
+    linear-gradient(360deg, #FFFFFF 0%, rgba(255, 255, 255, 0.7) 50%, #FFFFFF 100%),
+    linear-gradient(191.75deg, #FFF000 0%, #FF0000 33%, #0E00FF 66%, #00FF00 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}

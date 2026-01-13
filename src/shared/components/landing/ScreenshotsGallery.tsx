@@ -136,7 +136,9 @@ export function ScreenshotsGallery() {
             }, 0.4)
         }, section)
 
-        return () => ctx.revert()
+        return () => {
+            ctx.revert()
+        }
     }, [])
 
     return (
