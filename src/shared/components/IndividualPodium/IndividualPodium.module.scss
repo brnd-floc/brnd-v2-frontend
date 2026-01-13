@@ -1,0 +1,325 @@
+@import "@/styles/index.scss";
+
+.container {
+  /* Auto layout */
+  display: flex;
+  flex-direction: row;
+  height: fit-content;
+  width: 100%;
+  height: 100px;
+  padding-top: 12px;
+  align-items: center;
+  overflow: visible;
+}
+
+/* Rank - Main container */
+.podiumSection {
+  /* Auto layout */
+  display: flex;
+  padding-top: 25px;
+  flex-direction: row;
+  width: fit-content;
+  height: fit-content;
+  align-self: stretch;
+}
+
+.podiumContainer {
+  /* Auto layout */
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  padding: 0px;
+  gap: 8px;
+  position: relative;
+  height: fit-content;
+}
+
+.podiumItem {
+  box-sizing: border-box;
+  /* Auto layout */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 0px;
+  gap: 6px;
+  flex: none;
+  flex-grow: 0;
+  transition: transform 0.3s ease;
+}
+
+/* Rank 1 (center) - highest position */
+.podiumItem.first {
+  transform: translateY(-16px);
+}
+
+/* Rank 2 (left) - middle position */
+.podiumItem.second {
+  transform: translateY(-6px);
+}
+
+/* Rank 3 (right) - lowest position */
+.podiumItem.third {
+  transform: translateY(0);
+}
+
+.imagePlaceholder,
+.brandImage {
+  width: 38px;
+  height: 38px;
+  border-radius: 6px;
+  flex: none;
+  flex-grow: 0;
+  object-fit: cover;
+}
+
+.brandImage {
+  display: block;
+}
+
+.numberContainer {
+  /* Auto layout */
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  padding: 0px;
+  flex: none;
+  width: 100%;
+  height: 18px;
+}
+
+.numberIcon {
+  width: auto;
+  height: 18px;
+  flex: none;
+  flex-grow: 0;
+}
+
+.detailsSection {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  flex: 1 1 0;
+  min-width: 0;
+  padding-top: 10px;
+  align-self: stretch;
+}
+
+.infoTop {
+  /* Auto layout */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 0px;
+  gap: 8px;
+  width: 99px;
+  height: 74px;
+  flex: none;
+  order: 0;
+  align-self: stretch;
+  flex-grow: 0;
+}
+
+.creatorItem {
+  /* Auto layout */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 0px;
+  gap: 4px;
+  width: 99px;
+  height: 33px;
+  flex: none;
+  order: 0;
+  align-self: stretch;
+  flex-grow: 0;
+}
+
+.ownerItem {
+  /* Auto layout */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0px;
+  gap: 4px;
+  width: 60px;
+  height: 33px;
+  flex: none;
+  order: 1;
+  flex-grow: 0;
+}
+
+.label {
+  width: auto;
+  height: 13px;
+  font-family: "Geist", sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 10px;
+  line-height: 13px;
+  color: #8a8a8a;
+  flex: none;
+  order: 0;
+  flex-grow: 0;
+}
+
+.value {
+  width: auto;
+  height: 16px;
+  font-family: "Geist", sans-serif;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 16px;
+  color: #ffffff;
+  flex: none;
+  order: 1;
+  flex-grow: 0;
+}
+
+.infoBottom {
+  /* Auto layout */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding-top: 15px;
+  gap: 4px;
+  width: 99px;
+  height: 68px;
+  flex: none;
+  order: 2;
+  flex-grow: 1;
+}
+
+.price {
+  width: 70px;
+  height: 13px;
+  font-family: "Geist", sans-serif;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 10px;
+  line-height: 13px;
+  color: #8a8a8a;
+  flex: none;
+  order: 0;
+  flex-grow: 0;
+  text-align: center;
+}
+
+.buyButton {
+  /* Auto layout */
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 8px 12px;
+  gap: 8px;
+  width: 99px;
+  height: 34px;
+  background: linear-gradient(
+      360deg,
+      #eaeaea 0%,
+      rgba(255, 255, 255, 0.8) 50%,
+      #eaeaea 100%
+    ),
+    linear-gradient(
+      191.75deg,
+      #fff000 0%,
+      #ff0000 33%,
+      #0e00ff 66%,
+      #00ff00 100%
+    ),
+    rgba(0, 255, 0, 0.12);
+  backdrop-filter: blur(12px);
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  flex: none;
+  order: 1;
+  align-self: stretch;
+  flex-grow: 0;
+  transition: opacity 0.2s ease;
+
+  &:hover {
+    opacity: 0.9;
+  }
+
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.buyButtonText {
+  width: 27px;
+  height: 18px;
+  font-family: "Geist", sans-serif;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 125%;
+  color: #000000;
+  flex: none;
+  order: 0;
+  flex-grow: 0;
+}
+
+.priceHidden {
+  width: 70px;
+  height: 13px;
+  font-family: "Geist", sans-serif;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 10px;
+  line-height: 13px;
+  color: #8a8a8a;
+  opacity: 0;
+  flex: none;
+  order: 2;
+  flex-grow: 0;
+}
+
+.arrowSection {
+  /* Auto layout */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 6px;
+  border: 1px solid $border-primary;
+  width: 32px;
+  align-self: stretch;
+  background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.05) 0%,
+      rgba(0, 0, 0, 0) 99.99%,
+      rgba(255, 255, 255, 0) 100%
+    ),
+    rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+}
+
+.arrowButton {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  order: 0;
+  flex-grow: 0;
+  transition: opacity 0.2s ease;
+  transform: rotate(180deg);
+}
+
+.arrowIcon {
+  width: 24px;
+  height: 24px;
+}

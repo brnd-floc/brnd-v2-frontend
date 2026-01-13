@@ -20,7 +20,7 @@ export const AIRDROP_CONTRACT_CONFIG = {
 } as const;
 
 export const PODIUM_CONTRACT_CONFIG = {
-  CONTRACT: "0xe14A1b3f3314De3EBadBc30bFB3a91D4aC49Bd06" as `0x${string}`,
+  CONTRACT: "0x529648D4AC34354F1A37C6fe0f4B6090Ed86fB9e" as `0x${string}`,
   BRND_TOKEN: "0x41Ed0311640A5e489A90940b1c33433501a21B07" as `0x${string}`,
   CHAIN_ID: 8453, // Base mainnet
 } as const;
@@ -515,7 +515,6 @@ export const PODIUM_ABI = [
     name: "ECDSAInvalidSignatureS",
     type: "error",
   },
-  { inputs: [], name: "ERC721EnumerableForbiddenBatchMint", type: "error" },
   {
     inputs: [
       { internalType: "address", name: "sender", type: "address" },
@@ -563,14 +562,6 @@ export const PODIUM_ABI = [
     name: "ERC721NonexistentToken",
     type: "error",
   },
-  {
-    inputs: [
-      { internalType: "address", name: "owner", type: "address" },
-      { internalType: "uint256", name: "index", type: "uint256" },
-    ],
-    name: "ERC721OutOfBoundsIndex",
-    type: "error",
-  },
   { inputs: [], name: "Expired", type: "error" },
   { inputs: [], name: "InsufficientBalance", type: "error" },
   { inputs: [], name: "InvalidInput", type: "error" },
@@ -586,7 +577,7 @@ export const PODIUM_ABI = [
     name: "OwnableUnauthorizedAccount",
     type: "error",
   },
-  { inputs: [], name: "ReentrancyGuard", type: "error" },
+  { inputs: [], name: "ReentrancyGuardReentrantCall", type: "error" },
   { inputs: [], name: "TransferBlocked", type: "error" },
   { inputs: [], name: "Unauthorized", type: "error" },
   {
@@ -654,12 +645,6 @@ export const PODIUM_ABI = [
         internalType: "uint256",
         name: "amount",
         type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "address",
-        name: "wallet",
-        type: "address",
       },
     ],
     name: "FeesClaimed",
@@ -786,12 +771,6 @@ export const PODIUM_ABI = [
         name: "amount",
         type: "uint256",
       },
-      {
-        indexed: false,
-        internalType: "address",
-        name: "wallet",
-        type: "address",
-      },
     ],
     name: "ProceedsClaimed",
     type: "event",
@@ -805,12 +784,6 @@ export const PODIUM_ABI = [
         internalType: "uint256",
         name: "amount",
         type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "address",
-        name: "wallet",
-        type: "address",
       },
     ],
     name: "RoyaltiesClaimed",
@@ -861,7 +834,14 @@ export const PODIUM_ABI = [
   },
   {
     inputs: [],
-    name: "PRICE_INCREMENT",
+    name: "MULTIPLIER_DENOMINATOR",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "PRICE_MULTIPLIER",
     outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
     stateMutability: "view",
     type: "function",
@@ -869,13 +849,6 @@ export const PODIUM_ABI = [
   {
     inputs: [],
     name: "PROTOCOL_FEE_BPS",
-    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "REPEAT_FEE_BPS",
     outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
     stateMutability: "view",
     type: "function",
@@ -924,8 +897,6 @@ export const PODIUM_ABI = [
     inputs: [
       { internalType: "uint256", name: "tokenId", type: "uint256" },
       { internalType: "uint256", name: "buyerFid", type: "uint256" },
-      { internalType: "uint256", name: "deadline", type: "uint256" },
-      { internalType: "bytes", name: "signature", type: "bytes" },
     ],
     name: "buyPodium",
     outputs: [],
@@ -934,7 +905,7 @@ export const PODIUM_ABI = [
   },
   {
     inputs: [{ internalType: "uint256", name: "fid", type: "uint256" }],
-    name: "claimAll",
+    name: "claimBalance",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -952,13 +923,6 @@ export const PODIUM_ABI = [
     type: "function",
   },
   {
-    inputs: [{ internalType: "uint256", name: "fid", type: "uint256" }],
-    name: "claimProceeds",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
     inputs: [
       { internalType: "uint256", name: "tokenId", type: "uint256" },
       { internalType: "uint256", name: "feeAmount", type: "uint256" },
@@ -966,13 +930,6 @@ export const PODIUM_ABI = [
       { internalType: "bytes", name: "signature", type: "bytes" },
     ],
     name: "claimRepeatFees",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [{ internalType: "uint256", name: "fid", type: "uint256" }],
-    name: "claimRoyalties",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -989,16 +946,6 @@ export const PODIUM_ABI = [
     name: "claimableRoyalties",
     outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
     stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      { internalType: "address", name: "token", type: "address" },
-      { internalType: "uint256", name: "amount", type: "uint256" },
-    ],
-    name: "emergencyWithdraw",
-    outputs: [],
-    stateMutability: "nonpayable",
     type: "function",
   },
   {
@@ -1039,44 +986,34 @@ export const PODIUM_ABI = [
     type: "function",
   },
   {
-    inputs: [{ internalType: "uint256", name: "fid", type: "uint256" }],
-    name: "getClaimableBalances",
+    inputs: [{ internalType: "uint256", name: "tokenId", type: "uint256" }],
+    name: "getPodium",
     outputs: [
-      { internalType: "uint256", name: "proceeds", type: "uint256" },
-      { internalType: "uint256", name: "royalties", type: "uint256" },
+      {
+        components: [
+          { internalType: "uint16[3]", name: "brandIds", type: "uint16[3]" },
+          {
+            internalType: "uint256",
+            name: "genesisCreatorFid",
+            type: "uint256",
+          },
+          { internalType: "uint256", name: "ownerFid", type: "uint256" },
+          { internalType: "uint256", name: "claimCount", type: "uint256" },
+          { internalType: "uint256", name: "lastSalePrice", type: "uint256" },
+          { internalType: "uint256", name: "totalFeesEarned", type: "uint256" },
+          { internalType: "uint256", name: "createdAt", type: "uint256" },
+        ],
+        internalType: "struct BRNDPodiumCollectables.PodiumData",
+        name: "",
+        type: "tuple",
+      },
     ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      { internalType: "bytes32", name: "arrangementHash", type: "bytes32" },
-    ],
-    name: "getCurrentPrice",
-    outputs: [{ internalType: "uint256", name: "price", type: "uint256" }],
     stateMutability: "view",
     type: "function",
   },
   {
     inputs: [{ internalType: "uint256", name: "tokenId", type: "uint256" }],
-    name: "getPodium",
-    outputs: [
-      { internalType: "uint16[3]", name: "brandIds", type: "uint16[3]" },
-      { internalType: "uint256", name: "genesisCreatorFid", type: "uint256" },
-      { internalType: "uint256", name: "ownerFid", type: "uint256" },
-      { internalType: "uint256", name: "claimCount", type: "uint256" },
-      { internalType: "uint256", name: "currentPrice", type: "uint256" },
-      { internalType: "uint256", name: "totalFeesEarned", type: "uint256" },
-      { internalType: "uint256", name: "createdAt", type: "uint256" },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      { internalType: "uint16[3]", name: "brandIds", type: "uint16[3]" },
-    ],
-    name: "getTokenIdForArrangement",
+    name: "getPriceByTokenId",
     outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
     stateMutability: "view",
     type: "function",
@@ -1087,15 +1024,6 @@ export const PODIUM_ABI = [
       { internalType: "address", name: "operator", type: "address" },
     ],
     name: "isApprovedForAll",
-    outputs: [{ internalType: "bool", name: "", type: "bool" }],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      { internalType: "uint16[3]", name: "brandIds", type: "uint16[3]" },
-    ],
-    name: "isArrangementMinted",
     outputs: [{ internalType: "bool", name: "", type: "bool" }],
     stateMutability: "view",
     type: "function",
@@ -1220,30 +1148,6 @@ export const PODIUM_ABI = [
     type: "function",
   },
   {
-    inputs: [{ internalType: "uint256", name: "index", type: "uint256" }],
-    name: "tokenByIndex",
-    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      { internalType: "address", name: "owner", type: "address" },
-      { internalType: "uint256", name: "index", type: "uint256" },
-    ],
-    name: "tokenOfOwnerByIndex",
-    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [{ internalType: "uint256", name: "", type: "uint256" }],
-    name: "tokenToArrangement",
-    outputs: [{ internalType: "bytes32", name: "", type: "bytes32" }],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
     inputs: [{ internalType: "uint256", name: "tokenId", type: "uint256" }],
     name: "tokenURI",
     outputs: [{ internalType: "string", name: "", type: "string" }],
@@ -1252,14 +1156,7 @@ export const PODIUM_ABI = [
   },
   {
     inputs: [],
-    name: "totalPodiums",
-    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "totalSupply",
+    name: "totalMinted",
     outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
     stateMutability: "view",
     type: "function",

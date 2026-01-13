@@ -7,7 +7,8 @@ export enum ModalsIds {
   ERROR = 'ERROR',
   BOTTOM_ALERT = 'BOTTOM_ALERT',
   SHARE_BRAND = 'SHARE_BRAND',
-  PERKS = 'PERKS'
+  PERKS = 'PERKS',
+  PODIUM_DETAIL = 'PODIUM_DETAIL'
 }
 
 /**
@@ -18,6 +19,7 @@ export type ModalData = {
   [ModalsIds.BOTTOM_ALERT]: BottomAlertData;
   [ModalsIds.SHARE_BRAND]: ShareBrandModalData;
   [ModalsIds.PERKS]: PerksModalData;
+  [ModalsIds.PODIUM_DETAIL]: PodiumDetailModalData;
 };
 
 /**
@@ -76,3 +78,24 @@ export type BottomAlertData = {
  * Type representing the data structure for the perks modal.
  */
 export type PerksModalData = {};
+
+/**
+ * Type representing the data structure for the podium detail modal.
+ */
+export type PodiumDetailModalData = {
+  brand1?: {
+    id: number;
+    name: string;
+    imageUrl?: string;
+  };
+  brand2?: {
+    id: number;
+    name: string;
+    imageUrl?: string;
+  };
+  brand3?: {
+    id: number;
+    name: string;
+    imageUrl?: string;
+  };
+};

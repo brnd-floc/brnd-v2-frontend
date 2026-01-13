@@ -9,7 +9,7 @@ import {
 } from "wagmi";
 import { readContract } from "wagmi/actions";
 import { config } from "@/shared/config/wagmi";
-import { parseUnits, formatUnits } from "viem";
+import { formatUnits } from "viem";
 
 import {
   PODIUM_CONTRACT_CONFIG,
@@ -31,26 +31,12 @@ export interface ClaimPodiumParams {
   signature: string;
 }
 
-export interface BuyPodiumParams {
-  tokenId: number;
-  buyerFid: number;
-  deadline: number;
-  signature: string;
-}
-
-export interface ClaimRepeatFeesParams {
-  tokenId: number;
-  feeAmount: string;
-  deadline: number;
-  signature: string;
-}
-
 export interface PodiumData {
   brandIds: [number, number, number];
   genesisCreatorFid: number;
   ownerFid: number;
   claimCount: number;
-  currentPrice: string;
+  lastSalePrice: string;
   totalFeesEarned: string;
   createdAt: number;
 }
@@ -68,9 +54,7 @@ export const usePodiumCollectibles = (
   onClaimPodiumSuccess?: (txData: any) => void,
   onBuyPodiumSuccess?: (txData: any) => void,
   onClaimFeesSuccess?: (txData: any) => void,
-  onClaimProceedsSuccess?: (txData: any) => void,
-  onClaimRoyaltiesSuccess?: (txData: any) => void,
-  onClaimAllSuccess?: (txData: any) => void
+  onClaimBalanceSuccess?: (txData: any) => void
 ) => {
   const { address: userAddress, isConnected, chainId } = useAccount();
   const { switchChain } = useSwitchChain();
@@ -92,20 +76,25 @@ export const usePodiumCollectibles = (
     | "claimPodium"
     | "buyPodium"
     | "claimRepeatFees"
-    | "claimProceeds"
-    | "claimRoyalties"
-    | "claimAll"
+    | "claimBalance"
     | null
   >(null);
   const [pendingClaimData, setPendingClaimData] =
     useState<ClaimPodiumParams | null>(null);
-  const [pendingBuyData, setPendingBuyData] = useState<BuyPodiumParams | null>(
+  const [pendingBuyTokenId, setPendingBuyTokenId] = useState<number | null>(
     null
   );
-  const [pendingFeeClaimData, setPendingFeeClaimData] =
-    useState<ClaimRepeatFeesParams | null>(null);
+  const [_pendingFeeClaimData, setPendingFeeClaimData] = useState<{
+    tokenId: number;
+    feeAmount: string;
+    deadline: number;
+    signature: string;
+  } | null>(null);
   const [pendingApprovalAmount, setPendingApprovalAmount] = useState<
     bigint | null
+  >(null);
+  const [pendingOperationType, setPendingOperationType] = useState<
+    "claim" | "buy" | null
   >(null);
 
   // Get FID from auth context
@@ -202,26 +191,6 @@ export const usePodiumCollectibles = (
     [userAddress]
   );
 
-  const getBuyPodiumSignature = useCallback(
-    async (tokenId: number, deadline: number) => {
-      const { getFarcasterToken } = await import("@/shared/utils/auth");
-      getFarcasterToken();
-
-      return await request<{
-        signature: string;
-        price: string;
-      }>(`${BLOCKCHAIN_SERVICE}/podium/buy-signature`, {
-        method: "POST",
-        body: {
-          walletAddress: userAddress,
-          tokenId,
-          deadline,
-        },
-      });
-    },
-    [userAddress]
-  );
-
   const getClaimFeesSignature = useCallback(
     async (tokenId: number, deadline: number) => {
       const { getFarcasterToken } = await import("@/shared/utils/auth");
@@ -264,18 +233,18 @@ export const usePodiumCollectibles = (
     []
   );
 
-  const getCurrentPrice = useCallback(
-    async (arrangementHash: string): Promise<string> => {
+  const getPriceByTokenId = useCallback(
+    async (tokenId: number): Promise<string> => {
       try {
         const price = await readContract(config, {
           address: PODIUM_CONTRACT_CONFIG.CONTRACT,
           abi: BRND_PODIUM_COLLECTABLES_ABI,
-          functionName: "getCurrentPrice",
-          args: [arrangementHash as `0x${string}`],
+          functionName: "getPriceByTokenId",
+          args: [BigInt(tokenId)],
         });
         return formatUnits(price as bigint, 18);
       } catch (error) {
-        console.error("Failed to get current price:", error);
+        console.error("Failed to get price by token ID:", error);
         return "0";
       }
     },
@@ -285,29 +254,31 @@ export const usePodiumCollectibles = (
   const isArrangementMinted = useCallback(
     async (brandIds: [number, number, number]): Promise<boolean> => {
       try {
-        const isMinted = await readContract(config, {
+        const hash = await getArrangementHash(brandIds);
+        const tokenId = await readContract(config, {
           address: PODIUM_CONTRACT_CONFIG.CONTRACT,
           abi: BRND_PODIUM_COLLECTABLES_ABI,
-          functionName: "isArrangementMinted",
-          args: [brandIds],
+          functionName: "arrangementToTokenId",
+          args: [hash as `0x${string}`],
         });
-        return isMinted as boolean;
+        return (tokenId as bigint) > 0n;
       } catch (error) {
         console.error("Failed to check if arrangement is minted:", error);
         return false;
       }
     },
-    []
+    [getArrangementHash]
   );
 
   const getTokenIdForArrangement = useCallback(
     async (brandIds: [number, number, number]): Promise<number> => {
       try {
+        const hash = await getArrangementHash(brandIds);
         const tokenId = await readContract(config, {
           address: PODIUM_CONTRACT_CONFIG.CONTRACT,
           abi: BRND_PODIUM_COLLECTABLES_ABI,
-          functionName: "getTokenIdForArrangement",
-          args: [brandIds],
+          functionName: "arrangementToTokenId",
+          args: [hash as `0x${string}`],
         });
         return Number(tokenId);
       } catch (error) {
@@ -315,7 +286,7 @@ export const usePodiumCollectibles = (
         return 0;
       }
     },
-    []
+    [getArrangementHash]
   );
 
   const getPodium = useCallback(
@@ -328,28 +299,21 @@ export const usePodiumCollectibles = (
           args: [BigInt(tokenId)],
         });
 
-        const [
-          brandIds,
-          genesisCreatorFid,
-          ownerFid,
-          claimCount,
-          currentPrice,
-          totalFeesEarned,
-          createdAt,
-        ] = podium as any;
+        // Contract returns: brandIds, genesisCreatorFid, ownerFid, claimCount, lastSalePrice, totalFeesEarned, createdAt
+        const result = podium as any;
 
         return {
           brandIds: [
-            Number(brandIds[0]),
-            Number(brandIds[1]),
-            Number(brandIds[2]),
+            Number(result.brandIds[0]),
+            Number(result.brandIds[1]),
+            Number(result.brandIds[2]),
           ] as [number, number, number],
-          genesisCreatorFid: Number(genesisCreatorFid),
-          ownerFid: Number(ownerFid),
-          claimCount: Number(claimCount),
-          currentPrice: formatUnits(currentPrice as bigint, 18),
-          totalFeesEarned: formatUnits(totalFeesEarned as bigint, 18),
-          createdAt: Number(createdAt),
+          genesisCreatorFid: Number(result.genesisCreatorFid),
+          ownerFid: Number(result.ownerFid),
+          claimCount: Number(result.claimCount),
+          lastSalePrice: formatUnits(result.lastSalePrice as bigint, 18),
+          totalFeesEarned: formatUnits(result.totalFeesEarned as bigint, 18),
+          createdAt: Number(result.createdAt),
         };
       } catch (error) {
         console.error("Failed to get podium:", error);
@@ -362,18 +326,24 @@ export const usePodiumCollectibles = (
   const getClaimableBalances = useCallback(
     async (fid: number): Promise<ClaimableBalances> => {
       try {
-        const balances = await readContract(config, {
-          address: PODIUM_CONTRACT_CONFIG.CONTRACT,
-          abi: BRND_PODIUM_COLLECTABLES_ABI,
-          functionName: "getClaimableBalances",
-          args: [BigInt(fid)],
-        });
-
-        const [proceeds, royalties] = balances as [bigint, bigint];
+        const [proceeds, royalties] = await Promise.all([
+          readContract(config, {
+            address: PODIUM_CONTRACT_CONFIG.CONTRACT,
+            abi: BRND_PODIUM_COLLECTABLES_ABI,
+            functionName: "claimableProceeds",
+            args: [BigInt(fid)],
+          }),
+          readContract(config, {
+            address: PODIUM_CONTRACT_CONFIG.CONTRACT,
+            abi: BRND_PODIUM_COLLECTABLES_ABI,
+            functionName: "claimableRoyalties",
+            args: [BigInt(fid)],
+          }),
+        ]);
 
         return {
-          proceeds: formatUnits(proceeds, 18),
-          royalties: formatUnits(royalties, 18),
+          proceeds: formatUnits(proceeds as bigint, 18),
+          royalties: formatUnits(royalties as bigint, 18),
         };
       } catch (error) {
         console.error("Failed to get claimable balances:", error);
@@ -383,17 +353,17 @@ export const usePodiumCollectibles = (
     []
   );
 
-  const getTotalPodiums = useCallback(async (): Promise<number> => {
+  const getTotalMinted = useCallback(async (): Promise<number> => {
     try {
       const total = await readContract(config, {
         address: PODIUM_CONTRACT_CONFIG.CONTRACT,
         abi: BRND_PODIUM_COLLECTABLES_ABI,
-        functionName: "totalPodiums",
+        functionName: "totalMinted",
         args: [],
       });
       return Number(total);
     } catch (error) {
-      console.error("Failed to get total podiums:", error);
+      console.error("Failed to get total minted:", error);
       return 0;
     }
   }, []);
@@ -402,7 +372,7 @@ export const usePodiumCollectibles = (
   //                          WRITE FUNCTIONS
   // ============================================================================
 
-  // Claim a new podium (first mint)
+  // Claim a new podium (first mint) - requires signature
   const claimPodium = useCallback(
     async (brandIds: [number, number, number]) => {
       console.log("🏆 [ClaimPodium] Starting claim flow", { brandIds });
@@ -428,7 +398,6 @@ export const usePodiumCollectibles = (
         }
 
         // Backend returns price in wei format (as string like "1000000000000000000000000")
-        // Convert directly to BigInt - don't use parseUnits as it expects BRND units
         const price = BigInt(signatureData.price);
         console.log("💰 [ClaimPodium] Price:", {
           raw: signatureData.price,
@@ -436,25 +405,21 @@ export const usePodiumCollectibles = (
           priceBRND: formatUnits(price, 18),
         });
 
-        // Check BRND balance - brndBalance is already in wei (bigint) from contract
+        // Check BRND balance
         const balance = brndBalance ? (brndBalance as bigint) : 0n;
         console.log("💰 [ClaimPodium] Balance check:", {
-          balanceRaw: brndBalance,
           balanceWei: balance.toString(),
           balanceBRND: formatUnits(balance, 18),
           priceWei: price.toString(),
           priceBRND: formatUnits(price, 18),
-          comparison: `${balance.toString()} < ${price.toString()} = ${
-            balance < price
-          }`,
         });
 
         if (balance < price) {
           const needBRND = formatUnits(price, 18);
           const haveBRND = formatUnits(balance, 18);
-          const errorMsg = `Insufficient BRND balance. Need ${needBRND} BRND, have ${haveBRND} BRND`;
-          console.error("❌ [ClaimPodium] Balance check failed:", errorMsg);
-          throw new Error(errorMsg);
+          throw new Error(
+            `Insufficient BRND balance. Need ${needBRND} BRND, have ${haveBRND} BRND`
+          );
         }
 
         // Check and handle BRND approval
@@ -470,6 +435,7 @@ export const usePodiumCollectibles = (
             signature: signatureData.signature,
           });
           setPendingApprovalAmount(price);
+          setPendingOperationType("claim");
           setLastOperation("approve");
 
           await writeContract({
@@ -524,7 +490,7 @@ export const usePodiumCollectibles = (
     ]
   );
 
-  // Buy an existing podium
+  // Buy an existing podium - NO signature required
   const buyPodium = useCallback(
     async (tokenId: number) => {
       console.log("💰 [BuyPodium] Starting buy flow", { tokenId });
@@ -537,53 +503,45 @@ export const usePodiumCollectibles = (
       }
 
       try {
-        const deadline = Math.floor(Date.now() / 1000) + 3600;
+        // Get price directly from contract
+        console.log("📝 [BuyPodium] Getting price from contract");
+        const priceRaw = await readContract(config, {
+          address: PODIUM_CONTRACT_CONFIG.CONTRACT,
+          abi: BRND_PODIUM_COLLECTABLES_ABI,
+          functionName: "getPriceByTokenId",
+          args: [BigInt(tokenId)],
+        });
 
-        // Get signature from backend
-        console.log("📝 [BuyPodium] Requesting signature from backend");
-        const signatureData = await getBuyPodiumSignature(tokenId, deadline);
-
-        // Backend returns price in wei format (as string like "2000000000000000000000000")
-        // Convert directly to BigInt - don't use parseUnits as it expects BRND units
-        const price = BigInt(signatureData.price);
+        const price = priceRaw as bigint;
         console.log("💰 [BuyPodium] Price:", {
-          raw: signatureData.price,
           priceWei: price.toString(),
           priceBRND: formatUnits(price, 18),
         });
 
-        // Check BRND balance - brndBalance is already in wei (bigint) from contract
+        // Check BRND balance
         const balance = brndBalance ? (brndBalance as bigint) : 0n;
         console.log("💰 [BuyPodium] Balance check:", {
-          balanceRaw: brndBalance,
           balanceWei: balance.toString(),
           balanceBRND: formatUnits(balance, 18),
           priceWei: price.toString(),
           priceBRND: formatUnits(price, 18),
-          comparison: `${balance.toString()} < ${price.toString()} = ${
-            balance < price
-          }`,
         });
 
         if (balance < price) {
           const needBRND = formatUnits(price, 18);
           const haveBRND = formatUnits(balance, 18);
-          const errorMsg = `Insufficient BRND balance. Need ${needBRND} BRND, have ${haveBRND} BRND`;
-          console.error("❌ [BuyPodium] Balance check failed:", errorMsg);
-          throw new Error(errorMsg);
+          throw new Error(
+            `Insufficient BRND balance. Need ${needBRND} BRND, have ${haveBRND} BRND`
+          );
         }
 
         // Check and handle BRND approval
         const allowance = (brndAllowance as bigint) || 0n;
         if (allowance < price) {
           console.log("⚠️ [BuyPodium] Insufficient allowance, approval needed");
-          setPendingBuyData({
-            tokenId,
-            buyerFid: userFid,
-            deadline,
-            signature: signatureData.signature,
-          });
+          setPendingBuyTokenId(tokenId);
           setPendingApprovalAmount(price);
+          setPendingOperationType("buy");
           setLastOperation("approve");
 
           await writeContract({
@@ -599,44 +557,34 @@ export const usePodiumCollectibles = (
         // Approval is sufficient, proceed with buy
         console.log("✅ [BuyPodium] Allowance sufficient, proceeding with buy");
         setLastOperation("buyPodium");
-        setPendingBuyData({
-          tokenId,
-          buyerFid: userFid,
-          deadline,
-          signature: signatureData.signature,
-        });
+        setPendingBuyTokenId(tokenId);
 
+        // Contract signature: buyPodium(uint256 tokenId, uint256 buyerFid)
         await writeContract({
           address: PODIUM_CONTRACT_CONFIG.CONTRACT,
           abi: BRND_PODIUM_COLLECTABLES_ABI,
           functionName: "buyPodium",
-          args: [
-            BigInt(tokenId),
-            BigInt(userFid),
-            BigInt(deadline),
-            signatureData.signature as `0x${string}`,
-          ],
+          args: [BigInt(tokenId), BigInt(userFid)],
           chainId: PODIUM_CONTRACT_CONFIG.CHAIN_ID,
         });
       } catch (error: any) {
         console.error("❌ [BuyPodium] Buy failed:", error);
         setError(error.message || "Buy podium failed");
         setLastOperation(null);
-        setPendingBuyData(null);
+        setPendingBuyTokenId(null);
       }
     },
     [
       userAddress,
       userFid,
       switchToBase,
-      getBuyPodiumSignature,
       brndBalance,
       brndAllowance,
       writeContract,
     ]
   );
 
-  // Claim repeat fees
+  // Claim repeat fees - requires signature
   const claimRepeatFees = useCallback(
     async (tokenId: number) => {
       console.log("💵 [ClaimFees] Starting claim fees flow", { tokenId });
@@ -655,12 +603,16 @@ export const usePodiumCollectibles = (
         console.log("📝 [ClaimFees] Requesting signature from backend");
         const signatureData = await getClaimFeesSignature(tokenId, deadline);
 
-        const feeAmount = parseUnits(signatureData.feeAmount, 18);
+        const feeAmount = BigInt(signatureData.feeAmount);
         console.log(
           "💰 [ClaimFees] Fee amount:",
           formatUnits(feeAmount, 18),
           "BRND"
         );
+
+        if (feeAmount === 0n) {
+          throw new Error("No fees available to claim");
+        }
 
         setLastOperation("claimRepeatFees");
         setPendingFeeClaimData({
@@ -692,9 +644,9 @@ export const usePodiumCollectibles = (
     [userAddress, userFid, switchToBase, getClaimFeesSignature, writeContract]
   );
 
-  // Claim proceeds (from sales)
-  const claimProceeds = useCallback(async () => {
-    console.log("💵 [ClaimProceeds] Starting claim proceeds flow");
+  // Claim balance (proceeds + royalties combined)
+  const claimBalance = useCallback(async () => {
+    console.log("💵 [ClaimBalance] Starting claim balance flow");
     setError(null);
     await switchToBase();
 
@@ -704,77 +656,37 @@ export const usePodiumCollectibles = (
     }
 
     try {
-      setLastOperation("claimProceeds");
+      // Check if there's anything to claim
+      const balances = await getClaimableBalances(userFid);
+      const totalClaimable =
+        parseFloat(balances.proceeds) + parseFloat(balances.royalties);
 
+      if (totalClaimable === 0) {
+        throw new Error("Nothing to claim");
+      }
+
+      console.log("💰 [ClaimBalance] Claimable amounts:", {
+        proceeds: balances.proceeds,
+        royalties: balances.royalties,
+        total: totalClaimable,
+      });
+
+      setLastOperation("claimBalance");
+
+      // Contract signature: claimBalance(uint256 fid)
       await writeContract({
         address: PODIUM_CONTRACT_CONFIG.CONTRACT,
         abi: BRND_PODIUM_COLLECTABLES_ABI,
-        functionName: "claimProceeds",
+        functionName: "claimBalance",
         args: [BigInt(userFid)],
         chainId: PODIUM_CONTRACT_CONFIG.CHAIN_ID,
       });
     } catch (error: any) {
-      console.error("❌ [ClaimProceeds] Claim proceeds failed:", error);
-      setError(error.message || "Claim proceeds failed");
+      console.error("❌ [ClaimBalance] Claim balance failed:", error);
+      setError(error.message || "Claim balance failed");
       setLastOperation(null);
     }
-  }, [userAddress, userFid, switchToBase, writeContract]);
-
-  // Claim royalties (genesis creator)
-  const claimRoyalties = useCallback(async () => {
-    console.log("💵 [ClaimRoyalties] Starting claim royalties flow");
-    setError(null);
-    await switchToBase();
-
-    if (!userAddress || !userFid) {
-      setError("Wallet not connected or user not authenticated");
-      return;
-    }
-
-    try {
-      setLastOperation("claimRoyalties");
-
-      await writeContract({
-        address: PODIUM_CONTRACT_CONFIG.CONTRACT,
-        abi: BRND_PODIUM_COLLECTABLES_ABI,
-        functionName: "claimRoyalties",
-        args: [BigInt(userFid)],
-        chainId: PODIUM_CONTRACT_CONFIG.CHAIN_ID,
-      });
-    } catch (error: any) {
-      console.error("❌ [ClaimRoyalties] Claim royalties failed:", error);
-      setError(error.message || "Claim royalties failed");
-      setLastOperation(null);
-    }
-  }, [userAddress, userFid, switchToBase, writeContract]);
-
-  // Claim all (proceeds + royalties)
-  const claimAll = useCallback(async () => {
-    console.log("💵 [ClaimAll] Starting claim all flow");
-    setError(null);
-    await switchToBase();
-
-    if (!userAddress || !userFid) {
-      setError("Wallet not connected or user not authenticated");
-      return;
-    }
-
-    try {
-      setLastOperation("claimAll");
-
-      await writeContract({
-        address: PODIUM_CONTRACT_CONFIG.CONTRACT,
-        abi: BRND_PODIUM_COLLECTABLES_ABI,
-        functionName: "claimAll",
-        args: [BigInt(userFid)],
-        chainId: PODIUM_CONTRACT_CONFIG.CHAIN_ID,
-      });
-    } catch (error: any) {
-      console.error("❌ [ClaimAll] Claim all failed:", error);
-      setError(error.message || "Claim all failed");
-      setLastOperation(null);
-    }
-  }, [userAddress, userFid, switchToBase, writeContract]);
+  }, [userAddress, userFid, switchToBase, getClaimableBalances, writeContract]);
 
   // ============================================================================
   //                          TRANSACTION HANDLERS
@@ -800,10 +712,10 @@ export const usePodiumCollectibles = (
         // Wait a bit for allowance to update
         setTimeout(async () => {
           try {
-            // Retry the pending operation
-            if (pendingClaimData) {
+            if (pendingOperationType === "claim" && pendingClaimData) {
               console.log("🔄 [Approve] Auto-retrying claim after approval");
               setPendingApprovalAmount(null);
+              setPendingOperationType(null);
               setLastOperation("claimPodium");
 
               await writeContract({
@@ -818,34 +730,36 @@ export const usePodiumCollectibles = (
                 ],
                 chainId: PODIUM_CONTRACT_CONFIG.CHAIN_ID,
               });
-            } else if (pendingBuyData) {
+            } else if (
+              pendingOperationType === "buy" &&
+              pendingBuyTokenId !== null &&
+              userFid
+            ) {
               console.log("🔄 [Approve] Auto-retrying buy after approval");
               setPendingApprovalAmount(null);
+              setPendingOperationType(null);
               setLastOperation("buyPodium");
 
               await writeContract({
                 address: PODIUM_CONTRACT_CONFIG.CONTRACT,
                 abi: BRND_PODIUM_COLLECTABLES_ABI,
                 functionName: "buyPodium",
-                args: [
-                  BigInt(pendingBuyData.tokenId),
-                  BigInt(pendingBuyData.buyerFid),
-                  BigInt(pendingBuyData.deadline),
-                  pendingBuyData.signature as `0x${string}`,
-                ],
+                args: [BigInt(pendingBuyTokenId), BigInt(userFid)],
                 chainId: PODIUM_CONTRACT_CONFIG.CHAIN_ID,
               });
             }
           } catch (error) {
             console.error("❌ [Approve] Auto-retry failed:", error);
             setPendingClaimData(null);
-            setPendingBuyData(null);
+            setPendingBuyTokenId(null);
             setPendingApprovalAmount(null);
+            setPendingOperationType(null);
           }
         }, 1000);
       } catch (error: any) {
         setError("Failed to proceed after approval");
         setPendingApprovalAmount(null);
+        setPendingOperationType(null);
         setLastOperation(null);
       }
     };
@@ -855,17 +769,24 @@ export const usePodiumCollectibles = (
     isConfirmed,
     receipt,
     pendingApprovalAmount,
+    pendingOperationType,
     userAddress,
+    userFid,
     writeContract,
     lastOperation,
     pendingClaimData,
-    pendingBuyData,
+    pendingBuyTokenId,
     refetchAllowance,
   ]);
 
   // Handle transaction success
   useEffect(() => {
-    if (isConfirmed && receipt && lastOperation) {
+    if (
+      isConfirmed &&
+      receipt &&
+      lastOperation &&
+      lastOperation !== "approve"
+    ) {
       console.log("🎉 [Transaction] Transaction confirmed", {
         operation: lastOperation,
         txHash: receipt.transactionHash,
@@ -890,25 +811,20 @@ export const usePodiumCollectibles = (
           break;
         case "buyPodium":
           onBuyPodiumSuccess?.(txData);
-          setPendingBuyData(null);
+          setPendingBuyTokenId(null);
           break;
         case "claimRepeatFees":
           onClaimFeesSuccess?.(txData);
           setPendingFeeClaimData(null);
           break;
-        case "claimProceeds":
-          onClaimProceedsSuccess?.(txData);
-          break;
-        case "claimRoyalties":
-          onClaimRoyaltiesSuccess?.(txData);
-          break;
-        case "claimAll":
-          onClaimAllSuccess?.(txData);
+        case "claimBalance":
+          onClaimBalanceSuccess?.(txData);
           break;
       }
 
       setLastOperation(null);
       setPendingApprovalAmount(null);
+      setPendingOperationType(null);
     }
   }, [
     isConfirmed,
@@ -917,9 +833,7 @@ export const usePodiumCollectibles = (
     onClaimPodiumSuccess,
     onBuyPodiumSuccess,
     onClaimFeesSuccess,
-    onClaimProceedsSuccess,
-    onClaimRoyaltiesSuccess,
-    onClaimAllSuccess,
+    onClaimBalanceSuccess,
     refetchBrndBalance,
     refetchAllowance,
   ]);
@@ -930,16 +844,16 @@ export const usePodiumCollectibles = (
       console.error("❌ [Transaction] Transaction failed", {
         operation: lastOperation,
         error: writeError.message,
-        hasPendingFeeClaim: !!pendingFeeClaimData,
       });
       setLastOperation(null);
       setError(writeError.message || "Transaction failed");
       setPendingClaimData(null);
-      setPendingBuyData(null);
+      setPendingBuyTokenId(null);
       setPendingFeeClaimData(null);
       setPendingApprovalAmount(null);
+      setPendingOperationType(null);
     }
-  }, [writeError, lastOperation, pendingFeeClaimData]);
+  }, [writeError, lastOperation]);
 
   // ============================================================================
   //                          RETURN
@@ -969,9 +883,7 @@ export const usePodiumCollectibles = (
     isClaimingPodium: lastOperation === "claimPodium",
     isBuyingPodium: lastOperation === "buyPodium",
     isClaimingFees: lastOperation === "claimRepeatFees",
-    isClaimingProceeds: lastOperation === "claimProceeds",
-    isClaimingRoyalties: lastOperation === "claimRoyalties",
-    isClaimingAll: lastOperation === "claimAll",
+    isClaimingBalance: lastOperation === "claimBalance",
 
     // Loading states
     isLoadingBrndBalance,
@@ -981,18 +893,16 @@ export const usePodiumCollectibles = (
     claimPodium,
     buyPodium,
     claimRepeatFees,
-    claimProceeds,
-    claimRoyalties,
-    claimAll,
+    claimBalance,
 
     // View functions
     getArrangementHash,
-    getCurrentPrice,
+    getPriceByTokenId,
     isArrangementMinted,
     getTokenIdForArrangement,
     getPodium,
     getClaimableBalances,
-    getTotalPodiums,
+    getTotalMinted,
 
     // Refresh functions
     refreshData: () => {

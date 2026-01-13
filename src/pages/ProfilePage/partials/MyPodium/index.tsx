@@ -14,6 +14,7 @@ import { useAuth } from "@/shared/hooks/auth";
 // Components
 import BrandCard from "@/components/cards/BrandCard";
 import Typography from "@/components/Typography";
+import IndividualPodium from "@/shared/components/IndividualPodium";
 
 // Utils
 import { getBrandScoreVariation } from "@/shared/utils/brand";
@@ -49,15 +50,13 @@ function MyPodium() {
     isConfirming,
     error: contractError,
     refreshData,
-  } = usePodiumCollectibles(
-    (txData) => {
-      // Claim success callback
-      console.log("✅ Podium claimed successfully!", txData);
-      setProcessingPodiumId(null);
-      refreshData();
-      refetch();
-    }
-  );
+  } = usePodiumCollectibles((txData) => {
+    // Claim success callback
+    console.log("✅ Podium claimed successfully!", txData);
+    setProcessingPodiumId(null);
+    refreshData();
+    refetch();
+  });
 
   useEffect(() => {
     refetch();
@@ -180,103 +179,32 @@ function MyPodium() {
       {history && (
         <div className={styles.view} onScroll={handleScrollList}>
           <ul className={styles.list}>
-            {Object.keys(history.data).map((date, index) => (
-              <li
-                key={`--podium-key-${index.toString()}`}
-                className={styles.item}
-              >
-                <div className={styles.brands}>
-                  <BrandCard
-                    key={"--podium-key-1"}
-                    score={history.data[date].brand1.score}
-                    variation={getBrandScoreVariation(
-                      history.data[date].brand1.stateScore
-                    )}
-                    name={history.data[date].brand1.name}
-                    photoUrl={history.data[date].brand1.imageUrl}
-                    onClick={() =>
-                      navigate(`/brand/${history.data[date].brand1.id}`)
-                    }
+            {Object.keys(history.data).map((date, index) => {
+              const podiumData = history.data[date];
+              return (
+                <li
+                  key={`--podium-key-${index.toString()}`}
+                  className={styles.item}
+                >
+                  <IndividualPodium
+                    brand1={podiumData.brand1}
+                    brand2={podiumData.brand2}
+                    brand3={podiumData.brand3}
+                    creator="@jpfraneto"
+                    owner="@esdotge"
+                    price="10000 $BRND"
+                    onBuyClick={() => {
+                      const brandIds: [number, number, number] = [
+                        podiumData.brand1.id,
+                        podiumData.brand2.id,
+                        podiumData.brand3.id,
+                      ];
+                      handleClaimPodium(podiumData.id, brandIds);
+                    }}
                   />
-                  <BrandCard
-                    key={"--podium-key-2"}
-                    score={history.data[date].brand2.score}
-                    variation={getBrandScoreVariation(
-                      history.data[date].brand2.stateScore
-                    )}
-                    name={history.data[date].brand2.name}
-                    photoUrl={history.data[date].brand2.imageUrl}
-                    onClick={() =>
-                      navigate(`/brand/${history.data[date].brand2.id}`)
-                    }
-                  />
-                  <BrandCard
-                    key={"--podium-key-3"}
-                    score={history.data[date].brand3.score}
-                    variation={getBrandScoreVariation(
-                      history.data[date].brand3.stateScore
-                    )}
-                    name={history.data[date].brand3.name}
-                    photoUrl={history.data[date].brand3.imageUrl}
-                    onClick={() =>
-                      navigate(`/brand/${history.data[date].brand3.id}`)
-                    }
-                  />
-                </div>
-                <div className={styles.data}>
-                  <Typography
-                    variant={"geist"}
-                    size={14}
-                    lineHeight={14}
-                    weight={"medium"}
-                  >
-                    {formatDistanceToNow(new Date(date).getTime(), {
-                      addSuffix: true,
-                    }).includes("hour")
-                      ? "today"
-                      : formatDistanceToNow(new Date(date).getTime(), {
-                          addSuffix: true,
-                        })}
-                  </Typography>
-                  {/* Claim Podium Button */}
-                  <div className={styles.claimButton}>
-                    <Button
-                      caption={
-                        processingPodiumId === history.data[date].id &&
-                        isClaimingPodium
-                          ? "Claiming..."
-                          : isApproving
-                          ? "Approving..."
-                          : isConfirming
-                          ? "Confirming..."
-                          : "Claim Podium"
-                      }
-                      variant="primary"
-                      disabled={
-                        processingPodiumId === history.data[date].id ||
-                        isPending ||
-                        isConfirming ||
-                        isApproving
-                      }
-                      onClick={() => {
-                        const brandIds: [number, number, number] = [
-                          history.data[date].brand1.id,
-                          history.data[date].brand2.id,
-                          history.data[date].brand3.id,
-                        ];
-                        handleClaimPodium(history.data[date].id, brandIds);
-                      }}
-                    />
-                    {contractError &&
-                      processingPodiumId === history.data[date].id && (
-                        <Typography size={12} className={styles.errorText}>
-                          {contractError}
-                        </Typography>
-                      )}
-                  </div>
-                </div>
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
 
           {/* Loading indicator for pagination */}

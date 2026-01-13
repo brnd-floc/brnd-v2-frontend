@@ -1,0 +1,458 @@
+@import "@/styles/index.scss";
+
+.container {
+  background: #0a0b0d;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background: linear-gradient(
+    45deg,
+    #ff9533 9.34%,
+    #ff0000 36.21%,
+    #0c00ff 63.09%,
+    #00ff00 90.78%
+  );
+  border: 1px solid #2f2f2f;
+}
+
+.header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  position: relative;
+}
+
+.closeButton {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  transition: opacity 0.2s ease;
+
+  &:hover {
+    opacity: 0.7;
+  }
+}
+
+.headerCenter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.headerSubtitle {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+}
+
+.verifiedBadge {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: linear-gradient(
+    88.53deg,
+    #ff9533 9.34%,
+    #ff0000 36.21%,
+    #0c00ff 63.09%,
+    #00ff00 90.78%
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: bold;
+}
+
+.headerRight {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+
+.ellipsisButton {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #ffffff;
+  font-size: 20px;
+  padding: 4px;
+  line-height: 1;
+}
+
+.podiumDisplay {
+  padding: 24px 24px 40px 24px;
+  border-radius: 12px;
+  background: #110f15;
+  margin: 20px;
+  position: relative;
+}
+
+.closePodiumButton {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  transition: opacity 0.2s ease;
+  z-index: 10;
+
+  &:hover {
+    opacity: 0.7;
+  }
+
+  &:active {
+    opacity: 0.5;
+  }
+}
+
+.podiumContainer {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 16px;
+  padding: 20px 0 40px 0;
+  position: relative;
+}
+
+.podiumItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: fit-content;
+  justify-content: flex-start;
+  position: relative;
+  border-radius: 12px;
+  border: 1px solid white;
+}
+
+.firstPlace {
+  width: 100px;
+  transform: translateY(-25px);
+}
+
+.thirdPlace {
+  transform: translateY(25px);
+}
+
+.imagePlaceholder,
+.brandImage {
+  width: 88px;
+  aspect-ratio: 1;
+  border-radius: 12px;
+
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+.brandImage {
+  display: block;
+}
+
+.numberContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 60px;
+}
+
+.numberIcon {
+  width: 60px;
+  height: 60px;
+}
+
+.podiumLabel {
+  color: #ffffff;
+  text-align: center;
+  font-weight: 600;
+  position: absolute;
+  bottom: -55px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  width: 100%;
+}
+
+/* Compensate for item transforms to align all labels at same bottom */
+.podiumItem.firstPlace .podiumLabel {
+  bottom: -80px; /* Item moved up 25px, so label needs to be 25px lower */
+}
+
+.podiumItem.thirdPlace .podiumLabel {
+  bottom: -30px; /* Item moved down 25px, so label needs to be 25px higher */
+}
+
+.valueBenefits {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  padding: 0 24px;
+  margin-bottom: 24px;
+}
+
+.valueBox,
+.benefitsBox {
+  flex: 1;
+  background: rgba(245, 245, 245, 0.1);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+}
+
+.boxLabel {
+  position: absolute;
+  top: 8px;
+  left: 12px;
+  color: #ffffff;
+  text-transform: uppercase;
+  font-size: 10px;
+}
+
+.podiumInfo {
+  padding: 20px;
+  margin: 24px auto 0 auto;
+  background: rgba(245, 245, 245, 0.1);
+  width: 90%;
+  border-radius: 12px;
+  border: 1px solid white;
+}
+
+.podiumInfoHeader {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.podiumId {
+  color: #ffffff;
+}
+
+.podiumInfoMeta {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.nftNumber {
+  color: #ffffff;
+}
+
+.description {
+  color: #ffffff;
+  line-height: 20px;
+}
+
+.tabs {
+  display: flex;
+  flex-direction: row;
+  position: relative;
+  padding: 0;
+  margin-top: 24px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid white;
+}
+
+.tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 12px 0;
+  color: #ffffff;
+  transition: color 0.2s ease;
+  position: relative;
+  text-transform: uppercase;
+
+  &.active {
+    color: #ffffff;
+  }
+}
+
+.tabIndicator {
+  position: absolute;
+  bottom: -1px;
+  height: 2px;
+  background: #00ff00;
+  border-radius: 2px;
+}
+
+.tabContent {
+  padding: 0;
+  margin-bottom: 24px;
+  min-height: 200px;
+}
+
+.traitsContent {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.inputField {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inputLabel {
+  color: #ffffff;
+  text-transform: uppercase;
+}
+
+.inputValue {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid white;
+  border-radius: 8px;
+  padding: 12px;
+  color: #ffffff;
+  min-height: 48px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+}
+
+.traitBoxes {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.traitBox {
+  flex: 1;
+  background: linear-gradient(135deg, #8a60e3 0%, #4ecdc4 100%);
+  border-radius: 12px;
+  border: 1px solid white;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  min-height: 80px;
+  color: #ffffff;
+
+  > *:first-child {
+    align-self: flex-start;
+  }
+
+  > *:last-child {
+    align-self: flex-start;
+    margin-top: auto;
+  }
+}
+
+.activityContent {
+  width: 100%;
+}
+
+.activityTable {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tableHeader {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  padding-bottom: 8px;
+  color: #ffffff;
+}
+
+.tableRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  padding: 8px 0;
+  color: #ffffff;
+}
+
+.buySection {
+  padding: 24px;
+  border-top: 1px solid #2f2f2f;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.buySectionContent {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-around;
+  width: 100%;
+  padding: 0 24px;
+}
+
+.buyLabel {
+  color: #ffffff;
+  text-transform: uppercase;
+}
+
+.buyPrice {
+  color: #ffffff;
+}
+
+.buyNowButton {
+  /* Auto layout */
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 8px 12px;
+  margin: 0 auto;
+  gap: 8px;
+  width: 100%;
+  height: 34px;
+  background: linear-gradient(
+      360deg,
+      #eaeaea 0%,
+      rgba(255, 255, 255, 0.8) 50%,
+      #eaeaea 100%
+    ),
+    rgba(0, 255, 0, 0.12);
+  border-radius: 4px;
+  border: none;
+  /* Inside auto layout */
+  flex: none;
+  order: 1;
+  align-self: stretch;
+  flex-grow: 0;
+}
