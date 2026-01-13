@@ -44,7 +44,7 @@ function MyPodium() {
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
     const calc = scrollTop + clientHeight + 50;
     if (calc >= scrollHeight && !isFetching && history) {
-      const totalItems = Object.keys(history.data).length;
+      const totalItems = history.data.length;
       if (totalItems < history.count) {
         setPageId((prev) => prev + 1);
       }
@@ -84,7 +84,7 @@ function MyPodium() {
   }
 
   // Empty state - no podiums yet
-  if (history && Object.keys(history.data).length === 0) {
+  if (history && history.data.length === 0) {
     return (
       <div className={styles.emptyLayout}>
         <div className={styles.empty}>
@@ -111,47 +111,32 @@ function MyPodium() {
       {history && (
         <div className={styles.view} onScroll={handleScrollList}>
           <ul className={styles.list}>
-            {Object.keys(history.data).map((date, index) => (
-              <li
-                key={`--podium-key-${index.toString()}`}
-                className={styles.item}
-              >
+            {history.data.map((vote, _) => (
+              <li key={`--podium-key-${vote.id}`} className={styles.item}>
                 <div className={styles.brands}>
                   <BrandCard
                     key={"--podium-key-1"}
-                    score={history.data[date].brand1.score}
-                    variation={getBrandScoreVariation(
-                      history.data[date].brand1.stateScore
-                    )}
-                    name={history.data[date].brand1.name}
-                    photoUrl={history.data[date].brand1.imageUrl}
-                    onClick={() =>
-                      navigate(`/brand/${history.data[date].brand1.id}`)
-                    }
+                    score={vote.brand1.score}
+                    variation={getBrandScoreVariation(vote.brand1.stateScore)}
+                    name={vote.brand1.name}
+                    photoUrl={vote.brand1.imageUrl}
+                    onClick={() => navigate(`/brand/${vote.brand1.id}`)}
                   />
                   <BrandCard
                     key={"--podium-key-2"}
-                    score={history.data[date].brand2.score}
-                    variation={getBrandScoreVariation(
-                      history.data[date].brand2.stateScore
-                    )}
-                    name={history.data[date].brand2.name}
-                    photoUrl={history.data[date].brand2.imageUrl}
-                    onClick={() =>
-                      navigate(`/brand/${history.data[date].brand2.id}`)
-                    }
+                    score={vote.brand2.score}
+                    variation={getBrandScoreVariation(vote.brand2.stateScore)}
+                    name={vote.brand2.name}
+                    photoUrl={vote.brand2.imageUrl}
+                    onClick={() => navigate(`/brand/${vote.brand2.id}`)}
                   />
                   <BrandCard
                     key={"--podium-key-3"}
-                    score={history.data[date].brand3.score}
-                    variation={getBrandScoreVariation(
-                      history.data[date].brand3.stateScore
-                    )}
-                    name={history.data[date].brand3.name}
-                    photoUrl={history.data[date].brand3.imageUrl}
-                    onClick={() =>
-                      navigate(`/brand/${history.data[date].brand3.id}`)
-                    }
+                    score={vote.brand3.score}
+                    variation={getBrandScoreVariation(vote.brand3.stateScore)}
+                    name={vote.brand3.name}
+                    photoUrl={vote.brand3.imageUrl}
+                    onClick={() => navigate(`/brand/${vote.brand3.id}`)}
                   />
                 </div>
                 <div className={styles.data}>
@@ -161,11 +146,11 @@ function MyPodium() {
                     lineHeight={14}
                     weight={"medium"}
                   >
-                    {formatDistanceToNow(new Date(date).getTime(), {
+                    {formatDistanceToNow(new Date(vote.date).getTime(), {
                       addSuffix: true,
                     }).includes("hour")
                       ? "today"
-                      : formatDistanceToNow(new Date(date).getTime(), {
+                      : formatDistanceToNow(new Date(vote.date).getTime(), {
                           addSuffix: true,
                         })}
                   </Typography>

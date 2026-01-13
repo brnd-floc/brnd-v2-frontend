@@ -8,7 +8,7 @@ import { useQuery } from "@tanstack/react-query";
  * Uses authentication to identify the user automatically.
  */
 export const useMyVoteHistory = (pageId: number = 1, limit: number = 15) => {
-  const votesRef = useRef<Record<string, UserVoteHistory>>({});
+  const votesRef = useRef<UserVoteHistory[]>([]);
   const countRef = useRef<number>(0);
 
   const result = useQuery({
@@ -18,18 +18,18 @@ export const useMyVoteHistory = (pageId: number = 1, limit: number = 15) => {
     staleTime: 2 * 60 * 1000, // Consider data fresh for 2 minutes
     // No need for enabled: false since we always want to fetch when user is authenticated
   });
-  console.log("THE MY VOTE HISTORY IS: ", result.data);
 
   if (!result.isError && result.data) {
-    const votes = result.data.data || {};
+    const votes = result.data.data || [];
 
     if (pageId === 1) {
-      votesRef.current = votes;
+      votesRef.current = votes as unknown as UserVoteHistory[];
     } else {
-      votesRef.current = {
+      // Append new votes to existing ones for pagination
+      votesRef.current = [
         ...votesRef.current,
-        ...votes,
-      };
+        ...(votes as unknown as UserVoteHistory[]),
+      ];
     }
     countRef.current = result.data.count ?? 0;
   }

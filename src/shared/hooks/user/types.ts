@@ -84,15 +84,20 @@ export enum UserRoleEnum {
 }
 
 export interface UserVoteHistory {
-  length: number;
-  map(
-    arg0: (brand: any, index: any) => import("react/jsx-runtime").JSX.Element
-  ): import("react").ReactNode;
   id: string;
   date: string;
   brand1: Brand;
   brand2: Brand;
   brand3: Brand;
+  isCollectible: boolean;
+  collectibleTokenId: number | null;
+  collectiblePrice: string | null;
+  collectibleClaimCount: number;
+  collectibleGenesisCreatorFid: number | null;
+  collectibleGenesisCreatorUsername: string | null;
+  collectibleOwnerFid: number | null;
+  collectibleOwnerUsername: string | null;
+  collectibleTotalFeesEarned: string;
 }
 
 export interface UserVote {
