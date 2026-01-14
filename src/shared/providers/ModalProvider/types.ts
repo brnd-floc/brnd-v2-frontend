@@ -1,3 +1,4 @@
+import { User } from "@/shared/hooks/user";
 import { Brand } from "../../hooks/brands";
 import { CollectibleData, PodiumBrand } from "../../types/collectibles";
 
@@ -84,6 +85,8 @@ export type PerksModalData = {};
  * Type representing the data structure for the podium detail modal.
  */
 export type PodiumDetailModalData = {
+  user?: User;
+  isLastVoteForCombination?: boolean;
   brand1: PodiumBrand;
   brand2: PodiumBrand;
   brand3: PodiumBrand;

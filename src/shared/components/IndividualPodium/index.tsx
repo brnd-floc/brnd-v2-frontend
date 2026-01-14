@@ -58,7 +58,7 @@ const IndividualPodium: React.FC<IndividualPodiumProps> = ({
 
   const isMinted = collectibleData.isCollectible;
   const displayPrice = `${formatPrice(collectibleData.price)} $BRND`;
-  const creator = collectibleData.genesisCreatorUsername;
+  // const creator = collectibleData.genesisCreatorUsername;
   const owner = collectibleData.ownerUsername;
 
   // Determine mintability state
@@ -76,6 +76,7 @@ const IndividualPodium: React.FC<IndividualPodiumProps> = ({
       brand1,
       brand2,
       brand3,
+      user,
       collectibleData,
       isLastVoteForCombination,
     });
