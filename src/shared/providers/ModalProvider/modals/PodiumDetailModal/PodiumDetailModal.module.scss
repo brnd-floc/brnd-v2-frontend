@@ -488,23 +488,88 @@
 .activityTable {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 0;
 }
 
 .tableHeader {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  gap: 16px;
-  padding-bottom: 8px;
-  color: #ffffff;
+  gap: 8px;
+  padding: 0 0 12px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.headerLabel {
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  &:nth-child(2) {
+    text-align: center;
+  }
+
+  &:nth-child(3) {
+    text-align: right;
+  }
+}
+
+.tableBody {
+  display: flex;
+  flex-direction: column;
 }
 
 .tableRow {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  gap: 16px;
-  padding: 8px 0;
+  gap: 8px;
+  padding: 16px 0;
   color: #ffffff;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.eventCell {
+  color: #ffffff;
+}
+
+.priceCell {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px;
+  color: #ffffff;
+}
+
+.priceSuffix {
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+}
+
+.fromCell {
+  color: rgba(255, 255, 255, 0.7);
+  text-align: right;
+}
+
+.loadingActivity {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 32px 0;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.emptyActivity {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 0;
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .buySection {
@@ -591,4 +656,29 @@
   order: 1;
   align-self: stretch;
   flex-grow: 0;
+}
+
+.ownedButton {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: #ffffff;
+}
+
+.notMintableButton {
+  background: rgba(138, 138, 138, 0.3);
+  border: 1px solid rgba(138, 138, 138, 0.5);
+  color: #ffffff;
+}
+
+.spinner {
+  animation: spin 0.8s linear infinite;
+  color: currentColor;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }

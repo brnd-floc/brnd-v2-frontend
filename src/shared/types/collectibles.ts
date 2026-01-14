@@ -22,6 +22,7 @@ export interface PodiumDetailModalData {
   brand2: PodiumBrand;
   brand3: PodiumBrand;
   collectibleData: CollectibleData;
+  isLastVoteForCombination?: boolean;
 }
 
 export interface VoteHistoryItem {
@@ -42,10 +43,17 @@ export interface VoteHistoryItem {
   collectibleTotalFeesEarned: string;
 }
 
+export type ActivityEventType =
+  | "mint"
+  | "sale"
+  | "transfer"
+  | "listing"
+  | "item_offer";
+
 export interface ActivityEvent {
   id: number;
   tokenId: number;
-  eventType: "mint" | "sale";
+  eventType: ActivityEventType;
   price: string | null;
   fromFid: number;
   toFid: number | null;

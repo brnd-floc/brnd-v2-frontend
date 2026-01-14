@@ -33,7 +33,14 @@ const formatPrice = (priceStr: string | null): string => {
 
 export const PodiumDetailModal: React.FC<
   BaseModalProps<PodiumDetailModalData>
-> = ({ handleClose, brand1, brand2, brand3, collectibleData }) => {
+> = ({
+  handleClose,
+  brand1,
+  brand2,
+  brand3,
+  collectibleData,
+  isLastVoteForCombination = false,
+}) => {
   const [activeTab, setActiveTab] = useState<"traits" | "activity">("traits");
   const [indicatorWidth, setIndicatorWidth] = useState<number>(0);
   const [indicatorOffset, setIndicatorOffset] = useState<number>(0);
@@ -74,6 +81,16 @@ export const PodiumDetailModal: React.FC<
   const creator = collectibleData.genesisCreatorUsername;
   const owner = collectibleData.ownerUsername;
   const podiumId = `${brand1?.id ?? 0}-${brand2?.id ?? 0}-${brand3?.id ?? 0}`;
+
+  // Determine mintability state
+  // - isLastVoteForCombination: true + isCollectible: false → "Mint" (can mint)
+  // - isLastVoteForCombination: true + isCollectible: true → "Owned" (already minted by user)
+  // - isLastVoteForCombination: false + isCollectible: false → "Not mintable" (someone else voted after)
+  // - isLastVoteForCombination: false + isCollectible: true → "Buy" (minted by someone else)
+  const canMint = isLastVoteForCombination && !isMinted;
+  const isOwned = isLastVoteForCombination && isMinted;
+  const isNotMintable = !isLastVoteForCombination && !isMinted;
+  const canBuy = !isLastVoteForCombination && isMinted;
 
   // Fetch activity when tab changes to activity
   useEffect(() => {
@@ -122,10 +139,11 @@ export const PodiumDetailModal: React.FC<
   };
 
   const handleBuyOrMint = async () => {
+    if (isOwned || isNotMintable) return;
     sdk.haptics.impactOccurred("medium");
-    if (isMinted && tokenId) {
+    if (canBuy && tokenId) {
       await buyPodium(tokenId);
-    } else {
+    } else if (canMint) {
       const brandIds: [number, number, number] = [
         brand1.id,
         brand2.id,
@@ -137,18 +155,69 @@ export const PodiumDetailModal: React.FC<
 
   const isPending =
     isClaimingPodium || isBuyingPodium || isApproving || isConfirming;
+  const isButtonDisabled = isPending || isOwned || isNotMintable;
 
   const getButtonText = (): string => {
+    if (canMint) return "Mint Now";
+    if (isOwned) return "Owned";
+    if (isNotMintable) return "Not Mintable";
+    if (canBuy) return "Buy Now";
+    return "Mint Now";
+  };
+
+  const getLoadingText = (): string => {
     if (isApproving) return "Approving...";
     if (isConfirming) return "Confirming...";
     if (isClaimingPodium) return "Minting...";
     if (isBuyingPodium) return "Buying...";
-    return isMinted ? "Buy Now" : "Mint Now";
+    return getButtonText();
   };
 
+  // Inline spinner component for loading state
+  const Spinner = () => (
+    <svg
+      className={styles.spinner}
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="none"
+    >
+      <circle
+        cx="8"
+        cy="8"
+        r="6"
+        stroke="currentColor"
+        strokeOpacity="0.25"
+        strokeWidth="2"
+      />
+      <path
+        d="M14 8a6 6 0 0 0-6-6"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+
   const formatEventType = (type: string): string => {
-    const labels: Record<string, string> = { mint: "Mint", sale: "Sale" };
+    const labels: Record<string, string> = {
+      mint: "Mint",
+      sale: "Sale",
+      transfer: "Transfer",
+      listing: "Listing",
+      item_offer: "Item Offer",
+    };
     return labels[type] || type;
+  };
+
+  const getFromDisplay = (event: ActivityEvent): string => {
+    if (event.eventType === "mint") {
+      return "NullAddress";
+    }
+    if (event.fromUser?.username) {
+      return `@${event.fromUser.username}`;
+    }
+    return truncateAddress(event.fromWallet);
   };
 
   const truncateAddress = (address: string): string => {
@@ -535,9 +604,10 @@ export const PodiumDetailModal: React.FC<
             ) : (
               <div className={styles.activityContent}>
                 {loadingActivity ? (
-                  <div className={styles.emptyActivity}>
+                  <div className={styles.loadingActivity}>
+                    <Spinner />
                     <Typography variant="geist" weight="regular" size={12}>
-                      Loading...
+                      Loading activity...
                     </Typography>
                   </div>
                 ) : (
@@ -545,96 +615,120 @@ export const PodiumDetailModal: React.FC<
                     <div className={styles.tableHeader}>
                       <Typography
                         variant="geist"
-                        weight="bold"
-                        size={12}
-                        lineHeight={16}
+                        weight="regular"
+                        size={10}
+                        lineHeight={12}
+                        className={styles.headerLabel}
                       >
                         EVENT
                       </Typography>
                       <Typography
                         variant="geist"
-                        weight="bold"
-                        size={12}
-                        lineHeight={16}
+                        weight="regular"
+                        size={10}
+                        lineHeight={12}
+                        className={styles.headerLabel}
                       >
                         PRICE
                       </Typography>
                       <Typography
                         variant="geist"
-                        weight="bold"
-                        size={12}
-                        lineHeight={16}
+                        weight="regular"
+                        size={10}
+                        lineHeight={12}
+                        className={styles.headerLabel}
                       >
                         FROM
                       </Typography>
                     </div>
-                    {activityHistory.length > 0 ? (
-                      activityHistory.map((event, index) => (
-                        <div key={index} className={styles.tableRow}>
+                    <div className={styles.tableBody}>
+                      {activityHistory.length > 0 ? (
+                        activityHistory.map((event, index) => (
+                          <div key={index} className={styles.tableRow}>
+                            <Typography
+                              variant="geist"
+                              weight="medium"
+                              size={14}
+                              lineHeight={18}
+                              className={styles.eventCell}
+                            >
+                              {formatEventType(event.eventType)}
+                            </Typography>
+                            <div className={styles.priceCell}>
+                              <Typography
+                                variant="geist"
+                                weight="medium"
+                                size={14}
+                                lineHeight={18}
+                              >
+                                {event.price ? formatPrice(event.price) : "—"}
+                              </Typography>
+                              {event.price && (
+                                <Typography
+                                  variant="geist"
+                                  weight="regular"
+                                  size={10}
+                                  lineHeight={12}
+                                  className={styles.priceSuffix}
+                                >
+                                  BRND
+                                </Typography>
+                              )}
+                            </div>
+                            <Typography
+                              variant="geist"
+                              weight="medium"
+                              size={14}
+                              lineHeight={18}
+                              className={styles.fromCell}
+                            >
+                              {getFromDisplay(event)}
+                            </Typography>
+                          </div>
+                        ))
+                      ) : isMinted ? (
+                        <div className={styles.tableRow}>
                           <Typography
                             variant="geist"
-                            weight="regular"
-                            size={12}
-                            lineHeight={16}
+                            weight="medium"
+                            size={14}
+                            lineHeight={18}
+                            className={styles.eventCell}
                           >
-                            {formatEventType(event.eventType)}
+                            Mint
                           </Typography>
+                          <div className={styles.priceCell}>
+                            <Typography
+                              variant="geist"
+                              weight="medium"
+                              size={14}
+                              lineHeight={18}
+                            >
+                              —
+                            </Typography>
+                          </div>
                           <Typography
                             variant="geist"
-                            weight="regular"
-                            size={12}
-                            lineHeight={16}
+                            weight="medium"
+                            size={14}
+                            lineHeight={18}
+                            className={styles.fromCell}
                           >
-                            {event.price
-                              ? `${formatPrice(event.price)} BRND`
-                              : "—"}
-                          </Typography>
-                          <Typography
-                            variant="geist"
-                            weight="regular"
-                            size={12}
-                            lineHeight={16}
-                          >
-                            {event.fromUser?.username
-                              ? `@${event.fromUser.username}`
-                              : truncateAddress(event.fromWallet)}
+                            {creator ? `@${creator}` : "NullAddress"}
                           </Typography>
                         </div>
-                      ))
-                    ) : isMinted ? (
-                      <div className={styles.tableRow}>
-                        <Typography
-                          variant="geist"
-                          weight="regular"
-                          size={12}
-                          lineHeight={16}
-                        >
-                          Mint
-                        </Typography>
-                        <Typography
-                          variant="geist"
-                          weight="regular"
-                          size={12}
-                          lineHeight={16}
-                        >
-                          —
-                        </Typography>
-                        <Typography
-                          variant="geist"
-                          weight="regular"
-                          size={12}
-                          lineHeight={16}
-                        >
-                          {creator ? `@${creator}` : "—"}
-                        </Typography>
-                      </div>
-                    ) : (
-                      <div className={styles.emptyActivity}>
-                        <Typography variant="geist" weight="regular" size={12}>
-                          No activity yet
-                        </Typography>
-                      </div>
-                    )}
+                      ) : (
+                        <div className={styles.emptyActivity}>
+                          <Typography
+                            variant="geist"
+                            weight="regular"
+                            size={12}
+                          >
+                            No activity yet
+                          </Typography>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
@@ -659,33 +753,46 @@ export const PodiumDetailModal: React.FC<
       {/* Buy Section */}
       {collectibleData.ownerFid !== userFid && (
         <div className={styles.buySection}>
-          <div className={styles.topBuySection}>
-            <Typography
-              variant="geist"
-              weight="regular"
-              size={12}
-              lineHeight={16}
-              className={styles.buyLabel}
-            >
-              {isMinted ? "BUY FOR" : "MINT FOR"}
-            </Typography>
-            <Typography
-              variant="druk"
-              weight="wide"
-              size={24}
-              lineHeight={28}
-              className={styles.buyPrice}
-            >
-              {formatPrice(currentPrice)} $BRND
-            </Typography>
-          </div>
+          {(canMint || canBuy) && (
+            <div className={styles.topBuySection}>
+              <Typography
+                variant="geist"
+                weight="regular"
+                size={12}
+                lineHeight={16}
+                className={styles.buyLabel}
+              >
+                {canBuy ? "BUY FOR" : "MINT FOR"}
+              </Typography>
+              <Typography
+                variant="druk"
+                weight="wide"
+                size={24}
+                lineHeight={28}
+                className={styles.buyPrice}
+              >
+                {formatPrice(currentPrice)} $BRND
+              </Typography>
+            </div>
+          )}
 
           <button
-            className={styles.buyNowButton}
+            className={classNames(
+              styles.buyNowButton,
+              isOwned && styles.ownedButton,
+              isNotMintable && styles.notMintableButton
+            )}
             onClick={handleBuyOrMint}
-            disabled={isPending}
+            disabled={isButtonDisabled}
           >
-            {getButtonText()}{" "}
+            {isPending ? (
+              <>
+                <Spinner />
+                {getLoadingText()}
+              </>
+            ) : (
+              getButtonText()
+            )}
           </button>
         </div>
       )}

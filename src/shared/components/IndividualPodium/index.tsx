@@ -77,6 +77,7 @@ const IndividualPodium: React.FC<IndividualPodiumProps> = ({
       brand2,
       brand3,
       collectibleData,
+      isLastVoteForCombination,
     });
   };
 
