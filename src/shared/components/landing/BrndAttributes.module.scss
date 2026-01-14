@@ -30,6 +30,7 @@
   text-transform: uppercase;
   line-height: 1.25;
   color: white;
+  @include textGradientLight;
 
   @include sm {
     font-size: 1.5rem;
@@ -98,7 +99,7 @@
 }
 
 .attributeTitle {
-  font-family: var(--font-druk, 'Inter', sans-serif);
+  font-family: var(--font-display, 'Inter', sans-serif);
   font-size: clamp(18px, 2.1vw, 32px);
   font-weight: 700;
   line-height: 1.03;

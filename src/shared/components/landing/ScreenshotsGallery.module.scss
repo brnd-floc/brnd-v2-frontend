@@ -40,6 +40,7 @@
   font-weight: 900;
   text-transform: uppercase;
   color: white;
+  @include textGradientLight;
 
   @include sm {
     font-size: 2.25rem;
@@ -68,11 +69,16 @@
 
 .gridContainer {
   position: relative;
-  width: 500vw;
+  width: 240vw;
+  flex: 0 0 auto;
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   grid-template-rows: repeat(3, 1fr);
   gap: clamp(4px, 2vw, 40px);
+
+  @include sm {
+    width: 240vw;
+  }
 
   @include md {
     width: 240vw;
@@ -80,6 +86,16 @@
 
   @include lg {
     width: 2400px;
+  }
+
+  @include isTablet {
+    width: 200vw;
+    max-width: none;
+  }
+
+  @include isMobile {
+    width: 220vw;
+    max-width: none;
   }
 }
 
