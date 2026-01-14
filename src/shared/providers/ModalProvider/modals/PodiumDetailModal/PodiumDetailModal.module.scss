@@ -30,12 +30,16 @@
 }
 
 .closeButton {
+  position: absolute;
+  top: 8px;
+  right: 8px;
   background: transparent;
   border: none;
   cursor: pointer;
   padding: 4px;
   display: flex;
   align-items: center;
+
   justify-content: center;
   color: #ffffff;
   transition: opacity 0.2s ease;
@@ -149,7 +153,6 @@
   justify-content: flex-start;
   position: relative;
   border-radius: 12px;
-  border: 1px solid white;
 }
 
 .firstPlace {
@@ -214,29 +217,40 @@
   flex-direction: row;
   gap: 16px;
   padding: 0 24px;
-  margin-bottom: 24px;
 }
 
 .valueBox,
 .benefitsBox {
-  flex: 1;
-  background: rgba(245, 245, 245, 0.1);
-  border-radius: 12px;
-  padding: 20px;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  position: relative;
+  align-items: flex-start;
+  padding: 8px 16px;
+  gap: 28px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.15) 0%,
+    rgba(255, 255, 255, 0.075) 100%
+  );
+  border: 0.5px solid rgba(255, 255, 255, 0.5);
+  border-radius: 12px;
+  flex: 1;
 }
 
 .boxLabel {
-  position: absolute;
-  top: 8px;
-  left: 12px;
   color: #ffffff;
   text-transform: uppercase;
-  font-size: 10px;
+  flex: none;
+  align-self: flex-start;
+}
+
+.boxValueGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  flex: none;
+  align-self: flex-start;
 }
 
 .podiumInfo {
@@ -252,7 +266,7 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 12px;
+  justify-content: space-between;
   margin-bottom: 8px;
 }
 
@@ -263,13 +277,61 @@
 .podiumInfoMeta {
   display: flex;
   flex-direction: row;
-  align-items: center;
-  gap: 16px;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 0px;
+  gap: 8px;
+  width: 100%;
+  max-width: 318px;
+  height: 31px;
+  flex: none;
+  align-self: stretch;
+  flex-grow: 0;
   margin-bottom: 12px;
 }
 
-.nftNumber {
+.metaColumnOne {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  align-items: flex-start;
+}
+
+.metaColumnTwo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  align-items: flex-end;
+}
+
+.metaLabel {
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  flex: none;
+  align-self: flex-start;
+}
+
+.metaValue {
   color: #ffffff;
+  flex: none;
+  align-self: flex-start;
+}
+
+.metaLabelTwo {
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  flex: none;
+  align-self: flex-start;
+  margin-left: auto;
+}
+
+.metaValueTwp {
+  color: #ffffff;
+  flex: none;
+  align-self: flex-start;
+  margin-left: auto;
 }
 
 .description {
@@ -282,8 +344,7 @@
   flex-direction: row;
   position: relative;
   padding: 0;
-  margin-top: 24px;
-  margin-bottom: 24px;
+  margin-bottom: 8px;
   border-bottom: 1px solid white;
 }
 
@@ -311,69 +372,113 @@
   border-radius: 2px;
 }
 
-.tabContent {
-  padding: 0;
-  margin-bottom: 24px;
-  min-height: 200px;
-}
-
 .traitsContent {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
+.traitsHeader {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  padding: 0px;
+  gap: 8px;
+  width: 100%;
+  max-width: 318px;
+  height: 80px;
+}
+
 .inputField {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 8px;
+  gap: 8px;
+
+  height: 80px;
+  border: 0.5px solid #ffffff;
+  border-radius: 8px;
+  flex: 1;
+}
+
+.inputFieldContent {
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 0px;
   gap: 8px;
+  width: 100%;
+  height: 64px;
+  flex: 1;
+  align-self: stretch;
+}
+
+.podiumIcon {
+  height: 20px;
 }
 
 .inputLabel {
-  color: #ffffff;
+  width: 100%;
+  height: 13px;
+  font-weight: 400;
+  font-size: 10px;
+  line-height: 125%;
+  color: rgba(255, 255, 255, 0.5);
   text-transform: uppercase;
-}
-
-.inputValue {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid white;
-  border-radius: 8px;
-  padding: 12px;
-  color: #ffffff;
-  min-height: 48px;
-  display: flex;
-  align-items: flex-end;
-  justify-content: flex-start;
+  flex: none;
+  align-self: stretch;
 }
 
 .traitBoxes {
-  display: flex;
-  flex-direction: row;
-  gap: 12px;
-  margin-top: 8px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  width: 100%;
+  max-width: 318px;
+  height: 100px;
+  padding: 0;
 }
 
 .traitBox {
-  flex: 1;
-  background: linear-gradient(135deg, #8a60e3 0%, #4ecdc4 100%);
-  border-radius: 12px;
-  border: 1px solid white;
-  padding: 16px;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  justify-content: center;
+  padding: 8px;
+  gap: 8px;
+  height: 100px;
+  border: 0.5px solid #ffffff;
+  border-radius: 8px;
+  width: 100%;
+}
+
+.traitBoxContent {
+  display: flex;
+  flex-direction: column;
   justify-content: space-between;
-  min-height: 80px;
-  color: #ffffff;
+  align-items: flex-start;
+  padding: 0px;
+  gap: 8px;
+  width: 100%;
+  height: 84px;
+  flex: 1;
+  align-self: stretch;
+}
 
-  > *:first-child {
-    align-self: flex-start;
-  }
-
-  > *:last-child {
-    align-self: flex-start;
-    margin-top: auto;
-  }
+.traitLabel {
+  width: 100%;
+  height: 13px;
+  font-weight: 400;
+  font-size: 10px;
+  line-height: 125%;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  flex: none;
+  align-self: stretch;
 }
 
 .activityContent {
@@ -403,13 +508,20 @@
 }
 
 .buySection {
-  padding: 24px;
-  border-top: 1px solid #2f2f2f;
+  width: 90%;
+  margin: 24px auto 24px auto;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 12px;
   background: rgba(255, 255, 255, 0.02);
+}
+
+.topBuySection {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
 }
 
 .buySectionContent {
@@ -422,7 +534,7 @@
 }
 
 .buyLabel {
-  color: #ffffff;
+  color: rgba(255, 255, 255, 0.5);
   text-transform: uppercase;
 }
 
@@ -437,9 +549,9 @@
   justify-content: center;
   align-items: center;
   padding: 8px 12px;
-  margin: 0 auto;
   gap: 8px;
   width: 100%;
+
   height: 34px;
   background: linear-gradient(
       360deg,
@@ -447,9 +559,33 @@
       rgba(255, 255, 255, 0.8) 50%,
       #eaeaea 100%
     ),
+    linear-gradient(
+      191.75deg,
+      #fff000 0%,
+      #ff0000 33%,
+      #0e00ff 66%,
+      #00ff00 100%
+    ),
     rgba(0, 255, 0, 0.12);
+  backdrop-filter: blur(12px);
   border-radius: 4px;
   border: none;
+  cursor: pointer;
+  color: #000000;
+  font-family: "Geist", sans-serif;
+  font-weight: bold;
+  font-size: 14px;
+  transition: opacity 0.2s ease;
+
+  &:hover:not(:disabled) {
+    opacity: 0.9;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
   /* Inside auto layout */
   flex: none;
   order: 1;

@@ -301,6 +301,8 @@ function PublicPodiumsFeed() {
             ];
             const isProcessing = processingPodiumId === podium.id;
             const collectibleTokenId = podium.collectibleTokenId;
+            const isLastVoteForCombination =
+              podium.isLastVoteForCombination ?? false;
 
             // Apply optimistic update if this podium was successfully transacted
             const hasSucceeded = successfulPodiums.has(podium.id);
@@ -311,10 +313,14 @@ function PublicPodiumsFeed() {
             return (
               <li key={podium.id} className={styles.item}>
                 <IndividualPodium
+                  user={podium.user}
                   brand1={podium.brand1}
                   brand2={podium.brand2}
                   brand3={podium.brand3}
                   collectibleData={optimisticCollectibleData}
+                  isLastVoteForCombination={
+                    hasSucceeded ? true : isLastVoteForCombination
+                  }
                   onMintClick={() => handleMintPodium(podium.id, brandIds)}
                   onBuyClick={() => {
                     if (collectibleTokenId) {

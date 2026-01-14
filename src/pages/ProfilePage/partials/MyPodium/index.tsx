@@ -155,6 +155,7 @@ function MyPodium() {
   const toCollectibleData = (
     vote: UserVoteHistory & {
       isCollectible?: boolean;
+      isLastVoteForCombination?: boolean;
       collectibleTokenId?: number | null;
       collectiblePrice?: string | null;
       collectibleClaimCount?: number;
@@ -176,6 +177,11 @@ function MyPodium() {
     ownerUsername: (vote as any).collectibleOwnerUsername ?? null,
     totalFeesEarned: (vote as any).collectibleTotalFeesEarned ?? "0",
   });
+
+  // Get isLastVoteForCombination from vote data
+  const getIsLastVoteForCombination = (vote: UserVoteHistory): boolean => {
+    return (vote as any).isLastVoteForCombination ?? false;
+  };
 
   if (isLoading && pageId === 1) {
     return (
@@ -240,6 +246,8 @@ function MyPodium() {
               ];
               const isProcessing = processingPodiumId === vote.id;
               const collectibleTokenId = (vote as any).collectibleTokenId;
+              const isLastVoteForCombination =
+                getIsLastVoteForCombination(vote);
 
               // Apply optimistic update if this podium was successfully transacted
               const hasSucceeded = successfulPodiums.has(vote.id);
@@ -250,10 +258,14 @@ function MyPodium() {
               return (
                 <li key={vote.id} className={styles.item}>
                   <IndividualPodium
+                    user={vote.user}
                     brand1={vote.brand1}
                     brand2={vote.brand2}
                     brand3={vote.brand3}
                     collectibleData={optimisticCollectibleData}
+                    isLastVoteForCombination={
+                      hasSucceeded ? true : isLastVoteForCombination
+                    }
                     onMintClick={() => handleMintPodium(vote.id, brandIds)}
                     onBuyClick={() => {
                       if (collectibleTokenId) {

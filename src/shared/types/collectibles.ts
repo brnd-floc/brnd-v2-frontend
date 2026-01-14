@@ -31,6 +31,7 @@ export interface VoteHistoryItem {
   brand2: PodiumBrand;
   brand3: PodiumBrand;
   isCollectible: boolean;
+  isLastVoteForCombination: boolean;
   collectibleTokenId: number | null;
   collectiblePrice: string | null;
   collectibleClaimCount: number;

@@ -9,13 +9,16 @@ import { useModal } from "@/shared/hooks/ui/useModal";
 import { ModalsIds } from "@/shared/providers/ModalProvider/types";
 import { PodiumBrand, CollectibleData } from "@/shared/types/collectibles";
 import { useAuth } from "@/shared/hooks/auth";
+import { User } from "@/shared/hooks/user";
 
 interface IndividualPodiumProps {
   className?: string;
   brand1: PodiumBrand;
   brand2: PodiumBrand;
   brand3: PodiumBrand;
+  user: User;
   collectibleData: CollectibleData;
+  isLastVoteForCombination?: boolean;
   onMintClick?: () => void;
   onBuyClick?: () => void;
   isPending?: boolean;
@@ -42,8 +45,10 @@ const IndividualPodium: React.FC<IndividualPodiumProps> = ({
   brand2,
   brand3,
   collectibleData,
+  isLastVoteForCombination = false,
   onMintClick,
   onBuyClick,
+  user,
   isPending = false,
 }) => {
   const { openModal } = useModal();
@@ -56,6 +61,16 @@ const IndividualPodium: React.FC<IndividualPodiumProps> = ({
   const creator = collectibleData.genesisCreatorUsername;
   const owner = collectibleData.ownerUsername;
 
+  // Determine mintability state
+  // - isLastVoteForCombination: true + isCollectible: false → "Mint" (can mint)
+  // - isLastVoteForCombination: true + isCollectible: true → "Owned" (already minted by user)
+  // - isLastVoteForCombination: false + isCollectible: false → "Not mintable" (someone else voted after)
+  // - isLastVoteForCombination: false + isCollectible: true → "Buy" (minted by someone else)
+  const canMint = isLastVoteForCombination && !isMinted;
+  const isOwned = isLastVoteForCombination && isMinted;
+  const isNotMintable = !isLastVoteForCombination && !isMinted;
+  const canBuy = !isLastVoteForCombination && isMinted;
+
   const handleArrowClick = () => {
     openModal(ModalsIds.PODIUM_DETAIL, {
       brand1,
@@ -66,13 +81,57 @@ const IndividualPodium: React.FC<IndividualPodiumProps> = ({
   };
 
   const handleActionClick = () => {
-    if (isPending) return;
-    if (isMinted) {
+    if (isPending || isOwned || isNotMintable) return;
+    if (canBuy) {
       onBuyClick?.();
-    } else {
+    } else if (canMint) {
       onMintClick?.();
     }
   };
+
+  const getButtonText = () => {
+    if (canMint) return "Mint";
+    if (isOwned) return "Owned";
+    if (isNotMintable) return "Not mintable";
+    if (canBuy) return "Buy";
+    return "Mint";
+  };
+
+  // Inline spinner component for loading state
+  const Spinner = () => (
+    <svg
+      className={styles.spinner}
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="none"
+    >
+      <circle
+        cx="8"
+        cy="8"
+        r="6"
+        stroke="currentColor"
+        strokeOpacity="0.25"
+        strokeWidth="2"
+      />
+      <path
+        d="M14 8a6 6 0 0 0-6-6"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+
+  const getButtonStyle = () => {
+    if (canMint) return styles.mintButton;
+    if (isOwned) return styles.ownedButton;
+    if (isNotMintable) return styles.notMintableButton;
+    if (canBuy) return styles.buyButton;
+    return styles.mintButton;
+  };
+
+  const isButtonDisabled = isPending || isOwned || isNotMintable;
 
   const podiumBrands = [
     { brand: brand2, icon: Podium2Icon, place: "second" as const },
@@ -82,119 +141,130 @@ const IndividualPodium: React.FC<IndividualPodiumProps> = ({
 
   return (
     <div className={classNames(styles.container, className)}>
-      <div className={styles.podiumSection}>
-        <div className={styles.podiumContainer}>
-          {podiumBrands.map((item, index) => {
-            const IconComponent = item.icon;
-            return (
-              <div
-                key={`podium-${index}`}
-                className={classNames(styles.podiumItem, styles[item.place])}
-              >
-                {item.brand?.imageUrl ? (
-                  <img
-                    src={item.brand.imageUrl}
-                    alt={item.brand.name}
-                    className={styles.brandImage}
-                  />
-                ) : (
-                  <div className={styles.imagePlaceholder} />
-                )}
-                <div className={styles.numberContainer}>
-                  <IconComponent className={styles.numberIcon} />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className={styles.detailsSection}>
-        <div className={styles.infoTop}>
-          <div className={styles.creatorItem}>
-            <Typography
-              variant="geist"
-              weight="regular"
-              size={10}
-              lineHeight={13}
-              className={styles.label}
-            >
-              Creator
-            </Typography>
-            <Typography
-              variant="geist"
-              weight="bold"
-              size={12}
-              lineHeight={16}
-              className={styles.value}
-            >
-              {isMinted && creator ? `@${creator}` : "—"}
-            </Typography>
-          </div>
-          <div className={styles.ownerItem}>
-            <Typography
-              variant="geist"
-              weight="regular"
-              size={10}
-              lineHeight={13}
-              className={styles.label}
-            >
-              Owner
-            </Typography>
-            <Typography
-              variant="geist"
-              weight="bold"
-              size={12}
-              lineHeight={16}
-              className={styles.value}
-            >
-              {isMinted && owner ? `@${owner}` : "—"}
-            </Typography>
-          </div>
-        </div>
-
-        <div className={styles.infoBottom}>
-          {collectibleData.ownerFid !== userFid && (
-            <div className={styles.priceContainer}>
-              <Typography
-                variant="geist"
-                weight="bold"
-                size={10}
-                lineHeight={13}
-                className={styles.price}
-              >
-                {displayPrice}
-              </Typography>
-              <button
-                className={classNames(
-                  styles.actionButton,
-                  isMinted ? styles.buyButton : styles.mintButton,
-                  isPending && styles.pending
-                )}
-                onClick={handleActionClick}
-                disabled={isPending}
-              >
-                <Typography
-                  variant="geist"
-                  weight="bold"
-                  size={14}
-                  lineHeight={18}
-                  className={styles.actionButtonText}
+      <div className={styles.podiumOuterContainer}>
+        <div className={styles.podiumSection}>
+          <div className={styles.podiumContainer}>
+            {podiumBrands.map((item, index) => {
+              const IconComponent = item.icon;
+              return (
+                <div
+                  key={`podium-${index}`}
+                  className={classNames(styles.podiumItem, styles[item.place])}
                 >
-                  {isPending ? "..." : isMinted ? "Buy" : "Mint"}
-                </Typography>
-              </button>
+                  {item.brand?.imageUrl ? (
+                    <img
+                      src={item.brand.imageUrl}
+                      alt={item.brand.name}
+                      className={styles.brandImage}
+                    />
+                  ) : (
+                    <div className={styles.imagePlaceholder} />
+                  )}
+                  <div className={styles.numberContainer}>
+                    <IconComponent className={styles.numberIcon} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className={styles.detailsSection}>
+          <div className={styles.infoTop}>
+            <div className={styles.creatorItem}>
+              <Typography
+                variant="geist"
+                weight="regular"
+                size={10}
+                lineHeight={13}
+                className={styles.label}
+              >
+                Creator
+              </Typography>
               <Typography
                 variant="geist"
                 weight="bold"
-                size={10}
-                lineHeight={13}
-                className={styles.priceHidden}
+                size={12}
+                lineHeight={16}
+                className={styles.value}
               >
-                {displayPrice}
+                @{user.username}
               </Typography>
             </div>
-          )}
+            <div className={styles.ownerItem}>
+              <Typography
+                variant="geist"
+                weight="regular"
+                size={10}
+                lineHeight={13}
+                className={styles.label}
+              >
+                Owner
+              </Typography>
+              <Typography
+                variant="geist"
+                weight="bold"
+                size={12}
+                lineHeight={16}
+                className={styles.value}
+              >
+                {isMinted && owner ? `@${owner}` : "—"}
+              </Typography>
+            </div>
+          </div>
+
+          <div className={styles.infoBottom}>
+            {collectibleData.ownerFid !== userFid && (
+              <div className={styles.priceContainer}>
+                {(canMint || canBuy) && (
+                  <Typography
+                    variant="geist"
+                    weight="bold"
+                    size={10}
+                    lineHeight={13}
+                    className={styles.price}
+                  >
+                    {displayPrice}
+                  </Typography>
+                )}
+                <button
+                  className={classNames(
+                    styles.actionButton,
+                    getButtonStyle(),
+                    isButtonDisabled && styles.disabled,
+                    isPending && styles.loading
+                  )}
+                  onClick={handleActionClick}
+                  disabled={isButtonDisabled}
+                >
+                  {isPending ? (
+                    <Spinner />
+                  ) : (
+                    <Typography
+                      variant="geist"
+                      weight="bold"
+                      size={14}
+                      lineHeight={18}
+                      className={styles.actionButtonText}
+                    >
+                      {getButtonText()}
+                    </Typography>
+                  )}
+                </button>
+                {(canMint || canBuy) && (
+                  <Typography
+                    variant="geist"
+                    weight="bold"
+                    size={10}
+                    lineHeight={13}
+                    className={styles.priceHidden}
+                  >
+                    {displayPrice}
+                  </Typography>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

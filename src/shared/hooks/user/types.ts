@@ -93,6 +93,7 @@ export interface UserVoteHistory {
   brand1: Brand;
   brand2: Brand;
   brand3: Brand;
+  user: User;
 }
 
 export interface UserVote {
