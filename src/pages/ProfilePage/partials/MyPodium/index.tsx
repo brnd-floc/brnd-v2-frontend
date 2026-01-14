@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import sdk from "@farcaster/miniapp-sdk";
 import styles from "./MyPodium.module.scss";
 import { useMyVoteHistory } from "@/hooks/user";
 import { usePodiumCollectibles } from "@/shared/hooks/contract/usePodiumCollectibles";
@@ -16,6 +17,10 @@ function MyPodium() {
   const [pageId, setPageId] = useState<number>(1);
   const [processingPodiumId, setProcessingPodiumId] = useState<string | null>(
     null
+  );
+  // Track optimistic updates for successful transactions
+  const [successfulPodiums, setSuccessfulPodiums] = useState<Set<string>>(
+    new Set()
   );
 
   const {
@@ -40,12 +45,24 @@ function MyPodium() {
   } = usePodiumCollectibles(
     (txData) => {
       console.log("✅ Podium claimed!", txData);
+      // Provide haptic feedback for success
+      sdk.haptics.notificationOccurred("success");
+      // Optimistically mark this podium as successful
+      if (processingPodiumId) {
+        setSuccessfulPodiums((prev) => new Set(prev).add(processingPodiumId));
+      }
       setProcessingPodiumId(null);
       refreshData();
       refetch();
     },
     (txData) => {
       console.log("✅ Podium bought!", txData);
+      // Provide haptic feedback for success
+      sdk.haptics.notificationOccurred("success");
+      // Optimistically mark this podium as successful
+      if (processingPodiumId) {
+        setSuccessfulPodiums((prev) => new Set(prev).add(processingPodiumId));
+      }
       setProcessingPodiumId(null);
       refreshData();
       refetch();
@@ -73,6 +90,29 @@ function MyPodium() {
     isBuyingPodium,
     processingPodiumId,
   ]);
+
+  // Clear optimistic updates once real data confirms the change
+  useEffect(() => {
+    if (history && successfulPodiums.size > 0) {
+      const updatedSuccessful = new Set(successfulPodiums);
+      let hasChanges = false;
+
+      successfulPodiums.forEach((podiumId) => {
+        const vote = Object.values(history.data).find(
+          (v: UserVoteHistory) => v.id === podiumId
+        );
+        // If the real data now shows it's a collectible, remove from optimistic set
+        if (vote && (vote as any).isCollectible) {
+          updatedSuccessful.delete(podiumId);
+          hasChanges = true;
+        }
+      });
+
+      if (hasChanges) {
+        setSuccessfulPodiums(updatedSuccessful);
+      }
+    }
+  }, [history, successfulPodiums]);
 
   const handleMintPodium = useCallback(
     async (podiumId: string, brandIds: [number, number, number]) => {
@@ -201,13 +241,19 @@ function MyPodium() {
               const isProcessing = processingPodiumId === vote.id;
               const collectibleTokenId = (vote as any).collectibleTokenId;
 
+              // Apply optimistic update if this podium was successfully transacted
+              const hasSucceeded = successfulPodiums.has(vote.id);
+              const optimisticCollectibleData = hasSucceeded
+                ? { ...collectibleData, isCollectible: true }
+                : collectibleData;
+
               return (
                 <li key={vote.id} className={styles.item}>
                   <IndividualPodium
                     brand1={vote.brand1}
                     brand2={vote.brand2}
                     brand3={vote.brand3}
-                    collectibleData={collectibleData}
+                    collectibleData={optimisticCollectibleData}
                     onMintClick={() => handleMintPodium(vote.id, brandIds)}
                     onBuyClick={() => {
                       if (collectibleTokenId) {

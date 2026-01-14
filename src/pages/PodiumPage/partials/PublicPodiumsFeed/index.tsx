@@ -1,33 +1,37 @@
-import { useCallback, useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 
 // Components
-import BrandCard from "@/components/cards/BrandCard";
 import Typography from "@/components/Typography";
+import IndividualPodium from "@/shared/components/IndividualPodium";
+import LoaderIndicator from "@/shared/components/LoaderIndicator";
 
 // StyleSheet
 import styles from "./PublicPodiumsFeed.module.scss";
 
 // Hooks
 import { useRecentPodiums } from "@/hooks/brands";
-import { Brand } from "@/hooks/brands";
 import { usePodiumCollectibles } from "@/shared/hooks/contract/usePodiumCollectibles";
 import { useAuth } from "@/shared/hooks/auth";
 
 // Utils
-import { getBrandScoreVariation } from "@/utils/brand";
 import { sdk } from "@farcaster/miniapp-sdk";
-import LoaderIndicator from "@/shared/components/LoaderIndicator";
-import Button from "@/shared/components/Button";
+
+// Types
+import { CollectibleData } from "@/shared/types/collectibles";
 
 function PublicPodiumsFeed() {
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const [allPodiums, setAllPodiums] = useState<any[]>([]); // Accumulate all podiums
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false); // NEW: Track initialization
+  const [isInitialized, setIsInitialized] = useState(false); // Track initialization
   const [processingPodiumId, setProcessingPodiumId] = useState<string | null>(
     null
+  );
+  // Track optimistic updates for successful transactions
+  const [successfulPodiums, setSuccessfulPodiums] = useState<Set<string>>(
+    new Set()
   );
   const limit = 20;
 
@@ -55,17 +59,27 @@ function PublicPodiumsFeed() {
     (txData) => {
       // Claim success callback
       console.log("✅ Podium claimed successfully!", txData);
+      // Provide haptic feedback for success
+      sdk.haptics.notificationOccurred("success");
+      // Optimistically mark this podium as successful
+      if (processingPodiumId) {
+        setSuccessfulPodiums((prev) => new Set(prev).add(processingPodiumId));
+      }
       setProcessingPodiumId(null);
       refreshData();
-      // Optionally refetch podiums to show updated state
       refetch();
     },
     (txData) => {
       // Buy success callback
       console.log("✅ Podium bought successfully!", txData);
+      // Provide haptic feedback for success
+      sdk.haptics.notificationOccurred("success");
+      // Optimistically mark this podium as successful
+      if (processingPodiumId) {
+        setSuccessfulPodiums((prev) => new Set(prev).add(processingPodiumId));
+      }
       setProcessingPodiumId(null);
       refreshData();
-      // Optionally refetch podiums to show updated state
       refetch();
     }
   );
@@ -90,12 +104,33 @@ function PublicPodiumsFeed() {
     processingPodiumId,
   ]);
 
+  // Clear optimistic updates once real data confirms the change
+  useEffect(() => {
+    if (data?.data && successfulPodiums.size > 0) {
+      const updatedSuccessful = new Set(successfulPodiums);
+      let hasChanges = false;
+
+      successfulPodiums.forEach((podiumId) => {
+        const podium = allPodiums.find((p) => p.id === podiumId);
+        // If the real data now shows it's minted (isCollectible true), remove from optimistic set
+        if (podium && podium.isCollectible) {
+          updatedSuccessful.delete(podiumId);
+          hasChanges = true;
+        }
+      });
+
+      if (hasChanges) {
+        setSuccessfulPodiums(updatedSuccessful);
+      }
+    }
+  }, [data, allPodiums, successfulPodiums]);
+
   /**
    * Initialize component with first page data on mount
    */
   useEffect(() => {
-    if (data?.podiums && !isInitialized) {
-      setAllPodiums(data.podiums);
+    if (data?.data && !isInitialized) {
+      setAllPodiums(data.data);
       setIsInitialized(true);
     }
   }, [data, isInitialized]);
@@ -104,36 +139,22 @@ function PublicPodiumsFeed() {
    * Accumulate podiums from subsequent pages
    */
   useEffect(() => {
-    if (data?.podiums && isInitialized) {
+    if (data?.data && isInitialized) {
       if (currentPage === 1) {
         // First page after initialization - replace all podiums
-
-        setAllPodiums(data.podiums);
+        setAllPodiums(data.data);
       } else {
         // Subsequent pages - append new podiums
-
         setAllPodiums((prev) => {
-          // Filter out duplicates by transactionHash
-          const existingHashes = new Set(prev.map((p) => p.transactionHash));
-          const newPodiums = data.podiums.filter(
-            (p) => !existingHashes.has(p.transactionHash)
-          );
+          // Filter out duplicates by id (transactionHash)
+          const existingIds = new Set(prev.map((p) => p.id));
+          const newPodiums = data.data.filter((p) => !existingIds.has(p.id));
           return [...prev, ...newPodiums];
         });
       }
       setIsLoadingMore(false);
     }
   }, [data, currentPage, isInitialized]);
-
-  /**
-   * Handles clicking on a brand card
-   */
-  const handleClickCard = useCallback(
-    (id: Brand["id"]) => {
-      navigate(`/brand/${id}`);
-    },
-    [navigate]
-  );
 
   /**
    * Handles the scroll event for automatic loading.
@@ -144,93 +165,74 @@ function PublicPodiumsFeed() {
       const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
       const calc = scrollTop + clientHeight + 50; // 50px buffer before bottom
 
+      // Calculate hasNextPage: if we have loaded fewer items than total count
+      const hasNextPage = data ? allPodiums.length < data.count : false;
+
       if (
         calc >= scrollHeight &&
         !isFetching &&
         !isLoadingMore &&
-        data?.pagination.hasNextPage
+        hasNextPage
       ) {
         setIsLoadingMore(true);
         setCurrentPage((prev) => prev + 1);
       }
     },
-    [isFetching, isLoadingMore, data?.pagination.hasNextPage, currentPage]
+    [isFetching, isLoadingMore, data, allPodiums.length, currentPage]
   );
 
-  /**
-   * Format time ago display (UTC-based)
-   * Handles clock skew by treating future dates (within 10 minutes) as "Just now"
-   */
-  const getTimeAgo = useCallback((dateStr: string) => {
-    // Current time in UTC (timestamp in ms)
-    const nowUtc = Date.now();
-
-    // --- DEBUG LOGGING START ---
-    // (You can remove these logs once we confirm the fix works)
-
-    // 1. Normalize: Replace SQL space separator with ISO 'T'
-    // Postgres often sends "2025-12-16 14:00:00" -> We need "2025-12-16T14:00:00"
-    let normalizedDate = dateStr.replace(" ", "T");
-
-    // 2. Force UTC: If it doesn't end in Z, append it.
-    // This stops the browser from assuming it's Local Time (Chile Time).
-    if (!normalizedDate.endsWith("Z")) {
-      normalizedDate += "Z";
-    }
-
-    // Parse the date string - ensure it's treated as UTC
-    const createdUtc = new Date(normalizedDate).getTime();
-
-    // Calculate difference in milliseconds (both are UTC)
-    let diffInMs = nowUtc - createdUtc;
-
-    // Handle negative differences (future dates) due to clock skew
-    // If the date is in the future but within 10 minutes, treat as "Just now"
-    // This accounts for reasonable clock differences between server and client
-    const CLOCK_SKEW_THRESHOLD = 10 * 60 * 1000; // 10 minutes in milliseconds
-
-    if (diffInMs < 0) {
-      // If it's a small future difference (likely clock skew), treat as "Just now"
-      if (Math.abs(diffInMs) <= CLOCK_SKEW_THRESHOLD) {
-        return "Just now";
+  // Helper functions for handling mint and buy actions
+  const handleMintPodium = useCallback(
+    async (podiumId: string, brandIds: [number, number, number]) => {
+      if (!userFid) return;
+      try {
+        setProcessingPodiumId(podiumId);
+        await claimPodium(brandIds);
+      } catch (error) {
+        console.error("Failed to mint podium:", error);
+        setProcessingPodiumId(null);
       }
-      // For larger future differences, clamp to 0 to avoid showing negative time
-      diffInMs = 0;
-    }
+    },
+    [userFid, claimPodium]
+  );
 
-    const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
-    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
-    const diffInDays = Math.floor(diffInHours / 24);
-
-    if (diffInMinutes < 1) return "Just now";
-    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
-    if (diffInHours < 24) {
-      const remainingMinutes = diffInMinutes % 60;
-      if (remainingMinutes === 0) {
-        return `${diffInHours}h ago`;
+  const handleBuyPodium = useCallback(
+    async (podiumId: string, tokenId: number) => {
+      if (!userFid) return;
+      try {
+        setProcessingPodiumId(podiumId);
+        await buyPodium(tokenId);
+      } catch (error) {
+        console.error("Failed to buy podium:", error);
+        setProcessingPodiumId(null);
       }
-      return `${diffInHours}h ${remainingMinutes}m ago`;
-    }
-    if (diffInDays < 7) return `${diffInDays}d ago`;
+    },
+    [userFid, buyPodium]
+  );
 
-    // Use UTC date for formatting
-    const createdDate = new Date(createdUtc);
-    return createdDate.toLocaleDateString(undefined, {
-      timeZone: "UTC",
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
+  // Transform podium data to CollectibleData format
+  const toCollectibleData = useCallback((podium: any): CollectibleData => {
+    return {
+      isCollectible: podium.isCollectible ?? false,
+      tokenId: podium.collectibleTokenId ?? null,
+      price: podium.collectiblePrice || "1000000000000000000000000", // 1M BRND default
+      claimCount: podium.collectibleClaimCount ?? 0,
+      genesisCreatorFid: podium.collectibleGenesisCreatorFid ?? null,
+      genesisCreatorUsername: podium.collectibleGenesisCreatorUsername ?? null,
+      ownerFid: podium.collectibleOwnerFid ?? null,
+      ownerUsername: podium.collectibleOwnerUsername ?? null,
+      totalFeesEarned: podium.collectibleTotalFeesEarned ?? "0",
+    };
   }, []);
 
   useEffect(() => {
-    if (!data?.podiums) {
+    if (!data?.data) {
       setCurrentPage(1);
       setAllPodiums([]);
       setIsInitialized(false);
     }
     setIsLoadingMore(false);
-  }, []);
+  }, [data?.data]);
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -288,225 +290,53 @@ function PublicPodiumsFeed() {
   }
   return (
     <div className={styles.layout}>
-      {/* Scrollable container with automatic loading */}
-      <div className={styles.scrollContainer} onScroll={handleScrollList}>
-        <div className={styles.podiumsList}>
+      <div className={styles.view} onScroll={handleScrollList}>
+        <ul className={styles.list}>
           {allPodiums.map((podium) => {
-            // Convert brand1, brand2, brand3 to array for mapping
-            const brands = [podium.brand1, podium.brand2, podium.brand3];
-
-            // Determine if podium is already minted (has tokenId)
-            const isMinted = podium.id !== null;
-            const tokenId = podium.id ? Number(podium.id) : null;
+            const collectibleData = toCollectibleData(podium);
             const brandIds: [number, number, number] = [
               podium.brand1?.id || 0,
               podium.brand2?.id || 0,
               podium.brand3?.id || 0,
             ];
+            const isProcessing = processingPodiumId === podium.id;
+            const collectibleTokenId = podium.collectibleTokenId;
 
-            // Check if user created this podium (only creators can claim)
-
-            const userCreatedPodium = userFid && podium.user?.fid === userFid;
-
-            // Check if this podium is currently being processed
-            const isProcessing = processingPodiumId === podium.transactionHash;
-            const isButtonDisabled =
-              isProcessing || isPending || isConfirming || isApproving;
+            // Apply optimistic update if this podium was successfully transacted
+            const hasSucceeded = successfulPodiums.has(podium.id);
+            const optimisticCollectibleData = hasSucceeded
+              ? { ...collectibleData, isCollectible: true }
+              : collectibleData;
 
             return (
-              <div key={podium.transactionHash} className={styles.podiumItem}>
-                {/* User info header */}
-                <div className={styles.podiumHeader}>
-                  <div
-                    className={styles.userInfo}
-                    onClick={() => {
-                      sdk.actions.viewProfile({ fid: podium.user.fid });
-                    }}
-                  >
-                    {podium.user.photoUrl && (
-                      <img
-                        src={podium.user.photoUrl}
-                        alt={podium.user.username}
-                        className={styles.userAvatar}
-                      />
-                    )}
-                    <div className={styles.userDetails}>
-                      <div>
-                        <Typography size={14} weight="medium">
-                          {podium.user.username}
-                        </Typography>{" "}
-                        <Typography
-                          size={14}
-                          weight="medium"
-                          className={styles.levelText}
-                        >
-                          level {podium.user.brndPowerLevel}
-                        </Typography>
-                      </div>
-
-                      <Typography size={12} className={styles.timeAgo}>
-                        {getTimeAgo(podium.date)}
-                      </Typography>
-                    </div>
-                  </div>
-                  {/* Payment and claim info */}
-                  <div className={styles.paymentInfo}>
-                    {podium.brndPaidWhenCreatingPodium !== null &&
-                      podium.brndPaidWhenCreatingPodium !== undefined && (
-                        <span
-                          onClick={() => {
-                            sdk.actions.openUrl({
-                              url: `https://basescan.org/tx/${podium.transactionHash}`,
-                            });
-                          }}
-                        >
-                          <Typography size={12} className={styles.paidAmount}>
-                            Paid {podium.brndPaidWhenCreatingPodium} $BRND
-                          </Typography>
-                        </span>
-                      )}
-                    {podium.claimedAt && podium.rewardAmount && (
-                      <span
-                        onClick={() => {
-                          sdk.actions.openUrl({
-                            url: `https://basescan.org/tx/${podium.claimTxHash}`,
-                          });
-                        }}
-                      >
-                        {" "}
-                        <Typography size={12} className={styles.claimedAmount}>
-                          Claimed{" "}
-                          {Math.floor(
-                            Number(podium.brndPaidWhenCreatingPodium) * 10
-                          )}{" "}
-                          $BRND
-                        </Typography>
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Podium content */}
-                <div className={styles.podiumRow}>
-                  <div className={styles.podiumContent}>
-                    <div className={styles.podiumGrid}>
-                      {brands.map((brand: Brand, index: number) => (
-                        <BrandCard
-                          key={`${podium.transactionHash}-brand-${index}`}
-                          name={brand?.name || ""}
-                          photoUrl={brand?.imageUrl}
-                          context="podium"
-                          podiumPosition={index + 1}
-                          orientation={
-                            index === 0
-                              ? "left"
-                              : index === 1
-                              ? "center"
-                              : "right"
-                          }
-                          score={brand?.score || 0}
-                          variation={getBrandScoreVariation(brand?.score || 0)}
-                          size="s"
-                          onClick={() => handleClickCard(brand?.id || 0)}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                <div className={styles.podiumFooter}>
-                  {!isMinted && userCreatedPodium ? (
-                    // Show "Claim" button only if user created this podium and it's not minted yet
-                    <div>
-                      <Button
-                        caption={
-                          isProcessing && isClaimingPodium
-                            ? "Claiming..."
-                            : isApproving
-                            ? "Approving..."
-                            : isConfirming
-                            ? "Confirming..."
-                            : "Claim Podium"
-                        }
-                        variant="primary"
-                        disabled={isButtonDisabled}
-                        onClick={async () => {
-                          if (isButtonDisabled) return;
-
-                          try {
-                            setProcessingPodiumId(podium.transactionHash);
-                            await claimPodium(brandIds);
-                          } catch (error) {
-                            console.error("Failed to claim podium:", error);
-                            setProcessingPodiumId(null);
-                          }
-                        }}
-                      />
-                      {contractError && isProcessing && (
-                        <Typography size={12} className={styles.errorText}>
-                          {contractError}
-                        </Typography>
-                      )}
-                    </div>
-                  ) : false ? (
-                    // Show "Buy" button if podium is already minted (anyone can buy)
-                    <div>
-                      <Button
-                        caption={
-                          isProcessing && isBuyingPodium
-                            ? "Buying..."
-                            : isApproving
-                            ? "Approving..."
-                            : isConfirming
-                            ? "Confirming..."
-                            : "Buy Podium"
-                        }
-                        variant="primary"
-                        disabled={isButtonDisabled}
-                        onClick={async () => {
-                          if (isButtonDisabled || !tokenId) return;
-
-                          try {
-                            setProcessingPodiumId(podium.transactionHash);
-                            await buyPodium(tokenId);
-                          } catch (error) {
-                            console.error("Failed to buy podium:", error);
-                            setProcessingPodiumId(null);
-                          }
-                        }}
-                      />
-                      {contractError && isProcessing && (
-                        <Typography size={12} className={styles.errorText}>
-                          {contractError}
-                        </Typography>
-                      )}
-                    </div>
-                  ) : null}
-                  {/* No button shown if podium is not minted and user didn't create it */}
-                </div>
-              </div>
+              <li key={podium.id} className={styles.item}>
+                <IndividualPodium
+                  brand1={podium.brand1}
+                  brand2={podium.brand2}
+                  brand3={podium.brand3}
+                  collectibleData={optimisticCollectibleData}
+                  onMintClick={() => handleMintPodium(podium.id, brandIds)}
+                  onBuyClick={() => {
+                    if (collectibleTokenId) {
+                      handleBuyPodium(podium.id, collectibleTokenId);
+                    }
+                  }}
+                  isPending={
+                    isProcessing && (isPending || isConfirming || isApproving)
+                  }
+                />
+              </li>
             );
           })}
+        </ul>
 
-          {/* Loading indicator when fetching more */}
-          {(isFetching || isLoadingMore) && currentPage > 1 && (
-            <div className={styles.loadingMore}>
-              <LoaderIndicator size={24} />
-              <Typography size={12} className={styles.loadingText}>
-                Loading more podiums...
-              </Typography>
-            </div>
-          )}
-
-          {/* End of list indicator */}
-          {/* {!hasNextPage && allPodiums.length > 0 && !isLoadingMore && (
-            <div className={styles.endOfList}>
-              <Typography size={12} className={styles.endText}>
-                You've seen all {data?.pagination.total || allPodiums.length}{" "}
-                podiums! 🎉
-              </Typography>
-            </div>
-          )} */}
-        </div>
+        {(isFetching || isLoadingMore) && currentPage > 1 && (
+          <div className={styles.loadingMore}>
+            <Typography size={12} className={styles.loadingText}>
+              Loading more...
+            </Typography>
+          </div>
+        )}
       </div>
     </div>
   );

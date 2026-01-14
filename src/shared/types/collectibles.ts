@@ -17,6 +17,13 @@ export interface CollectibleData {
   totalFeesEarned: string;
 }
 
+export interface PodiumDetailModalData {
+  brand1: PodiumBrand;
+  brand2: PodiumBrand;
+  brand3: PodiumBrand;
+  collectibleData: CollectibleData;
+}
+
 export interface VoteHistoryItem {
   id: string;
   date: string;

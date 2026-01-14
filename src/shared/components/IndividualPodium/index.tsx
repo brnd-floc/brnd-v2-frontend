@@ -8,6 +8,7 @@ import Podium3Icon from "@/shared/assets/icons/podium-3.svg?react";
 import { useModal } from "@/shared/hooks/ui/useModal";
 import { ModalsIds } from "@/shared/providers/ModalProvider/types";
 import { PodiumBrand, CollectibleData } from "@/shared/types/collectibles";
+import { useAuth } from "@/shared/hooks/auth";
 
 interface IndividualPodiumProps {
   className?: string;
@@ -46,6 +47,9 @@ const IndividualPodium: React.FC<IndividualPodiumProps> = ({
   isPending = false,
 }) => {
   const { openModal } = useModal();
+
+  const { data: authData } = useAuth();
+  const userFid = authData?.fid ? Number(authData.fid) : null;
 
   const isMinted = collectibleData.isCollectible;
   const displayPrice = `${formatPrice(collectibleData.price)} $BRND`;
@@ -150,43 +154,47 @@ const IndividualPodium: React.FC<IndividualPodiumProps> = ({
         </div>
 
         <div className={styles.infoBottom}>
-          <Typography
-            variant="geist"
-            weight="bold"
-            size={10}
-            lineHeight={13}
-            className={styles.price}
-          >
-            {displayPrice}
-          </Typography>
-          <button
-            className={classNames(
-              styles.actionButton,
-              isMinted ? styles.buyButton : styles.mintButton,
-              isPending && styles.pending
-            )}
-            onClick={handleActionClick}
-            disabled={isPending}
-          >
-            <Typography
-              variant="geist"
-              weight="bold"
-              size={14}
-              lineHeight={18}
-              className={styles.actionButtonText}
-            >
-              {isPending ? "..." : isMinted ? "Buy" : "Mint"}
-            </Typography>
-          </button>
-          <Typography
-            variant="geist"
-            weight="bold"
-            size={10}
-            lineHeight={13}
-            className={styles.priceHidden}
-          >
-            {displayPrice}
-          </Typography>
+          {collectibleData.ownerFid !== userFid && (
+            <div className={styles.priceContainer}>
+              <Typography
+                variant="geist"
+                weight="bold"
+                size={10}
+                lineHeight={13}
+                className={styles.price}
+              >
+                {displayPrice}
+              </Typography>
+              <button
+                className={classNames(
+                  styles.actionButton,
+                  isMinted ? styles.buyButton : styles.mintButton,
+                  isPending && styles.pending
+                )}
+                onClick={handleActionClick}
+                disabled={isPending}
+              >
+                <Typography
+                  variant="geist"
+                  weight="bold"
+                  size={14}
+                  lineHeight={18}
+                  className={styles.actionButtonText}
+                >
+                  {isPending ? "..." : isMinted ? "Buy" : "Mint"}
+                </Typography>
+              </button>
+              <Typography
+                variant="geist"
+                weight="bold"
+                size={10}
+                lineHeight={13}
+                className={styles.priceHidden}
+              >
+                {displayPrice}
+              </Typography>
+            </div>
+          )}
         </div>
       </div>
 

@@ -560,6 +560,10 @@ export const usePodiumCollectibles = (
         setPendingBuyTokenId(tokenId);
 
         // Contract signature: buyPodium(uint256 tokenId, uint256 buyerFid)
+        console.log("💰 [BuyPodium] Buying podium", {
+          tokenId,
+          userFid,
+        });
         await writeContract({
           address: PODIUM_CONTRACT_CONFIG.CONTRACT,
           abi: BRND_PODIUM_COLLECTABLES_ABI,

@@ -10,13 +10,13 @@ import Podium2Icon from "@/shared/assets/icons/podium-2.svg?react";
 import Podium3Icon from "@/shared/assets/icons/podium-3.svg?react";
 import { usePodiumCollectibles } from "@/shared/hooks/contract/usePodiumCollectibles";
 import {
-  PodiumBrand,
-  CollectibleData,
   ActivityEvent,
+  PodiumDetailModalData,
 } from "@/shared/types/collectibles";
 import { request } from "@/services/api";
 import { BLOCKCHAIN_SERVICE } from "@/config/api";
 import styles from "./PodiumDetailModal.module.scss";
+import { useAuth } from "@/shared/hooks/auth";
 
 const formatPrice = (priceStr: string | null): string => {
   if (!priceStr) return "1M";
@@ -41,6 +41,9 @@ export const PodiumDetailModal: React.FC<
   const [loadingActivity, setLoadingActivity] = useState(false);
   const traitsTabRef = useRef<HTMLButtonElement>(null);
   const activityTabRef = useRef<HTMLButtonElement>(null);
+
+  const { data: authData } = useAuth();
+  const userFid = authData?.fid ? Number(authData.fid) : null;
 
   const {
     claimPodium,
@@ -592,49 +595,51 @@ export const PodiumDetailModal: React.FC<
       )}
 
       {/* Buy Section */}
-      <div className={styles.buySection}>
-        <Typography
-          variant="geist"
-          weight="regular"
-          size={12}
-          lineHeight={16}
-          className={styles.buyLabel}
-        >
-          {isMinted ? "BUY FOR" : "MINT FOR"}
-        </Typography>
-        <Typography
-          variant="druk"
-          weight="wide"
-          size={24}
-          lineHeight={28}
-          className={styles.buyPrice}
-        >
-          {formatPrice(currentPrice)} $BRND
-        </Typography>
-        <Button
-          variant="primary"
-          caption={getButtonText()}
-          className={classNames(
-            styles.buyNowButton,
-            isPending && styles.pending
-          )}
-          onClick={handleBuyOrMint}
-          disabled={isPending}
-        />
-        <Typography
-          variant="geist"
-          weight="regular"
-          size={10}
-          lineHeight={14}
-          className={styles.balanceInfo}
-        >
-          Your balance:{" "}
-          {formatPrice(
-            brndBalance ? (Number(brndBalance) * 1e18).toString() : "0"
-          )}{" "}
-          $BRND
-        </Typography>
-      </div>
+      {collectibleData.ownerFid !== userFid && (
+        <div className={styles.buySection}>
+          <Typography
+            variant="geist"
+            weight="regular"
+            size={12}
+            lineHeight={16}
+            className={styles.buyLabel}
+          >
+            {isMinted ? "BUY FOR" : "MINT FOR"}
+          </Typography>
+          <Typography
+            variant="druk"
+            weight="wide"
+            size={24}
+            lineHeight={28}
+            className={styles.buyPrice}
+          >
+            {formatPrice(currentPrice)} $BRND
+          </Typography>
+          <Button
+            variant="primary"
+            caption={getButtonText()}
+            className={classNames(
+              styles.buyNowButton,
+              isPending && styles.pending
+            )}
+            onClick={handleBuyOrMint}
+            disabled={isPending}
+          />
+          <Typography
+            variant="geist"
+            weight="regular"
+            size={10}
+            lineHeight={14}
+            className={styles.balanceInfo}
+          >
+            Your balance:{" "}
+            {formatPrice(
+              brndBalance ? (Number(brndBalance) * 1e18).toString() : "0"
+            )}{" "}
+            $BRND
+          </Typography>
+        </div>
+      )}
     </div>
   );
 };

@@ -340,6 +340,14 @@
   }
 }
 
+.priceContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
 .buyButton {
   background: linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%);
 }

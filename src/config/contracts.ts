@@ -20,7 +20,7 @@ export const AIRDROP_CONTRACT_CONFIG = {
 } as const;
 
 export const PODIUM_CONTRACT_CONFIG = {
-  CONTRACT: "0x529648D4AC34354F1A37C6fe0f4B6090Ed86fB9e" as `0x${string}`,
+  CONTRACT: "0x04764d92a9e9Ec8a31CFf832194d772eB04ef129" as `0x${string}`,
   BRND_TOKEN: "0x41Ed0311640A5e489A90940b1c33433501a21B07" as `0x${string}`,
   CHAIN_ID: 8453, // Base mainnet
 } as const;
