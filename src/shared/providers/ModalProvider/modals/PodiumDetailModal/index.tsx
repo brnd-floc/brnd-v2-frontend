@@ -101,14 +101,14 @@ export const PodiumDetailModal: React.FC<
       activityHistory.length === 0
     ) {
       setLoadingActivity(true);
-      request<ActivityEvent[]>(
+      request<{ activities: ActivityEvent[]; podiumInfo: unknown }>(
         `${BLOCKCHAIN_SERVICE}/collectible-activity/${tokenId}`,
         {
           method: "GET",
         }
       )
         .then((data) => {
-          setActivityHistory(data || []);
+          setActivityHistory(data?.activities || []);
         })
         .catch((err) => {
           console.error("Failed to fetch activity:", err);
@@ -204,8 +204,6 @@ export const PodiumDetailModal: React.FC<
       mint: "Mint",
       sale: "Sale",
       transfer: "Transfer",
-      listing: "Listing",
-      item_offer: "Item Offer",
     };
     return labels[type] || type;
   };
