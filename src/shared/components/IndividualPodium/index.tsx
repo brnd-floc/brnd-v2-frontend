@@ -114,13 +114,23 @@ const IndividualPodium: React.FC<IndividualPodiumProps> = ({
   const isNotMintable = !isMinted && (!isLastVoteForCombination || !isCreator);
 
   const handleArrowClick = () => {
+    // Pass optimistic collectible data if transaction succeeded
+    const optimisticCollectibleData = hasSucceeded
+      ? {
+          ...collectibleData,
+          isCollectible: true,
+          ownerFid: userFid,
+          ownerUsername: authData?.username || null,
+        }
+      : collectibleData;
+
     openModal(ModalsIds.PODIUM_DETAIL, {
       brand1,
       brand2,
       brand3,
       user,
-      collectibleData,
-      isLastVoteForCombination,
+      collectibleData: optimisticCollectibleData,
+      isLastVoteForCombination: hasSucceeded ? true : isLastVoteForCombination,
     });
   };
 

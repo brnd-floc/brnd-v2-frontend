@@ -125,14 +125,24 @@ const FeedIndividualPodium: React.FC<IndividualPodiumProps> = ({
   const timeAgo = useMemo(() => getTimeAgo(podium?.date), [podium?.date]);
 
   const handleArrowClick = () => {
+    // Pass optimistic collectible data if transaction succeeded
+    const optimisticCollectibleData = hasSucceeded
+      ? {
+          ...collectibleData,
+          isCollectible: true,
+          ownerFid: userFid,
+          ownerUsername: authData?.username || null,
+        }
+      : collectibleData;
+
     openModal(ModalsIds.FEED_PODIUM_DETAIL, {
       podium,
       brand1,
       brand2,
       brand3,
       user,
-      collectibleData,
-      isLastVoteForCombination,
+      collectibleData: optimisticCollectibleData,
+      isLastVoteForCombination: hasSucceeded ? true : isLastVoteForCombination,
       onMintSuccess,
     });
   };

@@ -339,7 +339,7 @@ export const PodiumDetailModal: React.FC<
           </Typography>
           <div className={styles.boxValueGroup}>
             <Typography variant="geist" weight="bold" size={24} lineHeight={28}>
-              {formatPrice(buyPrice)}
+              {formatPrice(isMinted ? buyPrice : currentPrice)}
             </Typography>
             <Typography
               variant="geist"

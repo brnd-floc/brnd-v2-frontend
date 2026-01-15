@@ -166,7 +166,7 @@ export const FeedPodiumDetailModal: React.FC<
 
   const getButtonText = (): string => {
     if (canMint) return `Mint · ${mintPrice} $BRND`;
-    if (isOwned) return "Minted!";
+    if (isOwned) return "Owned";
     if (isNotMintable) return "Not mintable";
     if (canBuy) return `Buy · ${displayBuyPrice} $BRND`;
     return "Not mintable";
