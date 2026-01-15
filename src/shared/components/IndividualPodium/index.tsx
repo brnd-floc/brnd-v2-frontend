@@ -10,6 +10,8 @@ import { ModalsIds } from "@/shared/providers/ModalProvider/types";
 import { PodiumBrand, CollectibleData } from "@/shared/types/collectibles";
 import { useAuth } from "@/shared/hooks/auth";
 import { User } from "@/shared/hooks/user";
+import { useAccount, useConnect } from "wagmi";
+import sdk from "@farcaster/miniapp-sdk";
 
 export interface IndividualPodiumProps {
   className?: string;
@@ -47,6 +49,7 @@ export interface IndividualPodiumProps {
   onBuyClick?: () => void;
   onMintSuccess?: () => void;
   isPending?: boolean;
+  hasSucceeded?: boolean; // Optimistic update after successful transaction
 }
 
 // Format large numbers (1000000 -> "1M", 1200000 -> "1.2M")
@@ -75,15 +78,19 @@ const IndividualPodium: React.FC<IndividualPodiumProps> = ({
   onBuyClick,
   user,
   isPending = false,
+  hasSucceeded = false,
 }) => {
   const { openModal } = useModal();
+  const { isConnected } = useAccount();
+  const { connect, connectors } = useConnect();
 
   const { data: authData } = useAuth();
   const userFid = authData?.fid ? Number(authData.fid) : null;
 
-  const isMinted = collectibleData.isCollectible;
-  const ownerFid = collectibleData.ownerFid;
-  const owner = collectibleData.ownerUsername;
+  // Apply optimistic update if transaction succeeded
+  const isMinted = hasSucceeded || collectibleData.isCollectible;
+  const ownerFid = hasSucceeded ? userFid : collectibleData.ownerFid;
+  const owner = hasSucceeded ? authData?.username : collectibleData.ownerUsername;
 
   // Price calculations per contract:
   // - Mint price: BASE_PRICE (stored in collectibleData.price)
@@ -119,6 +126,17 @@ const IndividualPodium: React.FC<IndividualPodiumProps> = ({
 
   const handleActionClick = () => {
     if (isPending || isOwned || isNotMintable) return;
+
+    // If wallet is not connected, connect it first
+    if (!isConnected) {
+      sdk.haptics.selectionChanged();
+      const farcasterConnector = connectors?.[0];
+      if (farcasterConnector) {
+        connect({ connector: farcasterConnector });
+      }
+      return;
+    }
+
     if (canBuy) {
       onBuyClick?.();
     } else if (canMint) {
@@ -128,7 +146,7 @@ const IndividualPodium: React.FC<IndividualPodiumProps> = ({
 
   const getButtonText = () => {
     if (canMint) return `Mint`;
-    if (isOwned) return "Minted";
+    if (isOwned) return "Owned";
     if (isNotMintable) return "N/A";
     if (canBuy) return `Buy`;
     return "N/A";

@@ -8,6 +8,8 @@ import Podium3Icon from "@/shared/assets/icons/podium-3.svg?react";
 import { useModal } from "@/shared/hooks/ui/useModal";
 import { ModalsIds } from "@/shared/providers/ModalProvider/types";
 import { useAuth } from "@/shared/hooks/auth";
+import { useAccount, useConnect } from "wagmi";
+import sdk from "@farcaster/miniapp-sdk";
 
 import { IndividualPodiumProps } from "../IndividualPodium";
 
@@ -84,15 +86,19 @@ const FeedIndividualPodium: React.FC<IndividualPodiumProps> = ({
   onMintSuccess,
   user,
   isPending = false,
+  hasSucceeded = false,
 }) => {
   const { openModal } = useModal();
+  const { isConnected } = useAccount();
+  const { connect, connectors } = useConnect();
 
   const { data: authData } = useAuth();
   const userFid = authData?.fid ? Number(authData.fid) : null;
 
-  const isMinted = collectibleData.isCollectible;
-  const ownerFid = collectibleData.ownerFid;
-  const owner = collectibleData.ownerUsername;
+  // Apply optimistic update if transaction succeeded
+  const isMinted = hasSucceeded || collectibleData.isCollectible;
+  const ownerFid = hasSucceeded ? userFid : collectibleData.ownerFid;
+  const owner = hasSucceeded ? authData?.username : collectibleData.ownerUsername;
 
   // Price calculations per contract:
   // - Mint price: BASE_PRICE (1M BRND)
@@ -133,6 +139,17 @@ const FeedIndividualPodium: React.FC<IndividualPodiumProps> = ({
 
   const handleActionClick = () => {
     if (isPending || isOwned || isNotMintable) return;
+
+    // If wallet is not connected, connect it first
+    if (!isConnected) {
+      sdk.haptics.selectionChanged();
+      const farcasterConnector = connectors?.[0];
+      if (farcasterConnector) {
+        connect({ connector: farcasterConnector });
+      }
+      return;
+    }
+
     if (canBuy) {
       onBuyClick?.();
     } else if (canMint) {
@@ -142,7 +159,7 @@ const FeedIndividualPodium: React.FC<IndividualPodiumProps> = ({
 
   const getButtonText = () => {
     if (canMint) return `Mint · ${mintPrice} $BRND`;
-    if (isOwned) return "Minted!";
+    if (isOwned) return "Owned";
     if (isNotMintable) return "Not mintable";
     if (canBuy) return `Buy · ${displayBuyPrice} $BRND`;
     return "Not mintable";
@@ -284,7 +301,13 @@ const FeedIndividualPodium: React.FC<IndividualPodiumProps> = ({
               <div className={styles.userInfo}>
                 {isMinted && owner ? (
                   <>
-                    {podium?.collectibleOwner?.photoUrl ? (
+                    {hasSucceeded && authData?.photoUrl ? (
+                      <img
+                        src={authData.photoUrl}
+                        alt={owner}
+                        className={styles.userAvatar}
+                      />
+                    ) : podium?.collectibleOwner?.photoUrl ? (
                       <img
                         src={podium?.collectibleOwner?.photoUrl}
                         alt={owner}

@@ -57,7 +57,8 @@ function MyPodium() {
       }
       setProcessingPodiumId(null);
       refreshData();
-      refetch();
+      // Don't refetch immediately - optimistic update handles the UI
+      // List will sync when user navigates away and back
     },
     (txData) => {
       console.log("✅ Podium bought!", txData);
@@ -69,7 +70,8 @@ function MyPodium() {
       }
       setProcessingPodiumId(null);
       refreshData();
-      refetch();
+      // Don't refetch immediately - optimistic update handles the UI
+      // List will sync when user navigates away and back
     }
   );
 
@@ -295,6 +297,7 @@ function MyPodium() {
                     isPending={
                       isProcessing && (isPending || isConfirming || isApproving)
                     }
+                    hasSucceeded={hasSucceeded}
                   />
                 </li>
               );

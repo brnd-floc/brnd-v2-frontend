@@ -414,8 +414,9 @@ export const usePodiumCollectibles = (
           priceBRND: formatUnits(price, 18),
         });
 
-        // Check BRND balance
+        // Use cached BRND balance from hook (avoids rate limiting)
         const balance = brndBalance ? (brndBalance as bigint) : 0n;
+
         console.log("💰 [ClaimPodium] Balance check:", {
           balanceWei: balance.toString(),
           balanceBRND: formatUnits(balance, 18),
@@ -720,97 +721,115 @@ export const usePodiumCollectibles = (
       }
 
       try {
-        // Refresh allowance first
-        await refetchAllowance();
+        // Poll for allowance to be reflected on-chain (RPC nodes may take time to sync)
+        const requiredAllowance = pendingApprovalAmount;
+        const maxAttempts = 10;
+        const delayMs = 1500;
 
-        // Wait a bit for allowance to update on-chain
-        setTimeout(async () => {
-          try {
-            if (pendingOperationType === "claim" && pendingClaimBrandIds) {
-              console.log("🔄 [Approve] Fetching fresh signature after approval");
-              setIsFetchingSignature(true);
+        console.log("🔄 [Approve] Waiting for allowance to be confirmed...");
 
-              // Fetch a FRESH signature from backend - critical fix!
-              // The old signature is invalid after blockchain state changes from approval
-              const freshDeadline = Math.floor(Date.now() / 1000) + 3600;
-              const freshSignatureData = await getClaimPodiumSignature(
-                pendingClaimBrandIds,
-                freshDeadline
-              );
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+          await refetchAllowance();
 
-              if (!freshSignatureData.eligible) {
-                throw new Error(
-                  freshSignatureData.reason || "Not eligible to claim this podium"
-                );
-              }
+          // Small delay to let state update
+          await new Promise((resolve) => setTimeout(resolve, 500));
 
-              console.log("🔄 [Approve] Got fresh signature, proceeding with claim");
-              // Keep isFetchingSignature true until writeContract is called
-              // This ensures spinner doesn't flicker during state transitions
-              setPendingApprovalAmount(null);
-              setPendingOperationType(null);
-              setLastOperation("claimPodium");
+          // Read fresh allowance from chain
+          const currentAllowance = await readContract(config, {
+            address: PODIUM_CONTRACT_CONFIG.BRND_TOKEN,
+            abi: ERC20_ABI,
+            functionName: "allowance",
+            args: [userAddress, PODIUM_CONTRACT_CONFIG.CONTRACT],
+            chainId: PODIUM_CONTRACT_CONFIG.CHAIN_ID,
+          });
 
-              const brandIds = pendingClaimBrandIds;
-              setPendingClaimBrandIds(null);
-              setPendingClaimData({
-                brandIds,
-                fid: userFid!,
-                deadline: freshDeadline,
-                signature: freshSignatureData.signature,
-              });
+          console.log(`🔄 [Approve] Attempt ${attempt}/${maxAttempts} - Allowance: ${currentAllowance}`);
 
-              // Now call writeContract - it sets isWritePending=true immediately
-              // Then clear isFetchingSignature since isWritePending handles the spinner
-              setIsFetchingSignature(false);
-              await writeContract({
-                address: PODIUM_CONTRACT_CONFIG.CONTRACT,
-                abi: BRND_PODIUM_COLLECTABLES_ABI,
-                functionName: "claimPodium",
-                args: [
-                  brandIds,
-                  BigInt(userFid!),
-                  BigInt(freshDeadline),
-                  freshSignatureData.signature as `0x${string}`,
-                ],
-                chainId: PODIUM_CONTRACT_CONFIG.CHAIN_ID,
-              });
-            } else if (
-              pendingOperationType === "buy" &&
-              pendingBuyTokenId !== null &&
-              userFid
-            ) {
-              console.log("🔄 [Approve] Auto-retrying buy after approval");
-              setPendingApprovalAmount(null);
-              setPendingOperationType(null);
-              setLastOperation("buyPodium");
-
-              await writeContract({
-                address: PODIUM_CONTRACT_CONFIG.CONTRACT,
-                abi: BRND_PODIUM_COLLECTABLES_ABI,
-                functionName: "buyPodium",
-                args: [BigInt(pendingBuyTokenId), BigInt(userFid)],
-                chainId: PODIUM_CONTRACT_CONFIG.CHAIN_ID,
-              });
-            }
-          } catch (error: any) {
-            console.error("❌ [Approve] Auto-retry failed:", error);
-            setError(error.message || "Failed to claim after approval");
-            setPendingClaimData(null);
-            setPendingClaimBrandIds(null);
-            setPendingBuyTokenId(null);
-            setPendingApprovalAmount(null);
-            setPendingOperationType(null);
-            setIsFetchingSignature(false);
-            setLastOperation(null);
+          if ((currentAllowance as bigint) >= requiredAllowance) {
+            console.log("✅ [Approve] Allowance confirmed on-chain!");
+            break;
           }
-        }, 1000);
+
+          if (attempt === maxAttempts) {
+            throw new Error("Allowance not confirmed after approval. Please try again.");
+          }
+
+          await new Promise((resolve) => setTimeout(resolve, delayMs));
+        }
+
+        // Now proceed with the actual operation
+        if (pendingOperationType === "claim" && pendingClaimBrandIds) {
+          console.log("🔄 [Approve] Fetching fresh signature after approval");
+          setIsFetchingSignature(true);
+
+          // Fetch a FRESH signature from backend
+          const freshDeadline = Math.floor(Date.now() / 1000) + 3600;
+          const freshSignatureData = await getClaimPodiumSignature(
+            pendingClaimBrandIds,
+            freshDeadline
+          );
+
+          if (!freshSignatureData.eligible) {
+            throw new Error(
+              freshSignatureData.reason || "Not eligible to claim this podium"
+            );
+          }
+
+          console.log("🔄 [Approve] Got fresh signature, proceeding with claim");
+          setPendingApprovalAmount(null);
+          setPendingOperationType(null);
+          setLastOperation("claimPodium");
+
+          const brandIds = pendingClaimBrandIds;
+          setPendingClaimBrandIds(null);
+          setPendingClaimData({
+            brandIds,
+            fid: userFid!,
+            deadline: freshDeadline,
+            signature: freshSignatureData.signature,
+          });
+
+          setIsFetchingSignature(false);
+          await writeContract({
+            address: PODIUM_CONTRACT_CONFIG.CONTRACT,
+            abi: BRND_PODIUM_COLLECTABLES_ABI,
+            functionName: "claimPodium",
+            args: [
+              brandIds,
+              BigInt(userFid!),
+              BigInt(freshDeadline),
+              freshSignatureData.signature as `0x${string}`,
+            ],
+            chainId: PODIUM_CONTRACT_CONFIG.CHAIN_ID,
+          });
+        } else if (
+          pendingOperationType === "buy" &&
+          pendingBuyTokenId !== null &&
+          userFid
+        ) {
+          console.log("🔄 [Approve] Auto-retrying buy after approval");
+          setPendingApprovalAmount(null);
+          setPendingOperationType(null);
+          setLastOperation("buyPodium");
+
+          await writeContract({
+            address: PODIUM_CONTRACT_CONFIG.CONTRACT,
+            abi: BRND_PODIUM_COLLECTABLES_ABI,
+            functionName: "buyPodium",
+            args: [BigInt(pendingBuyTokenId), BigInt(userFid)],
+            chainId: PODIUM_CONTRACT_CONFIG.CHAIN_ID,
+          });
+        }
       } catch (error: any) {
-        setError("Failed to proceed after approval");
+        console.error("❌ [Approve] Auto-retry failed:", error);
+        setError(error.message || "Failed to claim after approval");
+        setPendingClaimData(null);
+        setPendingClaimBrandIds(null);
+        setPendingBuyTokenId(null);
         setPendingApprovalAmount(null);
         setPendingOperationType(null);
-        setLastOperation(null);
         setIsFetchingSignature(false);
+        setLastOperation(null);
       }
     };
 

@@ -80,17 +80,22 @@ export const PodiumDetailModal: React.FC<
   const totalFeesEarned = collectibleData.totalFeesEarned || "0";
   const creator = collectibleData.genesisCreatorUsername;
   const owner = collectibleData.ownerUsername;
+  const ownerFid = collectibleData.ownerFid;
   const podiumId = `${brand1?.id ?? 0}-${brand2?.id ?? 0}-${brand3?.id ?? 0}`;
 
-  // Determine mintability state
-  // - isLastVoteForCombination: true + isCollectible: false → "Mint" (can mint)
-  // - isLastVoteForCombination: true + isCollectible: true → "Owned" (already minted by user)
-  // - isLastVoteForCombination: false + isCollectible: false → "Not mintable" (someone else voted after)
-  // - isLastVoteForCombination: false + isCollectible: true → "Buy" (minted by someone else)
+  // Calculate buy price (1.2x the last sale price)
+  const buyPrice = String(Math.floor(Number(currentPrice) * 1.2));
+
+  // Determine states based on ownership and mintability
+  // - canMint: User was last to vote AND not minted yet
+  // - isOwned: IS minted AND user IS the current owner
+  // - canBuy: IS minted AND user is NOT the current owner
+  // - isNotMintable: NOT minted AND user was NOT last to vote
+  const isCurrentOwner = isMinted && ownerFid === userFid;
   const canMint = isLastVoteForCombination && !isMinted;
-  const isOwned = isLastVoteForCombination && isMinted;
+  const isOwned = isCurrentOwner;
   const isNotMintable = !isLastVoteForCombination && !isMinted;
-  const canBuy = !isLastVoteForCombination && isMinted;
+  const canBuy = isMinted && !isCurrentOwner;
 
   // Fetch activity when tab changes to activity
   useEffect(() => {
@@ -320,7 +325,7 @@ export const PodiumDetailModal: React.FC<
         </div>
       </div>
 
-      {/* Value and Benefits */}
+      {/* Price and Benefits */}
       <div className={styles.valueBenefits}>
         <div className={styles.valueBox}>
           <Typography
@@ -330,11 +335,11 @@ export const PodiumDetailModal: React.FC<
             lineHeight={20}
             className={styles.boxLabel}
           >
-            VALUE
+            PRICE
           </Typography>
           <div className={styles.boxValueGroup}>
             <Typography variant="geist" weight="bold" size={24} lineHeight={28}>
-              {formatPrice(currentPrice)}
+              {formatPrice(buyPrice)}
             </Typography>
             <Typography
               variant="geist"
@@ -749,7 +754,7 @@ export const PodiumDetailModal: React.FC<
       )}
 
       {/* Buy Section */}
-      {collectibleData.ownerFid !== userFid && (
+      {!isOwned && (
         <div className={styles.buySection}>
           {(canMint || canBuy) && (
             <div className={styles.topBuySection}>
@@ -769,7 +774,7 @@ export const PodiumDetailModal: React.FC<
                 lineHeight={28}
                 className={styles.buyPrice}
               >
-                {formatPrice(currentPrice)} $BRND
+                {formatPrice(canBuy ? buyPrice : currentPrice)} $BRND
               </Typography>
             </div>
           )}

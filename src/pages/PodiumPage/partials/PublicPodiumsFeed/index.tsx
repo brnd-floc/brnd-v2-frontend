@@ -355,6 +355,7 @@ function PublicPodiumsFeed() {
                   isPending={
                     isProcessing && (isPending || isConfirming || isApproving)
                   }
+                  hasSucceeded={hasSucceeded}
                 />
               </li>
             );

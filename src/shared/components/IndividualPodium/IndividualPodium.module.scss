@@ -415,7 +415,61 @@
 }
 
 .buyButton {
-  background: linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%);
+  position: relative;
+  z-index: 0;
+  background: #18171d; // slightly off-black for inner fill
+  border-radius: 4px; // thick, rounded corners
+  padding: 0;
+  border: none;
+  width: 88px;
+
+  /* Outer glowing gradient border using a double-layer background */
+  &:before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    border-radius: 10px;
+    padding: 0;
+    background: conic-gradient(
+      #ffe45e 0deg,
+      #ff417d 90deg,
+      #617afd 180deg,
+      #20d67b 270deg,
+      #ffe45e 360deg
+    );
+    /* This gives a full color sweep as seen in the screenshot */
+    /* Glow effect: */
+    box-shadow: 0 0 8px 2px #ffe45e30, 0 0 12px 4px #617afd20;
+  }
+
+  /* Inner area of the button (content fill) */
+  &:after {
+    content: "";
+    position: absolute;
+    inset: 2px;
+    border-radius: 8px;
+    z-index: -1;
+    background: #18171d;
+  }
+
+  /* Button content styles */
+  color: #fff;
+  font-weight: 700;
+  font-size: 32px; // match screenshot
+  line-height: 1.2;
+  font-family: "Geist", "Inter", "Arial", sans-serif;
+  text-align: center;
+
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* Remove inner border or outline */
+  box-shadow: none;
+  outline: none;
+  transition: transform 0.15s;
 }
 
 .mintButton {
