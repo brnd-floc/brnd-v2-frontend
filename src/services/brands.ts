@@ -51,15 +51,8 @@ const brandListCache = new Map<string, GetBrandListResponse>();
  * Response structure for recent podiums API
  */
 export interface RecentPodiumsResponse {
-  podiums: PublicPodium[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
-  };
+  count: number;
+  data: PublicPodium[];
 }
 
 /**

@@ -30,12 +30,13 @@ function PublicPodiumsFeed() {
     limit
   );
 
+  console.log("THE DATA IS", data);
   /**
    * Initialize component with first page data on mount
    */
   useEffect(() => {
-    if (data?.podiums && !isInitialized) {
-      setAllPodiums(data.podiums);
+    if (data?.data && !isInitialized) {
+      setAllPodiums(data.data);
       setIsInitialized(true);
     }
   }, [data, isInitialized]);
@@ -44,20 +45,18 @@ function PublicPodiumsFeed() {
    * Accumulate podiums from subsequent pages
    */
   useEffect(() => {
-    if (data?.podiums && isInitialized) {
+    if (data?.data && isInitialized) {
       if (currentPage === 1) {
         // First page after initialization - replace all podiums
 
-        setAllPodiums(data.podiums);
+        setAllPodiums(data.data);
       } else {
         // Subsequent pages - append new podiums
 
         setAllPodiums((prev) => {
-          // Filter out duplicates by transactionHash
-          const existingHashes = new Set(prev.map((p) => p.transactionHash));
-          const newPodiums = data.podiums.filter(
-            (p) => !existingHashes.has(p.transactionHash)
-          );
+          // Filter out duplicates by id
+          const existingIds = new Set(prev.map((p) => p.id));
+          const newPodiums = data.data.filter((p) => !existingIds.has(p.id));
           return [...prev, ...newPodiums];
         });
       }
@@ -84,17 +83,20 @@ function PublicPodiumsFeed() {
       const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
       const calc = scrollTop + clientHeight + 50; // 50px buffer before bottom
 
+      // Calculate if there's a next page based on count and current data
+      const hasNextPage = data?.count ? allPodiums.length < data.count : false;
+
       if (
         calc >= scrollHeight &&
         !isFetching &&
         !isLoadingMore &&
-        data?.pagination.hasNextPage
+        hasNextPage
       ) {
         setIsLoadingMore(true);
         setCurrentPage((prev) => prev + 1);
       }
     },
-    [isFetching, isLoadingMore, data?.pagination.hasNextPage, currentPage]
+    [isFetching, isLoadingMore, data?.count, allPodiums.length, currentPage]
   );
 
   /**
@@ -164,7 +166,7 @@ function PublicPodiumsFeed() {
   }, []);
 
   useEffect(() => {
-    if (!data?.podiums) {
+    if (!data?.data) {
       setCurrentPage(1);
       setAllPodiums([]);
       setIsInitialized(false);
@@ -236,7 +238,7 @@ function PublicPodiumsFeed() {
             // Convert brand1, brand2, brand3 to array for mapping
             const brands = [podium.brand1, podium.brand2, podium.brand3];
             return (
-              <div key={podium.transactionHash} className={styles.podiumItem}>
+              <div key={podium.id} className={styles.podiumItem}>
                 {/* User info header */}
                 <div className={styles.podiumHeader}>
                   <div
@@ -257,13 +259,15 @@ function PublicPodiumsFeed() {
                         <Typography size={14} weight="medium">
                           {podium.user.username}
                         </Typography>{" "}
-                        <Typography
-                          size={14}
-                          weight="medium"
-                          className={styles.levelText}
-                        >
-                          level {podium.user.brndPowerLevel}
-                        </Typography>
+                        {podium.user.brndPowerLevel && (
+                          <Typography
+                            size={14}
+                            weight="medium"
+                            className={styles.levelText}
+                          >
+                            level {podium.user.brndPowerLevel}
+                          </Typography>
+                        )}
                       </div>
 
                       <Typography size={12} className={styles.timeAgo}>
@@ -278,7 +282,7 @@ function PublicPodiumsFeed() {
                         <span
                           onClick={() => {
                             sdk.actions.openUrl({
-                              url: `https://basescan.org/tx/${podium.transactionHash}`,
+                              url: `https://basescan.org/tx/${podium.id}`,
                             });
                           }}
                         >
@@ -287,7 +291,7 @@ function PublicPodiumsFeed() {
                           </Typography>
                         </span>
                       )}
-                    {podium.claimedAt && podium.rewardAmount && (
+                    {podium.claimed && (
                       <span
                         onClick={() => {
                           sdk.actions.openUrl({
@@ -314,7 +318,7 @@ function PublicPodiumsFeed() {
                     <div className={styles.podiumGrid}>
                       {brands.map((brand: Brand, index: number) => (
                         <BrandCard
-                          key={`${podium.transactionHash}-brand-${index}`}
+                          key={`${podium.id}-brand-${index}`}
                           name={brand?.name || ""}
                           photoUrl={brand?.imageUrl}
                           context="podium"
