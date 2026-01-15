@@ -314,26 +314,20 @@
   opacity: 0.7;
 }
 
+.sectionsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+}
+
 .upcomingSection {
-  flex: 1;
-  min-height: 0; // Allow flex item to shrink
-  // Removed overflow-y: auto to prevent nested scrolling
-  // Parent container handles scrolling
+  width: 100%;
 }
 
 .completedSection {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  max-height: 80px;
-  height: 80px;
-  overflow-y: hidden;
-  overflow-x: hidden;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  background-color: #110f15;
-  padding: 8px 0;
-  z-index: 10;
+  margin-top: 24px;
+  width: 100%;
 }
 
 .sectionTitle {
@@ -344,61 +338,57 @@
 
 .completedLevelsList {
   display: flex;
-  flex-direction: row;
-  gap: 8px;
-  padding: 0 4px;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
-
-  &::-webkit-scrollbar {
-    height: 4px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background-color: rgba(255, 255, 255, 0.2);
-    border-radius: 2px;
-  }
+  flex-direction: column;
+  gap: 0;
 }
 
 .completedLevelItem {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 16px;
-  background: rgba(16, 185, 129, 0.1);
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  border-radius: 6px;
+  gap: 16px;
+  padding: 16px 20px;
+  background: transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   transition: all 0.2s ease;
-  flex-shrink: 0;
-  min-width: fit-content;
-  white-space: nowrap;
 
-  &:hover {
-    background: rgba(16, 185, 129, 0.15);
+  &:last-child {
+    border-bottom: none;
   }
 }
 
-.completedLevelTitle {
-  flex: 1;
+.completedLevelNumber {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
   color: #fff;
+}
+
+.completedLevelContent {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.completedLevelTitle {
+  color: #fff;
+  text-transform: uppercase;
 }
 
 .completedStatus {
   display: flex;
   align-items: center;
   gap: 8px;
+}
 
-  .checkmark {
-    color: #10b981;
-    font-size: 16px;
-    font-weight: bold;
-  }
+.statusText {
+  color: #9b92a5;
+}
+
+.completedCheckmark {
+  color: #10b981;
+  font-size: 16px;
+  font-weight: bold;
 }
 
 .progressText {

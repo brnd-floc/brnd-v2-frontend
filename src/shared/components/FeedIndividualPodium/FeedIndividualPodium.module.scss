@@ -30,8 +30,8 @@
 // Date in top right corner
 .dateContainer {
   position: absolute;
-  top: 12px;
-  right: 16px;
+  top: 4px;
+  right: 8px;
 }
 
 .dateText {
@@ -66,6 +66,32 @@
   align-items: center;
   gap: 4px;
   transition: transform 0.3s ease;
+  position: relative; // Add this
+
+  // Metallic gradient border that fades down
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    padding: 0.5px;
+    background: linear-gradient(
+      180deg,
+      #e8e8e8 0%,
+      #b0b0b0 10%,
+      #f5f5f5 20%,
+      #888888 35%,
+      #c0c0c0 50%,
+      #a0a0a0 70%,
+      transparent 100%
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    border-radius: 8px 8px 0 0;
+    pointer-events: none;
+  }
 }
 
 .podiumItem.first {
@@ -82,8 +108,8 @@
 
 .imagePlaceholder,
 .brandImage {
-  width: 40px;
-  height: 40px;
+  width: 28px;
+  height: 28px;
   border-radius: 8px;
   object-fit: cover;
   background: rgba(255, 255, 255, 0.1);
@@ -99,7 +125,7 @@
 
 .numberIcon {
   width: auto;
-  height: 18px;
+  height: 14px;
 }
 
 // Info section (Creator/Owner)
@@ -110,15 +136,13 @@
   flex: 1;
   min-width: 0; // Allow flex item to shrink
   padding-top: 4px;
-  margin-top: 22px;
+  margin-top: 12px;
 }
 
 .infoRow {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 8px;
-  min-width: 0; // Allow flex item to shrink
   overflow: hidden; // Prevent content overflow
 }
 
@@ -172,10 +196,9 @@
 .paymentInfo {
   display: flex;
   flex-direction: row;
-  gap: 8px;
+  gap: 12px;
   align-items: center;
   justify-content: center;
-  gap: 4px;
   padding-left: 4px;
   margin-top: 4px;
   width: 100%;
@@ -190,16 +213,27 @@
 .claimedAmount {
   background: linear-gradient(
     90deg,
-    #fff100 0%,
-    #ff0000 33%,
-    #0c00ff 66%,
-    #00ff00 100%
+    #ff9533 0%,
+    #ff0000 25%,
+    #0c00ff 50%,
+    #00ff00 75%,
+    #ff9533 100%
   );
+  background-size: 200% 100%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   animation: rainbowShift 3s linear infinite;
   font-weight: 600;
+}
+
+@keyframes rainbowShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
 }
 
 // Action button
@@ -212,8 +246,8 @@
   padding: 12px 16px;
   width: 100%;
   max-width: 100%; // Prevent overflow
-  height: 44px;
-  border-radius: 8px;
+  height: 34px;
+  border-radius: 4px;
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -231,63 +265,112 @@
   color: white;
 }
 
-// Mint button with rainbow gradient border
+// Mint button with rainbow gradient and black overlay
 .mintButton {
   position: relative;
-  z-index: 0;
-  background: #18171d;
-  border-radius: 8px;
+  isolation: isolate;
+  padding: 8px 12px;
+  gap: 8px;
+  height: 34px;
+  border-radius: 12px;
+  backdrop-filter: blur(12px);
+  overflow: hidden;
+  background: transparent;
+  border: 1px solid transparent; // Reserve space for border
 
+  // Rainbow gradient border (outer layer)
   &:before {
     content: "";
     position: absolute;
     inset: 0;
     z-index: -2;
-    border-radius: 10px;
-    background: conic-gradient(
-      #ffe45e 0deg,
-      #ff417d 90deg,
-      #617afd 180deg,
-      #20d67b 270deg,
-      #ffe45e 360deg
+    border-radius: 12px;
+    background: linear-gradient(
+      90deg,
+      #ff9533 0%,
+      #ff0000 33%,
+      #0c00ff 66%,
+      #00ff00 100%
     );
-    box-shadow: 0 0 8px 2px rgba(255, 228, 94, 0.2),
-      0 0 12px 4px rgba(97, 122, 253, 0.1);
   }
 
+  // Black overlay background (inner layer, creates border effect)
   &:after {
     content: "";
     position: absolute;
-    inset: 2px;
-    border-radius: 6px;
+    inset: 1px; // Inset by 1px to show the rainbow border
     z-index: -1;
-    background: #18171d;
+    border-radius: 11px; // Slightly smaller to account for 1px inset
+    background: rgba(0, 0, 0, 0.75);
   }
 
   .actionButtonText {
     color: #fff;
+    position: relative;
+    z-index: 1;
   }
 }
 
-// Buy button with gradient
+// Buy button with rainbow gradient border and light background
 .buyButton {
-  background: linear-gradient(
-      360deg,
-      #eaeaea 0%,
-      rgba(255, 255, 255, 0.9) 50%,
-      #eaeaea 100%
-    ),
-    linear-gradient(
+  position: relative;
+  isolation: isolate;
+  padding: 8px 12px;
+  gap: 8px;
+  height: 34px;
+  border-radius: 4px;
+  backdrop-filter: blur(12px);
+  overflow: hidden;
+  background: transparent;
+  border: 1px solid transparent; // Reserve space for border
+
+  // Rainbow gradient border (outer layer)
+  &:before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -3;
+    border-radius: 4px;
+    background: linear-gradient(
       191.75deg,
       #fff000 0%,
       #ff0000 33%,
       #0e00ff 66%,
       #00ff00 100%
     );
-  background-blend-mode: overlay, normal;
+  }
+
+  // Light gradient background with green overlay (inner layer)
+  &:after {
+    content: "";
+    position: absolute;
+    inset: 1px; // Inset by 1px to show the rainbow border
+    z-index: -1;
+    border-radius: 3px; // Slightly smaller to account for 1px inset
+    background: linear-gradient(
+        360deg,
+        #eaeaea 0%,
+        rgba(255, 255, 255, 0.8) 50%,
+        #eaeaea 100%
+      ),
+      rgba(0, 255, 0, 0.12);
+    background-blend-mode: normal, overlay;
+  }
 
   .actionButtonText {
     color: #000000;
+    position: relative;
+    z-index: 1;
+  }
+}
+
+// Success button (just bought/minted)
+.successButton {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border: 1px solid rgba(16, 185, 129, 0.5);
+
+  .actionButtonText {
+    color: #ffffff;
   }
 }
 

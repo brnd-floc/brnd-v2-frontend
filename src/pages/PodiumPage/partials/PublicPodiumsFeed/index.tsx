@@ -32,10 +32,10 @@ function PublicPodiumsFeed() {
   const [processingPodiumId, setProcessingPodiumId] = useState<string | null>(
     null
   );
-  // Track optimistic updates for successful transactions
-  const [successfulPodiums, setSuccessfulPodiums] = useState<Set<string>>(
-    new Set()
-  );
+  // Track optimistic updates for successful transactions with their type
+  const [successfulPodiums, setSuccessfulPodiums] = useState<
+    Map<string, "mint" | "buy">
+  >(new Map());
   const limit = 20;
 
   const { data, isLoading, isFetching, error, refetch } = useRecentPodiums(
@@ -66,9 +66,9 @@ function PublicPodiumsFeed() {
       console.log("✅ Podium claimed successfully!", txData);
       // Provide haptic feedback for success
       sdk.haptics.notificationOccurred("success");
-      // Optimistically mark this podium as successful
+      // Optimistically mark this podium as minted
       if (processingPodiumId) {
-        setSuccessfulPodiums((prev) => new Set(prev).add(processingPodiumId));
+        setSuccessfulPodiums((prev) => new Map(prev).set(processingPodiumId, "mint"));
       }
       setProcessingPodiumId(null);
       refreshData();
@@ -79,9 +79,9 @@ function PublicPodiumsFeed() {
       console.log("✅ Podium bought successfully!", txData);
       // Provide haptic feedback for success
       sdk.haptics.notificationOccurred("success");
-      // Optimistically mark this podium as successful
+      // Optimistically mark this podium as bought
       if (processingPodiumId) {
-        setSuccessfulPodiums((prev) => new Set(prev).add(processingPodiumId));
+        setSuccessfulPodiums((prev) => new Map(prev).set(processingPodiumId, "buy"));
       }
       setProcessingPodiumId(null);
       refreshData();
@@ -136,13 +136,21 @@ function PublicPodiumsFeed() {
   // Clear optimistic updates once real data confirms the change
   useEffect(() => {
     if (data?.data && successfulPodiums.size > 0) {
-      const updatedSuccessful = new Set(successfulPodiums);
+      const updatedSuccessful = new Map(successfulPodiums);
       let hasChanges = false;
 
-      successfulPodiums.forEach((podiumId) => {
+      successfulPodiums.forEach((successType, podiumId) => {
         const podium = allPodiums.find((p) => p.id === podiumId);
-        // If the real data now shows it's minted (isCollectible true), remove from optimistic set
-        if (podium && podium.isCollectible) {
+        if (!podium) return;
+
+        // For mint: clear when isCollectible becomes true
+        // For buy: clear when the owner matches the current user
+        const shouldClear =
+          successType === "mint"
+            ? podium.isCollectible
+            : podium.collectibleOwnerFid === userFid;
+
+        if (shouldClear) {
           updatedSuccessful.delete(podiumId);
           hasChanges = true;
         }
@@ -152,7 +160,7 @@ function PublicPodiumsFeed() {
         setSuccessfulPodiums(updatedSuccessful);
       }
     }
-  }, [data, allPodiums, successfulPodiums]);
+  }, [data, allPodiums, successfulPodiums, userFid]);
 
   /**
    * Initialize component with first page data on mount
@@ -334,10 +342,22 @@ function PublicPodiumsFeed() {
               podium.isLastVoteForCombination ?? false;
 
             // Apply optimistic update if this podium was successfully transacted
-            const hasSucceeded = successfulPodiums.has(podium.id);
-            const optimisticCollectibleData = hasSucceeded
-              ? { ...collectibleData, isCollectible: true }
-              : collectibleData;
+            const successType = successfulPodiums.get(podium.id);
+            const hasSucceeded = !!successType;
+
+            // Build optimistic collectible data based on success type
+            let optimisticCollectibleData = collectibleData;
+            if (hasSucceeded) {
+              optimisticCollectibleData = {
+                ...collectibleData,
+                isCollectible: true,
+                // For buy success, update owner to current user
+                ...(successType === "buy" && {
+                  ownerFid: userFid,
+                  ownerUsername: authData?.username || null,
+                }),
+              };
+            }
 
             return (
               <li key={podium.id} className={styles.item}>
@@ -366,6 +386,7 @@ function PublicPodiumsFeed() {
                     (isPending || isConfirming || isApproving || isFetchingSignature)
                   }
                   hasSucceeded={hasSucceeded}
+                  successType={successType}
                 />
               </li>
             );

@@ -3,6 +3,7 @@
 .body {
   display: flex;
   flex-direction: column;
+  height: 100vh;
   @include baseLayout();
   gap: 0;
   padding: 0 12px;
@@ -279,7 +280,6 @@
 }
 
 .channelLink {
-  color: #00ff00;
   text-decoration: none;
 
   &:hover {
@@ -302,4 +302,12 @@
   height: 32px;
   border-radius: 50%;
   object-fit: cover;
+}
+
+.loadingContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
 }

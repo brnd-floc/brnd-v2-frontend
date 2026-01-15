@@ -48,11 +48,16 @@ function BrandPage() {
     <AppLayout>
       <div className={styles.body}>
         {isLoading || !data || !data.brand?.name ? (
-          <LoaderIndicator variant={"fullscreen"} />
+          <div className={styles.loadingContainer}>
+            <LoaderIndicator variant={"fullscreen"} />
+          </div>
         ) : (
           <>
             {/* New Brand Profile Header */}
-            <BrandProfileHeader brand={data.brand} />
+            <BrandProfileHeader
+              brand={data.brand}
+              voteTrend7d={data.voteTrend7d}
+            />
 
             <div className={styles.container}>
               <div className={styles.grid}>
@@ -64,8 +69,10 @@ function BrandPage() {
                   subtext="VOTERS"
                 />
 
-                {/* Channel */}
-                <UserProfileGridItem title="CHANNEL">
+                {/* Profile or Channel */}
+                <UserProfileGridItem
+                  title={data.brand.profile ? "PROFILE" : "CHANNEL"}
+                >
                   <div className={styles.channelContent}>
                     <Typography
                       variant="geist"
@@ -73,15 +80,31 @@ function BrandPage() {
                       size={14}
                       lineHeight={16}
                     >
-                      <a
-                        href={`https://warpcast.com/~/channel/${data.brand.channel?.slice(
-                          1
-                        )}`}
-                        target="_blank"
-                        className={styles.channelLink}
-                      >
-                        {data.brand.channel || "/no-channel"}
-                      </a>
+                      {data.brand.profile ? (
+                        <a
+                          href={`https://warpcast.com/${
+                            data.brand.profile.startsWith("@")
+                              ? data.brand.profile.slice(1)
+                              : data.brand.profile
+                          }`}
+                          target="_blank"
+                          className={styles.channelLink}
+                        >
+                          {data.brand.profile.startsWith("@")
+                            ? data.brand.profile
+                            : `@${data.brand.profile}`}
+                        </a>
+                      ) : (
+                        <a
+                          href={`https://warpcast.com/~/channel/${data.brand.channel?.slice(
+                            1
+                          )}`}
+                          target="_blank"
+                          className={styles.channelLink}
+                        >
+                          {data.brand.channel || "/no-channel"}
+                        </a>
+                      )}
                     </Typography>
                   </div>
                 </UserProfileGridItem>
@@ -198,7 +221,11 @@ function BrandPage() {
               caption={"Add To Podium"}
               variant="primary"
               iconLeft={<FavoriteIcon />}
-              onClick={() => navigate("/vote")}
+              onClick={() =>
+                navigate("/vote", {
+                  state: { preselectedBrand: data?.brand },
+                })
+              }
             />
           </div>
         )}

@@ -1,7 +1,7 @@
 // Dependencies
 import { useCallback, useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { formatUnits } from "viem";
 import { useConnect } from "wagmi";
 
@@ -36,8 +36,13 @@ interface PodiumViewProps extends VotingViewProps {}
 
 export default function PodiumView({}: PodiumViewProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { openModal } = useModal();
   const { data: authData, updateAuthData } = useAuth();
+
+  // Get preselected brand from navigation state (e.g., from BrandPage "Add to Podium")
+  const preselectedBrand = (location.state as { preselectedBrand?: Brand })
+    ?.preselectedBrand;
 
   const { connect, connectors, error: connectError } = useConnect();
 
@@ -688,7 +693,13 @@ export default function PodiumView({}: PodiumViewProps) {
                   authData.todaysVote.brand1!, // middle slot (1st place)
                   authData.todaysVote.brand3!, // right slot (3rd place)
                 ]
-              : undefined
+              : preselectedBrand
+                ? [
+                    undefined, // left slot (2nd place) - empty
+                    preselectedBrand, // middle slot (1st place) - preselected brand
+                    undefined, // right slot (3rd place) - empty
+                  ]
+                : undefined
           }
           buttonLabel={(() => {
             // PRIORITY 1: If vote is completed locally, show success immediately

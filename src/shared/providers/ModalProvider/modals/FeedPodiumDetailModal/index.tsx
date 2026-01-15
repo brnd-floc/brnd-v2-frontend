@@ -82,6 +82,8 @@ export const FeedPodiumDetailModal: React.FC<
   isLastVoteForCombination = false,
   user,
   onMintSuccess,
+  hasSucceeded = false,
+  successType,
 }) => {
   const { data: authData } = useAuth();
   const userFid = authData?.fid ? Number(authData.fid) : null;
@@ -162,9 +164,13 @@ export const FeedPodiumDetailModal: React.FC<
 
   const isPending =
     isClaimingPodium || isBuyingPodium || isApproving || isConfirming;
-  const isButtonDisabled = isPending || isOwned || isNotMintable;
+  const isButtonDisabled = isPending || isOwned || isNotMintable || hasSucceeded;
 
   const getButtonText = (): string => {
+    // Show success state first if transaction just succeeded
+    if (hasSucceeded) {
+      return successType === "buy" ? "Bought!" : "Minted!";
+    }
     if (canMint) return `Mint · ${mintPrice} $BRND`;
     if (isOwned) return "Owned";
     if (isNotMintable) return "Not mintable";
@@ -207,6 +213,7 @@ export const FeedPodiumDetailModal: React.FC<
   );
 
   const getButtonStyle = () => {
+    if (hasSucceeded) return styles.successButton;
     if (canMint) return styles.mintButton;
     if (isOwned) return styles.ownedButton;
     if (isNotMintable) return styles.notMintableButton;
@@ -376,7 +383,22 @@ export const FeedPodiumDetailModal: React.FC<
               OWNER
             </Typography>
             <div className={styles.creatorInfo}>
-              <div className={styles.ownerAvatarPlaceholder} />
+              {/* Use current user's photo if they just bought it */}
+              {hasSucceeded && successType === "buy" && authData?.photoUrl ? (
+                <img
+                  src={authData.photoUrl}
+                  alt={owner}
+                  className={styles.creatorAvatar}
+                />
+              ) : podium?.collectibleOwner?.photoUrl ? (
+                <img
+                  src={podium.collectibleOwner.photoUrl}
+                  alt={owner}
+                  className={styles.creatorAvatar}
+                />
+              ) : (
+                <div className={styles.ownerAvatarPlaceholder} />
+              )}
               <Typography
                 variant="geist"
                 weight="bold"
@@ -431,8 +453,8 @@ export const FeedPodiumDetailModal: React.FC<
         </div>
       )}
 
-      {/* Action Button - show for anyone who can mint, buy, or see "not mintable" */}
-      {!isOwned && (
+      {/* Action Button - show for anyone who can mint, buy, see "not mintable", or just succeeded */}
+      {(!isOwned || hasSucceeded) && (
         <div className={styles.actionSection}>
           <button
             className={classNames(

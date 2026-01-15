@@ -11,6 +11,7 @@
   border-radius: 16px;
   width: 100%;
   max-width: 95vw;
+  height: 100vh;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -20,7 +21,7 @@
     content: "";
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.9);
+    background: rgba(0, 0, 0, 0.8);
     border-radius: 16px;
     z-index: 1; // Above gradient background, below content
     pointer-events: none;
@@ -252,6 +253,8 @@
 }
 
 .actionButton {
+  position: sticky;
+  bottom: 64px;
   box-sizing: border-box;
   display: flex;
   flex-direction: row;
@@ -344,6 +347,16 @@
   background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
 }
 
+// Success button (just bought/minted)
+.successButton {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border: 1px solid rgba(16, 185, 129, 0.5);
+
+  .actionButtonText {
+    color: #ffffff;
+  }
+}
+
 // Not mintable button
 .notMintableButton {
   background: rgba(138, 138, 138, 0.2);
@@ -377,5 +390,31 @@
   }
   to {
     transform: rotate(360deg);
+  }
+}
+
+.claimedAmount {
+  background: linear-gradient(
+    90deg,
+    #ff9533 0%,
+    #ff0000 25%,
+    #0c00ff 50%,
+    #00ff00 75%,
+    #ff9533 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: rainbowShift 3s linear infinite;
+  font-weight: 600;
+}
+
+@keyframes rainbowShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
   }
 }

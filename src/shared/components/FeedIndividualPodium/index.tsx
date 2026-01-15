@@ -12,6 +12,7 @@ import { useAccount, useConnect } from "wagmi";
 import sdk from "@farcaster/miniapp-sdk";
 
 import { IndividualPodiumProps } from "../IndividualPodium";
+import { useNavigate } from "react-router-dom";
 
 // Format large numbers (1000000 -> "1M", 1200000 -> "1.2M")
 const formatPrice = (priceStr: string | null): string => {
@@ -87,18 +88,20 @@ const FeedIndividualPodium: React.FC<IndividualPodiumProps> = ({
   user,
   isPending = false,
   hasSucceeded = false,
+  successType,
 }) => {
   const { openModal } = useModal();
   const { isConnected } = useAccount();
   const { connect, connectors } = useConnect();
+  const navigate = useNavigate();
 
   const { data: authData } = useAuth();
   const userFid = authData?.fid ? Number(authData.fid) : null;
 
-  // Apply optimistic update if transaction succeeded
-  const isMinted = hasSucceeded || collectibleData.isCollectible;
-  const ownerFid = hasSucceeded ? userFid : collectibleData.ownerFid;
-  const owner = hasSucceeded ? authData?.username : collectibleData.ownerUsername;
+  // Use collectibleData directly - parent handles optimistic updates
+  const isMinted = collectibleData.isCollectible;
+  const ownerFid = collectibleData.ownerFid;
+  const owner = collectibleData.ownerUsername;
 
   // Price calculations per contract:
   // - Mint price: BASE_PRICE (1M BRND)
@@ -125,34 +128,28 @@ const FeedIndividualPodium: React.FC<IndividualPodiumProps> = ({
   const timeAgo = useMemo(() => getTimeAgo(podium?.date), [podium?.date]);
 
   const handleArrowClick = () => {
-    // Pass optimistic collectible data if transaction succeeded
-    const optimisticCollectibleData = hasSucceeded
-      ? {
-          ...collectibleData,
-          isCollectible: true,
-          ownerFid: userFid,
-          ownerUsername: authData?.username || null,
-        }
-      : collectibleData;
-
+    // collectibleData is already updated optimistically by the parent
+    sdk.haptics.selectionChanged();
     openModal(ModalsIds.FEED_PODIUM_DETAIL, {
       podium,
       brand1,
       brand2,
       brand3,
       user,
-      collectibleData: optimisticCollectibleData,
+      collectibleData,
       isLastVoteForCombination: hasSucceeded ? true : isLastVoteForCombination,
       onMintSuccess,
+      hasSucceeded,
+      successType,
     });
   };
 
   const handleActionClick = () => {
     if (isPending || isOwned || isNotMintable) return;
+    sdk.haptics.selectionChanged();
 
     // If wallet is not connected, connect it first
     if (!isConnected) {
-      sdk.haptics.selectionChanged();
       const farcasterConnector = connectors?.[0];
       if (farcasterConnector) {
         connect({ connector: farcasterConnector });
@@ -168,6 +165,10 @@ const FeedIndividualPodium: React.FC<IndividualPodiumProps> = ({
   };
 
   const getButtonText = () => {
+    // Show success state first if transaction just succeeded
+    if (hasSucceeded) {
+      return successType === "buy" ? "Bought!" : "Minted!";
+    }
     if (canMint) return `Mint · ${mintPrice} $BRND`;
     if (isOwned) return "Owned";
     if (isNotMintable) return "Not mintable";
@@ -202,6 +203,8 @@ const FeedIndividualPodium: React.FC<IndividualPodiumProps> = ({
   );
 
   const getButtonStyle = () => {
+    // Success state shows as owned/success style
+    if (hasSucceeded) return styles.successButton;
     if (canMint) return styles.mintButton;
     if (isOwned) return styles.ownedButton;
     if (isNotMintable) return styles.notMintableButton;
@@ -209,7 +212,8 @@ const FeedIndividualPodium: React.FC<IndividualPodiumProps> = ({
     return styles.mintButton;
   };
 
-  const isButtonDisabled = isPending || isOwned || isNotMintable;
+  const isButtonDisabled =
+    isPending || isOwned || isNotMintable || hasSucceeded;
 
   const podiumBrands = [
     { brand: brand2, icon: Podium2Icon, place: "second" as const },
@@ -244,6 +248,7 @@ const FeedIndividualPodium: React.FC<IndividualPodiumProps> = ({
                 return (
                   <div
                     key={`podium-${index}`}
+                    onClick={() => navigate(`/brand/${item.brand?.id}`)}
                     className={classNames(
                       styles.podiumItem,
                       styles[item.place]
@@ -350,11 +355,21 @@ const FeedIndividualPodium: React.FC<IndividualPodiumProps> = ({
         {podium?.brndPaidWhenCreatingPodium &&
           Number(podium.brndPaidWhenCreatingPodium) > 0 && (
             <div className={styles.paymentInfo}>
-              <Typography size={10} className={styles.paidAmount}>
+              <Typography
+                variant="geist"
+                weight="bold"
+                size={10}
+                className={styles.paidAmount}
+              >
                 Paid {podium.brndPaidWhenCreatingPodium} $BRND
               </Typography>
               {podium?.claimed && (
-                <Typography size={10} className={styles.claimedAmount}>
+                <Typography
+                  variant="geist"
+                  weight="bold"
+                  size={10}
+                  className={styles.claimedAmount}
+                >
                   Claimed {podium.brndPaidWhenCreatingPodium * 10} $BRND
                 </Typography>
               )}

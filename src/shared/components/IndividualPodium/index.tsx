@@ -50,6 +50,7 @@ export interface IndividualPodiumProps {
   onMintSuccess?: () => void;
   isPending?: boolean;
   hasSucceeded?: boolean; // Optimistic update after successful transaction
+  successType?: "mint" | "buy"; // Type of successful transaction
 }
 
 // Format large numbers (1000000 -> "1M", 1200000 -> "1.2M")
@@ -90,7 +91,9 @@ const IndividualPodium: React.FC<IndividualPodiumProps> = ({
   // Apply optimistic update if transaction succeeded
   const isMinted = hasSucceeded || collectibleData.isCollectible;
   const ownerFid = hasSucceeded ? userFid : collectibleData.ownerFid;
-  const owner = hasSucceeded ? authData?.username : collectibleData.ownerUsername;
+  const owner = hasSucceeded
+    ? authData?.username
+    : collectibleData.ownerUsername;
 
   // Price calculations per contract:
   // - Mint price: BASE_PRICE (stored in collectibleData.price)

@@ -18,7 +18,6 @@
   flex-direction: row;
   align-items: center;
   padding: 7px 10px 8px;
-  gap: 10px;
 
   width: 300px;
   height: 102.67px;
@@ -95,8 +94,8 @@
 
 .imagePlaceholder,
 .brandImage {
-  width: 38px;
-  height: 38px;
+  width: 28px;
+  height: 28px;
   border-radius: 6px;
   flex: none;
   flex-grow: 0;
@@ -240,7 +239,8 @@
 }
 
 .buyButton {
-  /* Auto layout */
+  position: relative;
+  isolation: isolate;
   display: flex;
   flex-direction: row;
   justify-content: center;
@@ -249,29 +249,50 @@
   gap: 8px;
   width: 99px;
   height: 34px;
-  background: linear-gradient(
-      360deg,
-      #eaeaea 0%,
-      rgba(255, 255, 255, 0.8) 50%,
-      #eaeaea 100%
-    ),
-    linear-gradient(
-      191.75deg,
-      #fff000 0%,
-      #ff0000 33%,
-      #0e00ff 66%,
-      #00ff00 100%
-    ),
-    rgba(0, 255, 0, 0.12);
-  backdrop-filter: blur(12px);
   border-radius: 4px;
-  border: none;
+  backdrop-filter: blur(12px);
+  overflow: hidden;
+  background: transparent;
+  border: 1px solid transparent; // Reserve space for border
   cursor: pointer;
   flex: none;
   order: 1;
   align-self: stretch;
   flex-grow: 0;
   transition: opacity 0.2s ease;
+
+  // Rainbow gradient border (outer layer)
+  &:before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -3;
+    border-radius: 4px;
+    background: linear-gradient(
+      191.75deg,
+      #fff000 0%,
+      #ff0000 33%,
+      #0e00ff 66%,
+      #00ff00 100%
+    );
+  }
+
+  // Light gradient background with green overlay (inner layer)
+  &:after {
+    content: "";
+    position: absolute;
+    inset: 1px; // Inset by 1px to show the rainbow border
+    z-index: -1;
+    border-radius: 3px; // Slightly smaller to account for 1px inset
+    background: linear-gradient(
+        360deg,
+        #eaeaea 0%,
+        rgba(255, 255, 255, 0.8) 50%,
+        #eaeaea 100%
+      ),
+      rgba(0, 255, 0, 0.12);
+    background-blend-mode: normal, overlay;
+  }
 
   &:hover {
     opacity: 0.9;
@@ -291,6 +312,8 @@
   font-size: 14px;
   line-height: 125%;
   color: #000000;
+  position: relative;
+  z-index: 1;
   flex: none;
   order: 0;
   flex-grow: 0;
@@ -474,41 +497,39 @@
 
 .mintButton {
   position: relative;
-  z-index: 0;
-  background: #18171d; // slightly off-black for inner fill
-  border-radius: 4px; // thick, rounded corners
+  isolation: isolate;
   padding: 0;
-  border: none;
-  width: 88px;
+  width: 99px;
+  height: 34px;
+  border-radius: 4px;
+  backdrop-filter: blur(12px);
+  overflow: hidden;
+  background: black;
 
-  /* Outer glowing gradient border using a double-layer background */
+  /* Rainbow gradient border (outer layer) */
   &:before {
     content: "";
     position: absolute;
     inset: 0;
     z-index: -2;
-    border-radius: 10px;
-    padding: 0;
-    background: conic-gradient(
-      #ffe45e 0deg,
-      #ff417d 90deg,
-      #617afd 180deg,
-      #20d67b 270deg,
-      #ffe45e 360deg
+    border-radius: 4px;
+    background: linear-gradient(
+      90deg,
+      #ff9533 0%,
+      #ff0000 33%,
+      #0c00ff 66%,
+      #00ff00 100%
     );
-    /* This gives a full color sweep as seen in the screenshot */
-    /* Glow effect: */
-    box-shadow: 0 0 8px 2px #ffe45e30, 0 0 12px 4px #617afd20;
   }
 
-  /* Inner area of the button (content fill) */
+  /* Black overlay background (inner layer, creates border effect) */
   &:after {
     content: "";
     position: absolute;
-    inset: 2px;
-    border-radius: 8px;
+    inset: 1px; // Inset by 1px to show the rainbow border
     z-index: -1;
-    background: #18171d;
+    border-radius: 4px; // Slightly smaller to account for 1px inset
+    background: rgba(0, 0, 0, 0.95);
   }
 
   /* Button content styles */
@@ -536,7 +557,6 @@
 
 .notMintableButton {
   background: rgba(138, 138, 138, 0.3);
-  width: 88px;
 }
 
 .disabled {
@@ -553,6 +573,8 @@
 
 .actionButtonText {
   color: white;
+  position: relative;
+  z-index: 1;
 }
 
 .loading {

@@ -60,6 +60,7 @@ export const usePodiumCollectibles = (
   const { switchChain } = useSwitchChain();
   const {
     writeContract,
+    writeContractAsync,
     isPending: isWritePending,
     data: hash,
     error: writeError,
@@ -100,6 +101,10 @@ export const usePodiumCollectibles = (
   >(null);
   const [pendingOperationType, setPendingOperationType] = useState<
     "claim" | "buy" | null
+  >(null);
+  // Track the expected hash for the current operation to prevent race conditions
+  const [expectedOperationHash, setExpectedOperationHash] = useState<
+    `0x${string}` | null
   >(null);
 
   // Get FID from auth context
@@ -469,7 +474,7 @@ export const usePodiumCollectibles = (
           signature: signatureData.signature,
         });
 
-        await writeContract({
+        const txHash = await writeContractAsync({
           address: PODIUM_CONTRACT_CONFIG.CONTRACT,
           abi: BRND_PODIUM_COLLECTABLES_ABI,
           functionName: "claimPodium",
@@ -481,12 +486,14 @@ export const usePodiumCollectibles = (
           ],
           chainId: PODIUM_CONTRACT_CONFIG.CHAIN_ID,
         });
+        setExpectedOperationHash(txHash);
       } catch (error: any) {
         console.error("❌ [ClaimPodium] Claim failed:", error);
         setError(error.message || "Claim podium failed");
         setLastOperation(null);
         setPendingClaimData(null);
         setPendingClaimBrandIds(null);
+        setExpectedOperationHash(null);
         setIsFetchingSignature(false);
       }
     },
@@ -497,7 +504,7 @@ export const usePodiumCollectibles = (
       getClaimPodiumSignature,
       brndBalance,
       brndAllowance,
-      writeContract,
+      writeContractAsync,
     ]
   );
 
@@ -575,18 +582,20 @@ export const usePodiumCollectibles = (
           tokenId,
           userFid,
         });
-        await writeContract({
+        const txHash = await writeContractAsync({
           address: PODIUM_CONTRACT_CONFIG.CONTRACT,
           abi: BRND_PODIUM_COLLECTABLES_ABI,
           functionName: "buyPodium",
           args: [BigInt(tokenId), BigInt(userFid)],
           chainId: PODIUM_CONTRACT_CONFIG.CHAIN_ID,
         });
+        setExpectedOperationHash(txHash);
       } catch (error: any) {
         console.error("❌ [BuyPodium] Buy failed:", error);
         setError(error.message || "Buy podium failed");
         setLastOperation(null);
         setPendingBuyTokenId(null);
+        setExpectedOperationHash(null);
       }
     },
     [
@@ -595,7 +604,7 @@ export const usePodiumCollectibles = (
       switchToBase,
       brndBalance,
       brndAllowance,
-      writeContract,
+      writeContractAsync,
     ]
   );
 
@@ -637,7 +646,7 @@ export const usePodiumCollectibles = (
           signature: signatureData.signature,
         });
 
-        await writeContract({
+        const txHash = await writeContractAsync({
           address: PODIUM_CONTRACT_CONFIG.CONTRACT,
           abi: BRND_PODIUM_COLLECTABLES_ABI,
           functionName: "claimRepeatFees",
@@ -649,14 +658,16 @@ export const usePodiumCollectibles = (
           ],
           chainId: PODIUM_CONTRACT_CONFIG.CHAIN_ID,
         });
+        setExpectedOperationHash(txHash);
       } catch (error: any) {
         console.error("❌ [ClaimFees] Claim fees failed:", error);
         setError(error.message || "Claim fees failed");
         setLastOperation(null);
         setPendingFeeClaimData(null);
+        setExpectedOperationHash(null);
       }
     },
-    [userAddress, userFid, switchToBase, getClaimFeesSignature, writeContract]
+    [userAddress, userFid, switchToBase, getClaimFeesSignature, writeContractAsync]
   );
 
   // Claim balance (proceeds + royalties combined)
@@ -689,19 +700,21 @@ export const usePodiumCollectibles = (
       setLastOperation("claimBalance");
 
       // Contract signature: claimBalance(uint256 fid)
-      await writeContract({
+      const txHash = await writeContractAsync({
         address: PODIUM_CONTRACT_CONFIG.CONTRACT,
         abi: BRND_PODIUM_COLLECTABLES_ABI,
         functionName: "claimBalance",
         args: [BigInt(userFid)],
         chainId: PODIUM_CONTRACT_CONFIG.CHAIN_ID,
       });
+      setExpectedOperationHash(txHash);
     } catch (error: any) {
       console.error("❌ [ClaimBalance] Claim balance failed:", error);
       setError(error.message || "Claim balance failed");
       setLastOperation(null);
+      setExpectedOperationHash(null);
     }
-  }, [userAddress, userFid, switchToBase, getClaimableBalances, writeContract]);
+  }, [userAddress, userFid, switchToBase, getClaimableBalances, writeContractAsync]);
 
   // ============================================================================
   //                          TRANSACTION HANDLERS
@@ -787,7 +800,7 @@ export const usePodiumCollectibles = (
           });
 
           setIsFetchingSignature(false);
-          await writeContract({
+          const txHash = await writeContractAsync({
             address: PODIUM_CONTRACT_CONFIG.CONTRACT,
             abi: BRND_PODIUM_COLLECTABLES_ABI,
             functionName: "claimPodium",
@@ -799,6 +812,7 @@ export const usePodiumCollectibles = (
             ],
             chainId: PODIUM_CONTRACT_CONFIG.CHAIN_ID,
           });
+          setExpectedOperationHash(txHash);
         } else if (
           pendingOperationType === "buy" &&
           pendingBuyTokenId !== null &&
@@ -809,13 +823,14 @@ export const usePodiumCollectibles = (
           setPendingOperationType(null);
           setLastOperation("buyPodium");
 
-          await writeContract({
+          const txHash = await writeContractAsync({
             address: PODIUM_CONTRACT_CONFIG.CONTRACT,
             abi: BRND_PODIUM_COLLECTABLES_ABI,
             functionName: "buyPodium",
             args: [BigInt(pendingBuyTokenId), BigInt(userFid)],
             chainId: PODIUM_CONTRACT_CONFIG.CHAIN_ID,
           });
+          setExpectedOperationHash(txHash);
         }
       } catch (error: any) {
         console.error("❌ [Approve] Auto-retry failed:", error);
@@ -825,6 +840,7 @@ export const usePodiumCollectibles = (
         setPendingBuyTokenId(null);
         setPendingApprovalAmount(null);
         setPendingOperationType(null);
+        setExpectedOperationHash(null);
         setIsFetchingSignature(false);
         setLastOperation(null);
       }
@@ -838,7 +854,7 @@ export const usePodiumCollectibles = (
     pendingOperationType,
     userAddress,
     userFid,
-    writeContract,
+    writeContractAsync,
     lastOperation,
     pendingClaimBrandIds,
     pendingBuyTokenId,
@@ -852,7 +868,10 @@ export const usePodiumCollectibles = (
       isConfirmed &&
       receipt &&
       lastOperation &&
-      lastOperation !== "approve"
+      lastOperation !== "approve" &&
+      // Ensure we're confirming the expected transaction, not a stale approval
+      expectedOperationHash &&
+      receipt.transactionHash === expectedOperationHash
     ) {
       console.log("🎉 [Transaction] Transaction confirmed", {
         operation: lastOperation,
@@ -892,11 +911,13 @@ export const usePodiumCollectibles = (
       setLastOperation(null);
       setPendingApprovalAmount(null);
       setPendingOperationType(null);
+      setExpectedOperationHash(null);
     }
   }, [
     isConfirmed,
     receipt,
     lastOperation,
+    expectedOperationHash,
     onClaimPodiumSuccess,
     onBuyPodiumSuccess,
     onClaimFeesSuccess,
@@ -920,6 +941,7 @@ export const usePodiumCollectibles = (
       setPendingFeeClaimData(null);
       setPendingApprovalAmount(null);
       setPendingOperationType(null);
+      setExpectedOperationHash(null);
       setIsFetchingSignature(false);
     }
   }, [writeError, lastOperation]);
