@@ -133,7 +133,6 @@
   flex: 1 1 0;
   min-width: 0;
   padding-top: 10px;
-  align-self: stretch;
 }
 
 .infoTop {
@@ -426,6 +425,7 @@
   border-radius: 4px; // thick, rounded corners
   padding: 0;
   border: none;
+  width: 88px;
 
   /* Outer glowing gradient border using a double-layer background */
   &:before {
@@ -474,22 +474,15 @@
   box-shadow: none;
   outline: none;
   transition: transform 0.15s;
-
-  &:hover {
-    transform: scale(1.025);
-  }
-  &:active {
-    transform: scale(0.98);
-  }
 }
 
 .ownedButton {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: transparent;
 }
 
 .notMintableButton {
   background: rgba(138, 138, 138, 0.3);
-  border: 1px solid rgba(138, 138, 138, 0.5);
+  width: 88px;
 }
 
 .disabled {

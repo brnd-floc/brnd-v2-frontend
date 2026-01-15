@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 // Components
 import Typography from "@/components/Typography";
-import IndividualPodium from "@/shared/components/IndividualPodium";
+import FeedIndividualPodium from "@/shared/components/FeedIndividualPodium";
 import LoaderIndicator from "@/shared/components/LoaderIndicator";
 
 // StyleSheet
@@ -13,6 +13,8 @@ import styles from "./PublicPodiumsFeed.module.scss";
 import { useRecentPodiums } from "@/hooks/brands";
 import { usePodiumCollectibles } from "@/shared/hooks/contract/usePodiumCollectibles";
 import { useAuth } from "@/shared/hooks/auth";
+import { useModal } from "@/shared/hooks/ui/useModal";
+import { ModalsIds } from "@/shared/providers/ModalProvider/types";
 
 // Utils
 import { sdk } from "@farcaster/miniapp-sdk";
@@ -22,6 +24,7 @@ import { CollectibleData } from "@/shared/types/collectibles";
 
 function PublicPodiumsFeed() {
   const navigate = useNavigate();
+  const { openModal } = useModal();
   const [currentPage, setCurrentPage] = useState(1);
   const [allPodiums, setAllPodiums] = useState<any[]>([]); // Accumulate all podiums
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -39,6 +42,7 @@ function PublicPodiumsFeed() {
     currentPage,
     limit
   );
+  console.log("THE DATA IS", data);
 
   // Get current user's FID for filtering
   const { data: authData } = useAuth();
@@ -103,6 +107,22 @@ function PublicPodiumsFeed() {
     isBuyingPodium,
     processingPodiumId,
   ]);
+
+  // Show error modal when contract error occurs
+  useEffect(() => {
+    if (contractError) {
+      sdk.haptics.notificationOccurred("error");
+      openModal(ModalsIds.BOTTOM_ALERT, {
+        title: "Transaction Failed",
+        content: (
+          <Typography size={14} className={styles.errorText}>
+            {contractError}
+          </Typography>
+        ),
+      });
+      setProcessingPodiumId(null);
+    }
+  }, [contractError, openModal]);
 
   // Clear optimistic updates once real data confirms the change
   useEffect(() => {
@@ -312,11 +332,12 @@ function PublicPodiumsFeed() {
 
             return (
               <li key={podium.id} className={styles.item}>
-                <IndividualPodium
+                <FeedIndividualPodium
                   user={podium.user}
                   brand1={podium.brand1}
                   brand2={podium.brand2}
                   brand3={podium.brand3}
+                  podium={podium}
                   collectibleData={optimisticCollectibleData}
                   isLastVoteForCombination={
                     hasSucceeded ? true : isLastVoteForCombination
@@ -326,6 +347,10 @@ function PublicPodiumsFeed() {
                     if (collectibleTokenId) {
                       handleBuyPodium(podium.id, collectibleTokenId);
                     }
+                  }}
+                  onMintSuccess={() => {
+                    refreshData();
+                    refetch();
                   }}
                   isPending={
                     isProcessing && (isPending || isConfirming || isApproving)

@@ -1,6 +1,7 @@
 import { User } from "@/shared/hooks/user";
 import { Brand } from "../../hooks/brands";
 import { CollectibleData, PodiumBrand } from "../../types/collectibles";
+import { IndividualPodiumProps } from "@/shared/components/IndividualPodium";
 
 /**
  * Enum representing the different types of modal identifiers.
@@ -11,6 +12,7 @@ export enum ModalsIds {
   SHARE_BRAND = "SHARE_BRAND",
   PERKS = "PERKS",
   PODIUM_DETAIL = "PODIUM_DETAIL",
+  FEED_PODIUM_DETAIL = "FEED_PODIUM_DETAIL",
 }
 
 /**
@@ -22,6 +24,7 @@ export type ModalData = {
   [ModalsIds.SHARE_BRAND]: ShareBrandModalData;
   [ModalsIds.PERKS]: PerksModalData;
   [ModalsIds.PODIUM_DETAIL]: PodiumDetailModalData;
+  [ModalsIds.FEED_PODIUM_DETAIL]: FeedPodiumDetailModalData;
 };
 
 /**
@@ -91,4 +94,8 @@ export type PodiumDetailModalData = {
   brand2: PodiumBrand;
   brand3: PodiumBrand;
   collectibleData: CollectibleData;
+};
+
+export type FeedPodiumDetailModalData = IndividualPodiumProps & {
+  onMintSuccess?: () => void;
 };

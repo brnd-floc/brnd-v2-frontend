@@ -11,8 +11,32 @@ import { PodiumBrand, CollectibleData } from "@/shared/types/collectibles";
 import { useAuth } from "@/shared/hooks/auth";
 import { User } from "@/shared/hooks/user";
 
-interface IndividualPodiumProps {
+export interface IndividualPodiumProps {
   className?: string;
+  podium?: {
+    brand1: PodiumBrand;
+    brand2: PodiumBrand;
+    brand3: PodiumBrand;
+    user: {
+      username: string;
+      fid: number;
+    };
+    claimed: boolean;
+    brndPaidWhenCreatingPodium: number | null;
+    collectibleClaimCount: number; // 0
+    collectibleGenesisCreatorFid: number | null; // null
+    collectibleGenesisCreatorUsername: string | null; // null
+    collectibleOwnerFid: number | null; // null
+    collectibleOwnerUsername: string | null; // null
+    collectiblePrice: string | null; // null
+    collectibleTokenId: string | null; // null
+    collectibleTotalFeesEarned: string; // "0"
+    date: string; // "2026-01-14T16:53:17.000Z"
+    id: string; // "0x5f2b47faccf19589322a47c6b4dd334b5d9df1c5ed83cc629e74906d4d0104c2"
+    isCollectible: boolean; // false
+    isLastVoteForCombination?: boolean; // true
+    collectibleOwner?: User;
+  };
   brand1: PodiumBrand;
   brand2: PodiumBrand;
   brand3: PodiumBrand;
@@ -21,23 +45,24 @@ interface IndividualPodiumProps {
   isLastVoteForCombination?: boolean;
   onMintClick?: () => void;
   onBuyClick?: () => void;
+  onMintSuccess?: () => void;
   isPending?: boolean;
 }
 
 // Format large numbers (1000000 -> "1M", 1200000 -> "1.2M")
-const formatPrice = (priceStr: string | null): string => {
-  if (!priceStr) return "1M";
-  // Price comes in wei (18 decimals), convert to BRND
-  const priceInBrnd = Number(priceStr) / 1e18;
-  if (priceInBrnd >= 1000000) {
-    const millions = priceInBrnd / 1000000;
-    return millions % 1 === 0 ? `${millions}M` : `${millions.toFixed(1)}M`;
-  } else if (priceInBrnd >= 1000) {
-    const thousands = priceInBrnd / 1000;
-    return thousands % 1 === 0 ? `${thousands}K` : `${thousands.toFixed(1)}K`;
-  }
-  return priceInBrnd.toFixed(0);
-};
+// const formatPrice = (priceStr: string | null): string => {
+//   if (!priceStr) return "1M";
+//   // Price comes in wei (18 decimals), convert to BRND
+//   const priceInBrnd = Number(priceStr) / 1e18;
+//   if (priceInBrnd >= 1000000) {
+//     const millions = priceInBrnd / 1000000;
+//     return millions % 1 === 0 ? `${millions}M` : `${millions.toFixed(1)}M`;
+//   } else if (priceInBrnd >= 1000) {
+//     const thousands = priceInBrnd / 1000;
+//     return thousands % 1 === 0 ? `${thousands}K` : `${thousands.toFixed(1)}K`;
+//   }
+//   return priceInBrnd.toFixed(0);
+// };
 
 const IndividualPodium: React.FC<IndividualPodiumProps> = ({
   className,
@@ -57,19 +82,29 @@ const IndividualPodium: React.FC<IndividualPodiumProps> = ({
   const userFid = authData?.fid ? Number(authData.fid) : null;
 
   const isMinted = collectibleData.isCollectible;
-  const displayPrice = `${formatPrice(collectibleData.price)} $BRND`;
-  // const creator = collectibleData.genesisCreatorUsername;
+  const ownerFid = collectibleData.ownerFid;
   const owner = collectibleData.ownerUsername;
 
-  // Determine mintability state
-  // - isLastVoteForCombination: true + isCollectible: false → "Mint" (can mint)
-  // - isLastVoteForCombination: true + isCollectible: true → "Owned" (already minted by user)
-  // - isLastVoteForCombination: false + isCollectible: false → "Not mintable" (someone else voted after)
-  // - isLastVoteForCombination: false + isCollectible: true → "Buy" (minted by someone else)
-  const canMint = isLastVoteForCombination && !isMinted;
-  const isOwned = isLastVoteForCombination && isMinted;
-  const isNotMintable = !isLastVoteForCombination && !isMinted;
-  const canBuy = !isLastVoteForCombination && isMinted;
+  // Price calculations per contract:
+  // - Mint price: BASE_PRICE (stored in collectibleData.price)
+  // - Buy price: lastSalePrice * 1.2 (20% increase each sale)
+  // const lastSalePrice = collectibleData.price || "1000000000000000000000000"; // 1M BRND default
+  // const buyPrice = String(Math.floor(Number(lastSalePrice) * 1.2));
+
+  // const mintPrice = formatPrice(lastSalePrice);
+  // const displayBuyPrice = formatPrice(buyPrice);
+
+  // Determine states based on contract logic:
+  // - canMint: Current user is the podium creator AND was last to vote AND not minted yet
+  // - canBuy: IS minted AND user is NOT the current owner
+  // - isOwned: IS minted AND user IS the current owner
+  // - isNotMintable: NOT minted AND (user was NOT last to vote OR current user is not the creator)
+  const isCurrentOwner = isMinted && ownerFid === userFid;
+  const isCreator = userFid === user.fid;
+  const canMint = isLastVoteForCombination && !isMinted && isCreator;
+  const canBuy = isMinted && !isCurrentOwner;
+  const isOwned = isCurrentOwner;
+  const isNotMintable = !isMinted && (!isLastVoteForCombination || !isCreator);
 
   const handleArrowClick = () => {
     openModal(ModalsIds.PODIUM_DETAIL, {
@@ -92,11 +127,11 @@ const IndividualPodium: React.FC<IndividualPodiumProps> = ({
   };
 
   const getButtonText = () => {
-    if (canMint) return "Mint";
-    if (isOwned) return "Owned";
-    if (isNotMintable) return "Not mintable";
-    if (canBuy) return "Buy";
-    return "Mint";
+    if (canMint) return `Mint`;
+    if (isOwned) return "Minted";
+    if (isNotMintable) return "N/A";
+    if (canBuy) return `Buy`;
+    return "N/A";
   };
 
   // Inline spinner component for loading state
@@ -216,56 +251,32 @@ const IndividualPodium: React.FC<IndividualPodiumProps> = ({
           </div>
 
           <div className={styles.infoBottom}>
-            {collectibleData.ownerFid !== userFid && (
-              <div className={styles.priceContainer}>
-                {(canMint || canBuy) && (
+            <div className={styles.priceContainer}>
+              <button
+                className={classNames(
+                  styles.actionButton,
+                  getButtonStyle(),
+                  isButtonDisabled && styles.disabled,
+                  isPending && styles.loading
+                )}
+                onClick={handleActionClick}
+                disabled={isButtonDisabled}
+              >
+                {isPending ? (
+                  <Spinner />
+                ) : (
                   <Typography
                     variant="geist"
                     weight="bold"
-                    size={10}
-                    lineHeight={13}
-                    className={styles.price}
+                    size={14}
+                    lineHeight={18}
+                    className={styles.actionButtonText}
                   >
-                    {displayPrice}
+                    {getButtonText()}
                   </Typography>
                 )}
-                <button
-                  className={classNames(
-                    styles.actionButton,
-                    getButtonStyle(),
-                    isButtonDisabled && styles.disabled,
-                    isPending && styles.loading
-                  )}
-                  onClick={handleActionClick}
-                  disabled={isButtonDisabled}
-                >
-                  {isPending ? (
-                    <Spinner />
-                  ) : (
-                    <Typography
-                      variant="geist"
-                      weight="bold"
-                      size={14}
-                      lineHeight={18}
-                      className={styles.actionButtonText}
-                    >
-                      {getButtonText()}
-                    </Typography>
-                  )}
-                </button>
-                {(canMint || canBuy) && (
-                  <Typography
-                    variant="geist"
-                    weight="bold"
-                    size={10}
-                    lineHeight={13}
-                    className={styles.priceHidden}
-                  >
-                    {displayPrice}
-                  </Typography>
-                )}
-              </div>
-            )}
+              </button>
+            </div>
           </div>
         </div>
       </div>

@@ -71,6 +71,7 @@ export const usePodiumCollectibles = (
   } = useWaitForTransactionReceipt({ hash });
 
   const [error, setError] = useState<string | null>(null);
+  const [isFetchingSignature, setIsFetchingSignature] = useState(false);
   const [lastOperation, setLastOperation] = useState<
     | "approve"
     | "claimPodium"
@@ -78,6 +79,10 @@ export const usePodiumCollectibles = (
     | "claimRepeatFees"
     | "claimBalance"
     | null
+  >(null);
+  // Store only brandIds for pending claim - we'll fetch fresh signature after approval
+  const [pendingClaimBrandIds, setPendingClaimBrandIds] = useState<
+    [number, number, number] | null
   >(null);
   const [pendingClaimData, setPendingClaimData] =
     useState<ClaimPodiumParams | null>(null);
@@ -377,14 +382,17 @@ export const usePodiumCollectibles = (
     async (brandIds: [number, number, number]) => {
       console.log("🏆 [ClaimPodium] Starting claim flow", { brandIds });
       setError(null);
-      await switchToBase();
-
-      if (!userAddress || !userFid) {
-        setError("Wallet not connected or user not authenticated");
-        return;
-      }
+      setIsFetchingSignature(true);
 
       try {
+        await switchToBase();
+
+        if (!userAddress || !userFid) {
+          setError("Wallet not connected or user not authenticated");
+          setIsFetchingSignature(false);
+          return;
+        }
+
         const deadline = Math.floor(Date.now() / 1000) + 3600;
 
         // Get signature from backend
@@ -392,6 +400,7 @@ export const usePodiumCollectibles = (
         const signatureData = await getClaimPodiumSignature(brandIds, deadline);
 
         if (!signatureData.eligible) {
+          setIsFetchingSignature(false);
           throw new Error(
             signatureData.reason || "Not eligible to claim this podium"
           );
@@ -417,10 +426,13 @@ export const usePodiumCollectibles = (
         if (balance < price) {
           const needBRND = formatUnits(price, 18);
           const haveBRND = formatUnits(balance, 18);
+          setIsFetchingSignature(false);
           throw new Error(
             `Insufficient BRND balance. Need ${needBRND} BRND, have ${haveBRND} BRND`
           );
         }
+
+        setIsFetchingSignature(false);
 
         // Check and handle BRND approval
         const allowance = (brndAllowance as bigint) || 0n;
@@ -428,12 +440,8 @@ export const usePodiumCollectibles = (
           console.log(
             "⚠️ [ClaimPodium] Insufficient allowance, approval needed"
           );
-          setPendingClaimData({
-            brandIds,
-            fid: userFid,
-            deadline,
-            signature: signatureData.signature,
-          });
+          // Store only brandIds - we'll fetch fresh signature after approval
+          setPendingClaimBrandIds(brandIds);
           setPendingApprovalAmount(price);
           setPendingOperationType("claim");
           setLastOperation("approve");
@@ -477,6 +485,8 @@ export const usePodiumCollectibles = (
         setError(error.message || "Claim podium failed");
         setLastOperation(null);
         setPendingClaimData(null);
+        setPendingClaimBrandIds(null);
+        setIsFetchingSignature(false);
       }
     },
     [
@@ -713,24 +723,55 @@ export const usePodiumCollectibles = (
         // Refresh allowance first
         await refetchAllowance();
 
-        // Wait a bit for allowance to update
+        // Wait a bit for allowance to update on-chain
         setTimeout(async () => {
           try {
-            if (pendingOperationType === "claim" && pendingClaimData) {
-              console.log("🔄 [Approve] Auto-retrying claim after approval");
+            if (pendingOperationType === "claim" && pendingClaimBrandIds) {
+              console.log("🔄 [Approve] Fetching fresh signature after approval");
+              setIsFetchingSignature(true);
+
+              // Fetch a FRESH signature from backend - critical fix!
+              // The old signature is invalid after blockchain state changes from approval
+              const freshDeadline = Math.floor(Date.now() / 1000) + 3600;
+              const freshSignatureData = await getClaimPodiumSignature(
+                pendingClaimBrandIds,
+                freshDeadline
+              );
+
+              if (!freshSignatureData.eligible) {
+                throw new Error(
+                  freshSignatureData.reason || "Not eligible to claim this podium"
+                );
+              }
+
+              console.log("🔄 [Approve] Got fresh signature, proceeding with claim");
+              // Keep isFetchingSignature true until writeContract is called
+              // This ensures spinner doesn't flicker during state transitions
               setPendingApprovalAmount(null);
               setPendingOperationType(null);
               setLastOperation("claimPodium");
 
+              const brandIds = pendingClaimBrandIds;
+              setPendingClaimBrandIds(null);
+              setPendingClaimData({
+                brandIds,
+                fid: userFid!,
+                deadline: freshDeadline,
+                signature: freshSignatureData.signature,
+              });
+
+              // Now call writeContract - it sets isWritePending=true immediately
+              // Then clear isFetchingSignature since isWritePending handles the spinner
+              setIsFetchingSignature(false);
               await writeContract({
                 address: PODIUM_CONTRACT_CONFIG.CONTRACT,
                 abi: BRND_PODIUM_COLLECTABLES_ABI,
                 functionName: "claimPodium",
                 args: [
-                  pendingClaimData.brandIds,
-                  BigInt(pendingClaimData.fid),
-                  BigInt(pendingClaimData.deadline),
-                  pendingClaimData.signature as `0x${string}`,
+                  brandIds,
+                  BigInt(userFid!),
+                  BigInt(freshDeadline),
+                  freshSignatureData.signature as `0x${string}`,
                 ],
                 chainId: PODIUM_CONTRACT_CONFIG.CHAIN_ID,
               });
@@ -752,12 +793,16 @@ export const usePodiumCollectibles = (
                 chainId: PODIUM_CONTRACT_CONFIG.CHAIN_ID,
               });
             }
-          } catch (error) {
+          } catch (error: any) {
             console.error("❌ [Approve] Auto-retry failed:", error);
+            setError(error.message || "Failed to claim after approval");
             setPendingClaimData(null);
+            setPendingClaimBrandIds(null);
             setPendingBuyTokenId(null);
             setPendingApprovalAmount(null);
             setPendingOperationType(null);
+            setIsFetchingSignature(false);
+            setLastOperation(null);
           }
         }, 1000);
       } catch (error: any) {
@@ -765,6 +810,7 @@ export const usePodiumCollectibles = (
         setPendingApprovalAmount(null);
         setPendingOperationType(null);
         setLastOperation(null);
+        setIsFetchingSignature(false);
       }
     };
 
@@ -778,9 +824,10 @@ export const usePodiumCollectibles = (
     userFid,
     writeContract,
     lastOperation,
-    pendingClaimData,
+    pendingClaimBrandIds,
     pendingBuyTokenId,
     refetchAllowance,
+    getClaimPodiumSignature,
   ]);
 
   // Handle transaction success
@@ -852,10 +899,12 @@ export const usePodiumCollectibles = (
       setLastOperation(null);
       setError(writeError.message || "Transaction failed");
       setPendingClaimData(null);
+      setPendingClaimBrandIds(null);
       setPendingBuyTokenId(null);
       setPendingFeeClaimData(null);
       setPendingApprovalAmount(null);
       setPendingOperationType(null);
+      setIsFetchingSignature(false);
     }
   }, [writeError, lastOperation]);
 
@@ -877,7 +926,7 @@ export const usePodiumCollectibles = (
       : "0",
 
     // Transaction state
-    isPending: isWritePending,
+    isPending: isWritePending || isFetchingSignature,
     isConfirming,
     isConfirmed,
     hash,
@@ -888,6 +937,7 @@ export const usePodiumCollectibles = (
     isBuyingPodium: lastOperation === "buyPodium",
     isClaimingFees: lastOperation === "claimRepeatFees",
     isClaimingBalance: lastOperation === "claimBalance",
+    isFetchingSignature,
 
     // Loading states
     isLoadingBrndBalance,

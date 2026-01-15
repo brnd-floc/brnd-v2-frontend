@@ -5,6 +5,8 @@ import styles from "./MyPodium.module.scss";
 import { useMyVoteHistory } from "@/hooks/user";
 import { usePodiumCollectibles } from "@/shared/hooks/contract/usePodiumCollectibles";
 import { useAuth } from "@/shared/hooks/auth";
+import { useModal } from "@/shared/hooks/ui/useModal";
+import { ModalsIds } from "@/shared/providers/ModalProvider/types";
 import Typography from "@/components/Typography";
 import IndividualPodium from "@/shared/components/IndividualPodium";
 import LoaderIndicator from "@/shared/components/LoaderIndicator";
@@ -14,6 +16,7 @@ import { UserVoteHistory } from "@/shared/hooks/user/types";
 
 function MyPodium() {
   const navigate = useNavigate();
+  const { openModal } = useModal();
   const [pageId, setPageId] = useState<number>(1);
   const [processingPodiumId, setProcessingPodiumId] = useState<string | null>(
     null
@@ -41,6 +44,7 @@ function MyPodium() {
     isApproving,
     isPending,
     isConfirming,
+    error: contractError,
     refreshData,
   } = usePodiumCollectibles(
     (txData) => {
@@ -90,6 +94,22 @@ function MyPodium() {
     isBuyingPodium,
     processingPodiumId,
   ]);
+
+  // Show error modal when contract error occurs
+  useEffect(() => {
+    if (contractError) {
+      sdk.haptics.notificationOccurred("error");
+      openModal(ModalsIds.BOTTOM_ALERT, {
+        title: "Transaction Failed",
+        content: (
+          <Typography size={14} className={styles.errorText}>
+            {contractError}
+          </Typography>
+        ),
+      });
+      setProcessingPodiumId(null);
+    }
+  }, [contractError, openModal]);
 
   // Clear optimistic updates once real data confirms the change
   useEffect(() => {

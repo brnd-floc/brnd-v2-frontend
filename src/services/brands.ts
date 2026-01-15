@@ -31,6 +31,11 @@ export interface PublicPodium {
   collectibleOwnerFid: number | null;
   collectibleOwnerUsername: string | null;
   collectibleTotalFeesEarned: string;
+  user: {
+    username: string;
+    fid: number;
+    photoUrl: string;
+  };
 }
 
 export type BrandTimePeriod = "day" | "week" | "month" | "all";
