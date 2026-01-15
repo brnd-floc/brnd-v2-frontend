@@ -57,6 +57,7 @@ function PublicPodiumsFeed() {
     isApproving,
     isPending,
     isConfirming,
+    isFetchingSignature,
     error: contractError,
     refreshData,
   } = usePodiumCollectibles(
@@ -71,7 +72,7 @@ function PublicPodiumsFeed() {
       }
       setProcessingPodiumId(null);
       refreshData();
-      refetch();
+      // Don't refetch immediately - optimistic update handles the UI
     },
     (txData) => {
       // Buy success callback
@@ -84,16 +85,23 @@ function PublicPodiumsFeed() {
       }
       setProcessingPodiumId(null);
       refreshData();
-      refetch();
+      // Don't refetch immediately - optimistic update handles the UI
     }
   );
 
   // Clear processing state when transaction completes (success or error)
   useEffect(() => {
-    if (!isPending && !isConfirming && !isApproving && processingPodiumId) {
+    // Don't clear if any transaction-related activity is in progress
+    if (
+      !isPending &&
+      !isConfirming &&
+      !isApproving &&
+      !isFetchingSignature &&
+      processingPodiumId
+    ) {
       // Small delay to allow success callbacks to run first
       const timer = setTimeout(() => {
-        if (!isClaimingPodium && !isBuyingPodium) {
+        if (!isClaimingPodium && !isBuyingPodium && !isFetchingSignature) {
           setProcessingPodiumId(null);
         }
       }, 1000);
@@ -105,6 +113,7 @@ function PublicPodiumsFeed() {
     isApproving,
     isClaimingPodium,
     isBuyingPodium,
+    isFetchingSignature,
     processingPodiumId,
   ]);
 
@@ -353,7 +362,8 @@ function PublicPodiumsFeed() {
                     refetch();
                   }}
                   isPending={
-                    isProcessing && (isPending || isConfirming || isApproving)
+                    isProcessing &&
+                    (isPending || isConfirming || isApproving || isFetchingSignature)
                   }
                   hasSucceeded={hasSucceeded}
                 />

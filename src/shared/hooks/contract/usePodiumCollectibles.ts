@@ -721,32 +721,29 @@ export const usePodiumCollectibles = (
       }
 
       try {
-        // Poll for allowance to be reflected on-chain (RPC nodes may take time to sync)
+        // Wait for allowance to propagate across RPC nodes
+        // Use fewer attempts with longer delays to avoid rate limiting
         const requiredAllowance = pendingApprovalAmount;
-        const maxAttempts = 10;
-        const delayMs = 1500;
+        const maxAttempts = 5;
+        const delayMs = 2000;
 
-        console.log("🔄 [Approve] Waiting for allowance to be confirmed...");
+        console.log("🔄 [Approve] Waiting for allowance to propagate...");
+
+        // Initial delay to let the transaction propagate
+        await new Promise((resolve) => setTimeout(resolve, 2000));
 
         for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-          await refetchAllowance();
-
-          // Small delay to let state update
-          await new Promise((resolve) => setTimeout(resolve, 500));
-
-          // Read fresh allowance from chain
-          const currentAllowance = await readContract(config, {
-            address: PODIUM_CONTRACT_CONFIG.BRND_TOKEN,
-            abi: ERC20_ABI,
-            functionName: "allowance",
-            args: [userAddress, PODIUM_CONTRACT_CONFIG.CONTRACT],
-            chainId: PODIUM_CONTRACT_CONFIG.CHAIN_ID,
-          });
+          // Only use refetchAllowance (uses react-query, more efficient)
+          const result = await refetchAllowance();
+          const currentAllowance = result.data as bigint | undefined;
 
           console.log(`🔄 [Approve] Attempt ${attempt}/${maxAttempts} - Allowance: ${currentAllowance}`);
 
-          if ((currentAllowance as bigint) >= requiredAllowance) {
-            console.log("✅ [Approve] Allowance confirmed on-chain!");
+          if (currentAllowance && currentAllowance >= requiredAllowance) {
+            console.log("✅ [Approve] Allowance confirmed!");
+            // Additional delay to ensure wallet's RPC has synced
+            console.log("🔄 [Approve] Waiting for wallet RPC to sync...");
+            await new Promise((resolve) => setTimeout(resolve, 3000));
             break;
           }
 
