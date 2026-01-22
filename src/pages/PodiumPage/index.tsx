@@ -41,7 +41,7 @@ function PodiumPage(): React.ReactNode {
     <AppLayout>
       <div className={styles.body}>
         <div className={styles.header}>
-          <BrandHeader />
+          <BrandHeader showBackButton={false} />
           <div className={styles.titleContainer}>
             <Typography variant={"druk"} weight={"wide"}>
               PODIUMS

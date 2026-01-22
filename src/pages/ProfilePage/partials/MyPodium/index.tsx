@@ -8,7 +8,7 @@ import { useAuth } from "@/shared/hooks/auth";
 import { useModal } from "@/shared/hooks/ui/useModal";
 import { ModalsIds } from "@/shared/providers/ModalProvider/types";
 import Typography from "@/components/Typography";
-import IndividualPodium from "@/shared/components/IndividualPodium";
+import IndividualPodium, { MintingStep } from "@/shared/components/IndividualPodium";
 import LoaderIndicator from "@/shared/components/LoaderIndicator";
 import Button from "@/shared/components/Button";
 import { CollectibleData, VoteHistoryItem } from "@/shared/types/collectibles";
@@ -44,6 +44,7 @@ function MyPodium() {
     isApproving,
     isPending,
     isConfirming,
+    isFetchingSignature,
     error: contractError,
     refreshData,
   } = usePodiumCollectibles(
@@ -79,8 +80,21 @@ function MyPodium() {
     refetch();
   }, [pageId, refetch]);
 
+  // Calculate current minting step based on hook states
+  const getCurrentMintingStep = (): MintingStep => {
+    if (isFetchingSignature) return "fetching_signature";
+    if (isApproving && !isConfirming) return "approving";
+    if (isApproving && isConfirming) return "confirming_approval";
+    if (isClaimingPodium && !isConfirming) return "minting";
+    if (isBuyingPodium && !isConfirming) return "buying";
+    if (isConfirming) return "confirming";
+    return null;
+  };
+
+  const currentMintingStep = getCurrentMintingStep();
+
   useEffect(() => {
-    if (!isPending && !isConfirming && !isApproving && processingPodiumId) {
+    if (!isPending && !isConfirming && !isApproving && !isFetchingSignature && processingPodiumId) {
       const timer = setTimeout(() => {
         if (!isClaimingPodium && !isBuyingPodium) {
           setProcessingPodiumId(null);
@@ -92,6 +106,7 @@ function MyPodium() {
     isPending,
     isConfirming,
     isApproving,
+    isFetchingSignature,
     isClaimingPodium,
     isBuyingPodium,
     processingPodiumId,
@@ -295,8 +310,9 @@ function MyPodium() {
                       }
                     }}
                     isPending={
-                      isProcessing && (isPending || isConfirming || isApproving)
+                      isProcessing && (isPending || isConfirming || isApproving || isFetchingSignature)
                     }
+                    mintingStep={isProcessing ? currentMintingStep : null}
                     hasSucceeded={hasSucceeded}
                   />
                 </li>

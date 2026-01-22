@@ -40,7 +40,7 @@ function RankingPage(): React.ReactNode {
     <AppLayout>
       <div className={styles.body}>
         <div className={styles.header}>
-          <BrandHeader showBackButton={true} />
+          <BrandHeader showBackButton={false} />
 
           <div className={styles.tabs}>
             <TabNavigator

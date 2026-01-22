@@ -90,34 +90,36 @@ const BrandHeader: React.FC<BrandHeaderProps> = ({
           />
         </div>
       ) : (
-        <div onClick={handleOpenBrandsSearch}>
-          {/* Magnifying glass SVG */}
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-hidden="true"
-          >
-            <circle
-              cx="11"
-              cy="11"
-              r="7"
-              stroke="#bbbbbb"
-              strokeWidth="2"
+        <div className={styles.left}>
+          <div className={styles.searchBtn} onClick={handleOpenBrandsSearch}>
+            {/* Magnifying glass SVG */}
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
               fill="none"
-            />
-            <line
-              x1="16.4142"
-              y1="16"
-              x2="21"
-              y2="20.5858"
-              stroke="#bbbbbb"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-          </svg>
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              <circle
+                cx="11"
+                cy="11"
+                r="7"
+                stroke="#bbbbbb"
+                strokeWidth="2"
+                fill="none"
+              />
+              <line
+                x1="16.4142"
+                y1="16"
+                x2="21"
+                y2="20.5858"
+                stroke="#bbbbbb"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+            </svg>
+          </div>
         </div>
       )}
 

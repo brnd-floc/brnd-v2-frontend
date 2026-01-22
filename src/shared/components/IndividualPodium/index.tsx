@@ -13,6 +13,26 @@ import { User } from "@/shared/hooks/user";
 import { useAccount, useConnect } from "wagmi";
 import sdk from "@farcaster/miniapp-sdk";
 
+// Minting step type for contextual messages
+export type MintingStep =
+  | "fetching_signature"
+  | "approving"
+  | "confirming_approval"
+  | "minting"
+  | "buying"
+  | "confirming"
+  | null;
+
+// Contextual messages for each minting step
+const MINTING_STEP_MESSAGES: Record<Exclude<MintingStep, null>, string> = {
+  fetching_signature: "Checking eligibility...",
+  approving: "Approve $BRND in wallet",
+  confirming_approval: "Confirming approval...",
+  minting: "Confirm in wallet",
+  buying: "Confirm in wallet",
+  confirming: "Minting on chain...",
+};
+
 export interface IndividualPodiumProps {
   className?: string;
   podium?: {
@@ -49,6 +69,7 @@ export interface IndividualPodiumProps {
   onBuyClick?: () => void;
   onMintSuccess?: () => void;
   isPending?: boolean;
+  mintingStep?: MintingStep; // Current step in the minting/buying process
   hasSucceeded?: boolean; // Optimistic update after successful transaction
   successType?: "mint" | "buy"; // Type of successful transaction
 }
@@ -79,6 +100,7 @@ const IndividualPodium: React.FC<IndividualPodiumProps> = ({
   onBuyClick,
   user,
   isPending = false,
+  mintingStep = null,
   hasSucceeded = false,
 }) => {
   const { openModal } = useModal();
@@ -87,6 +109,14 @@ const IndividualPodium: React.FC<IndividualPodiumProps> = ({
 
   const { data: authData } = useAuth();
   const userFid = authData?.fid ? Number(authData.fid) : null;
+
+  // Get contextual message for current minting step
+  const getMintingMessage = (): string => {
+    if (mintingStep && MINTING_STEP_MESSAGES[mintingStep]) {
+      return MINTING_STEP_MESSAGES[mintingStep];
+    }
+    return "Processing...";
+  };
 
   // Apply optimistic update if transaction succeeded
   const isMinted = hasSucceeded || collectibleData.isCollectible;
@@ -293,19 +323,15 @@ const IndividualPodium: React.FC<IndividualPodiumProps> = ({
                 onClick={handleActionClick}
                 disabled={isButtonDisabled}
               >
-                {isPending ? (
-                  <Spinner />
-                ) : (
-                  <Typography
-                    variant="geist"
-                    weight="bold"
-                    size={14}
-                    lineHeight={18}
-                    className={styles.actionButtonText}
-                  >
-                    {getButtonText()}
-                  </Typography>
-                )}
+                <Typography
+                  variant="geist"
+                  weight="bold"
+                  size={isPending ? 10 : 14}
+                  lineHeight={isPending ? 13 : 18}
+                  className={styles.actionButtonText}
+                >
+                  {isPending ? getMintingMessage() : getButtonText()}
+                </Typography>
               </button>
             </div>
           </div>

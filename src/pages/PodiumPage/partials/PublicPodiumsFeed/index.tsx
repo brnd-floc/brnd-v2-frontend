@@ -21,6 +21,7 @@ import { sdk } from "@farcaster/miniapp-sdk";
 
 // Types
 import { CollectibleData } from "@/shared/types/collectibles";
+import { MintingStep } from "@/shared/components/IndividualPodium";
 
 function PublicPodiumsFeed() {
   const navigate = useNavigate();
@@ -116,6 +117,19 @@ function PublicPodiumsFeed() {
     isFetchingSignature,
     processingPodiumId,
   ]);
+
+  // Calculate current minting step based on hook states
+  const getCurrentMintingStep = (): MintingStep => {
+    if (isFetchingSignature) return "fetching_signature";
+    if (isApproving && !isConfirming) return "approving";
+    if (isApproving && isConfirming) return "confirming_approval";
+    if (isClaimingPodium && !isConfirming) return "minting";
+    if (isBuyingPodium && !isConfirming) return "buying";
+    if (isConfirming) return "confirming";
+    return null;
+  };
+
+  const currentMintingStep = getCurrentMintingStep();
 
   // Show error modal when contract error occurs
   useEffect(() => {
@@ -385,6 +399,7 @@ function PublicPodiumsFeed() {
                     isProcessing &&
                     (isPending || isConfirming || isApproving || isFetchingSignature)
                   }
+                  mintingStep={isProcessing ? currentMintingStep : null}
                   hasSucceeded={hasSucceeded}
                   successType={successType}
                 />

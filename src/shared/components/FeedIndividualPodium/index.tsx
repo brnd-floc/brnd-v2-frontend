@@ -11,8 +11,18 @@ import { useAuth } from "@/shared/hooks/auth";
 import { useAccount, useConnect } from "wagmi";
 import sdk from "@farcaster/miniapp-sdk";
 
-import { IndividualPodiumProps } from "../IndividualPodium";
+import { IndividualPodiumProps, MintingStep } from "../IndividualPodium";
 import { useNavigate } from "react-router-dom";
+
+// Contextual messages for each minting step
+const MINTING_STEP_MESSAGES: Record<Exclude<MintingStep, null>, string> = {
+  fetching_signature: "Checking eligibility...",
+  approving: "Approve $BRND in wallet",
+  confirming_approval: "Confirming approval...",
+  minting: "Confirm in wallet",
+  buying: "Confirm in wallet",
+  confirming: "Minting on chain...",
+};
 
 // Format large numbers (1000000 -> "1M", 1200000 -> "1.2M")
 const formatPrice = (priceStr: string | null): string => {
@@ -87,6 +97,7 @@ const FeedIndividualPodium: React.FC<IndividualPodiumProps> = ({
   onMintSuccess,
   user,
   isPending = false,
+  mintingStep = null,
   hasSucceeded = false,
   successType,
 }) => {
@@ -98,10 +109,20 @@ const FeedIndividualPodium: React.FC<IndividualPodiumProps> = ({
   const { data: authData } = useAuth();
   const userFid = authData?.fid ? Number(authData.fid) : null;
 
-  // Use collectibleData directly - parent handles optimistic updates
-  const isMinted = collectibleData.isCollectible;
-  const ownerFid = collectibleData.ownerFid;
-  const owner = collectibleData.ownerUsername;
+  // Get contextual message for current minting step
+  const getMintingMessage = (): string => {
+    if (mintingStep && MINTING_STEP_MESSAGES[mintingStep]) {
+      return MINTING_STEP_MESSAGES[mintingStep];
+    }
+    return "Processing...";
+  };
+
+  // Apply optimistic update if transaction succeeded
+  const isMinted = hasSucceeded || collectibleData.isCollectible;
+  const ownerFid = hasSucceeded ? userFid : collectibleData.ownerFid;
+  const owner = hasSucceeded
+    ? authData?.username
+    : collectibleData.ownerUsername;
 
   // Price calculations per contract:
   // - Mint price: BASE_PRICE (1M BRND)
@@ -387,18 +408,14 @@ const FeedIndividualPodium: React.FC<IndividualPodiumProps> = ({
           onClick={handleActionClick}
           disabled={isButtonDisabled}
         >
-          {isPending ? (
-            <Spinner />
-          ) : (
-            <Typography
-              variant="geist"
-              weight="bold"
-              size={14}
-              className={styles.actionButtonText}
-            >
-              {getButtonText()}
-            </Typography>
-          )}
+          <Typography
+            variant="geist"
+            weight="bold"
+            size={14}
+            className={styles.actionButtonText}
+          >
+            {isPending ? getMintingMessage() : getButtonText()}
+          </Typography>
         </button>
       </div>
 

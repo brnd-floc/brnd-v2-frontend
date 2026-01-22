@@ -59,7 +59,15 @@ export const router = createBrowserRouter([
       { path: "/vote/:unixDate?", element: <VotePage /> },
       { path: "/podium", element: <PodiumPage /> },
       { path: "/claimed", element: <ClaimedPage /> },
-      { path: "/leaderboard", element: <LeaderboardPage /> },
+      {
+        path: "/leaderboard",
+        element: <LeaderboardPage />,
+        children: [
+          { path: "", element: <LeaderboardPage /> },
+          { path: "s1", element: <LeaderboardPage /> },
+          { path: "s2", element: <LeaderboardPage /> },
+        ],
+      },
       {
         path: "/ranking",
         element: <RankingPage />,

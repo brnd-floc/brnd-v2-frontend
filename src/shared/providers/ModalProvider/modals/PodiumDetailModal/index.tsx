@@ -351,30 +351,7 @@ export const PodiumDetailModal: React.FC<
             </Typography>
           </div>
         </div>
-        <div className={styles.benefitsBox}>
-          <Typography
-            variant="geist"
-            weight="bold"
-            size={16}
-            lineHeight={20}
-            className={styles.boxLabel}
-          >
-            BENEFITS
-          </Typography>
-          <div className={styles.boxValueGroup}>
-            <Typography variant="geist" weight="bold" size={24} lineHeight={28}>
-              {formatPrice(totalFeesEarned)}
-            </Typography>
-            <Typography
-              variant="geist"
-              weight="regular"
-              size={12}
-              lineHeight={16}
-            >
-              $BRND
-            </Typography>
-          </div>
-        </div>
+        
       </div>
 
       {/* Podium Info */}
