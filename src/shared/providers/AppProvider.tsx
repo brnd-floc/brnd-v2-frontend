@@ -16,7 +16,8 @@ import { BrandRankingsProvider } from "../contexts/BrandRankingsContext";
 
 // Components
 import NotificationPrompt from "@/shared/components/NotificationPrompt";
-import BrndLandingPage from "@/pages/BrndLandingPage";
+
+import NotInMiniappPage from "@/pages/NotInMiniappPage";
 
 // Farcaster Miniapp Init
 import sdk from "@farcaster/miniapp-sdk";

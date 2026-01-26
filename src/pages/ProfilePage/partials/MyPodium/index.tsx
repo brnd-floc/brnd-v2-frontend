@@ -183,7 +183,10 @@ function MyPodium() {
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
     const calc = scrollTop + clientHeight + 50;
     if (calc >= scrollHeight && !isFetching && history) {
-      setPageId((prev) => prev + 1);
+      const totalItems = history.data.length;
+      if (totalItems < history.count) {
+        setPageId((prev) => prev + 1);
+      }
     }
   };
 
@@ -247,7 +250,8 @@ function MyPodium() {
     );
   }
 
-  if (history && Object.keys(history.data).length === 0) {
+  // Empty state - no podiums yet
+  if (history && history.data.length === 0) {
     return (
       <div className={styles.emptyLayout}>
         <div className={styles.empty}>
@@ -274,50 +278,52 @@ function MyPodium() {
       {history && (
         <div className={styles.view} onScroll={handleScrollList}>
           <ul className={styles.list}>
-            {Object.values(history.data).map((vote: UserVoteHistory) => {
-              const collectibleData = toCollectibleData(vote);
-              const brandIds: [number, number, number] = [
-                vote.brand1.id,
-                vote.brand2.id,
-                vote.brand3.id,
-              ];
-              const isProcessing = processingPodiumId === vote.id;
-              const collectibleTokenId = (vote as any).collectibleTokenId;
-              const isLastVoteForCombination =
-                getIsLastVoteForCombination(vote);
-
-              // Apply optimistic update if this podium was successfully transacted
-              const hasSucceeded = successfulPodiums.has(vote.id);
-              const optimisticCollectibleData = hasSucceeded
-                ? { ...collectibleData, isCollectible: true }
-                : collectibleData;
-
-              return (
-                <li key={vote.id} className={styles.item}>
-                  <IndividualPodium
-                    user={vote.user}
-                    brand1={vote.brand1}
-                    brand2={vote.brand2}
-                    brand3={vote.brand3}
-                    collectibleData={optimisticCollectibleData}
-                    isLastVoteForCombination={
-                      hasSucceeded ? true : isLastVoteForCombination
-                    }
-                    onMintClick={() => handleMintPodium(vote.id, brandIds)}
-                    onBuyClick={() => {
-                      if (collectibleTokenId) {
-                        handleBuyPodium(vote.id, collectibleTokenId);
-                      }
-                    }}
-                    isPending={
-                      isProcessing && (isPending || isConfirming || isApproving || isFetchingSignature)
-                    }
-                    mintingStep={isProcessing ? currentMintingStep : null}
-                    hasSucceeded={hasSucceeded}
+            {history.data.map((vote, _) => (
+              <li key={`--podium-key-${vote.id}`} className={styles.item}>
+                <div className={styles.brands}>
+                  <BrandCard
+                    key={"--podium-key-1"}
+                    score={vote.brand1.score}
+                    variation={getBrandScoreVariation(vote.brand1.stateScore)}
+                    name={vote.brand1.name}
+                    photoUrl={vote.brand1.imageUrl}
+                    onClick={() => navigate(`/brand/${vote.brand1.id}`)}
                   />
-                </li>
-              );
-            })}
+                  <BrandCard
+                    key={"--podium-key-2"}
+                    score={vote.brand2.score}
+                    variation={getBrandScoreVariation(vote.brand2.stateScore)}
+                    name={vote.brand2.name}
+                    photoUrl={vote.brand2.imageUrl}
+                    onClick={() => navigate(`/brand/${vote.brand2.id}`)}
+                  />
+                  <BrandCard
+                    key={"--podium-key-3"}
+                    score={vote.brand3.score}
+                    variation={getBrandScoreVariation(vote.brand3.stateScore)}
+                    name={vote.brand3.name}
+                    photoUrl={vote.brand3.imageUrl}
+                    onClick={() => navigate(`/brand/${vote.brand3.id}`)}
+                  />
+                </div>
+                <div className={styles.data}>
+                  <Typography
+                    variant={"geist"}
+                    size={14}
+                    lineHeight={14}
+                    weight={"medium"}
+                  >
+                    {formatDistanceToNow(new Date(vote.date).getTime(), {
+                      addSuffix: true,
+                    }).includes("hour")
+                      ? "today"
+                      : formatDistanceToNow(new Date(vote.date).getTime(), {
+                          addSuffix: true,
+                        })}
+                  </Typography>
+                </div>
+              </li>
+            ))}
           </ul>
 
           {isFetching && pageId > 1 && (
