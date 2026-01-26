@@ -5,10 +5,10 @@
   flex-direction: column;
   flex: 1;
   @include baseLayout();
-  gap: 32px;
+
   height: 100vh;
-  overflow: hidden;
-  padding: 0 12px;
+  overflow-y: auto;
+  padding: 0 10px;
 }
 
 .header {
@@ -16,7 +16,7 @@
   align-items: center;
   flex-direction: column;
   justify-content: center;
-  padding-top: 3px;
+  padding: 4px 0;
 }
 
 .tabs {
@@ -29,4 +29,27 @@
   max-width: 600px;
   text-align: left;
   margin-top: 16px;
+  margin-bottom: 8px;
+}
+
+.titleContainer {
+  position: relative;
+  padding-bottom: 12px; // Add some spacing between text and line
+
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100vw;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      #fff100 0%,
+      #ff0000 33%,
+      #0c00ff 66%,
+      #00ff00 100%
+    );
+  }
 }

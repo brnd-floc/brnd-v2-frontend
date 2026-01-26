@@ -20,7 +20,7 @@ import sdk from "@farcaster/miniapp-sdk";
 interface PodiumProps {
   variant?: "readonly" | "selection";
   onVote?: (selected: Brand[]) => void;
-  initial?: Brand[];
+  initial?: (Brand | undefined)[];
   isAnimated?: boolean;
   buttonLabel?: string;
   buttonDisabled?: boolean;
@@ -36,8 +36,15 @@ function Podium({
   buttonDisabled = false,
   buttonVariant = "primary",
 }: PodiumProps) {
-  const [selected, setSelected] = useState<Brand[]>(initial);
+  const [selected, setSelected] = useState<(Brand | undefined)[]>(initial);
   const { open, close } = useBottomSheet();
+
+  // Check if all 3 positions are filled with valid brands
+  const allBrandsSelected =
+    selected.length >= 3 &&
+    selected[0] !== undefined &&
+    selected[1] !== undefined &&
+    selected[2] !== undefined;
 
   /**
    * Array of animation delays for each podium column.
@@ -96,13 +103,16 @@ function Podium({
                     open(
                       <div className={styles.selector}>
                         <BrandsList
-                          value={selected.map((brand) => brand?.id)}
+                          value={selected
+                            .filter((b): b is Brand => b !== undefined)
+                            .map((brand) => brand.id)}
                           isSelectable={true}
                           isFinderEnabled={true}
                           config={{
                             limit: 27,
                             order: "all",
                           }}
+                          positionBeingChanged={i === 0 ? 2 : i === 1 ? 1 : 3}
                           className={styles.list}
                           onSelect={(brand) => {
                             sdk.haptics.selectionChanged();
@@ -120,7 +130,7 @@ function Podium({
 
       {variant === "selection" && (
         <AnimatePresence>
-          {selected.length === 3 && (
+          {allBrandsSelected && (
             <motion.div
               className={styles.footer}
               initial={{ y: 300 }}
@@ -141,7 +151,8 @@ function Podium({
                 onClick={() => {
                   if (!buttonDisabled) {
                     sdk.haptics.selectionChanged();
-                    onVote?.(selected);
+                    // Filter out any undefined values before passing to onVote
+                    onVote?.(selected.filter((b): b is Brand => b !== undefined));
                   }
                 }}
               />

@@ -87,22 +87,30 @@ export interface LeaderboardApiResponse {
 }
 
 /**
+ * Season filter type for leaderboard
+ */
+export type LeaderboardSeason = "all" | "s1" | "s2";
+
+/**
  * Retrieves the user leaderboard with ranking and pagination.
  * Uses authentication to also return current user's position.
  *
  * @param page - The page number for pagination (default: 1).
  * @param limit - The number of users per page (default: 50).
+ * @param season - Season filter: "all" for all-time, "s1" for season 1, "s2" for season 2.
  * @returns A promise that resolves with the leaderboard data including users, pagination, and current user position.
  */
 export const getUserLeaderboard = async (
   page: number = 1,
-  limit: number = 50
+  limit: number = 50,
+  season: LeaderboardSeason = "all"
 ): Promise<LeaderboardApiResponse> =>
   await request<LeaderboardApiResponse>(`${USER_SERVICE}/leaderboard`, {
     method: "GET",
     params: {
       page: String(page),
       limit: String(limit),
+      season,
     },
   });
 

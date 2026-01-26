@@ -1,0 +1,65 @@
+@import "@/styles/index.scss";
+
+.section {
+  position: relative;
+  min-height: 50vh;
+  width: 100%;
+  overflow: hidden;
+  padding-top: 6rem;
+}
+
+.backgroundContainer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.backgroundImage {
+  position: absolute;
+  inset: 0;
+}
+
+.backgroundOverlay {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.heroImage {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.content {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  min-height: calc(50vh - 100px);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+.headline {
+  max-width: 1667px;
+  text-align: center;
+  font-family: var(--font-display, 'Inter', sans-serif);
+  font-size: 2.25rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  line-height: 1.03;
+  color: white;
+  @include textGradientLight;
+
+  @include md {
+    font-size: 3.75rem;
+  }
+
+  @include lg {
+    font-size: 4.5rem;
+  }
+}

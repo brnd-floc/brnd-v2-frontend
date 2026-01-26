@@ -15,9 +15,9 @@ export const useRecentPodiums = (page: number = 1, limit: number = 20) => {
       // Transform response to match component expectations
       return response;
     },
-    staleTime: Infinity, // Never consider data stale - cache indefinitely
-    gcTime: Infinity, // Keep cached data indefinitely (formerly cacheTime)
-    refetchOnMount: false, // Don't refetch when component mounts if data exists
+    staleTime: 0, // Always refetch fresh data on mount
+    gcTime: 5 * 60 * 1000, // Keep cached data for 5 minutes
+    refetchOnMount: true, // Refetch when component mounts if data is stale
     refetchOnWindowFocus: false, // Don't refetch when window regains focus
     refetchOnReconnect: false, // Don't refetch when network reconnects
     placeholderData: keepPreviousData, // Keep previous data while loading new page

@@ -10,6 +10,11 @@ import Typography from "@/components/Typography";
 // Assets
 import AddIcon from "@/assets/icons/add-solid.svg?react";
 
+import Podium1Icon from "@/shared/assets/icons/podium-1.svg?react";
+import Podium2Icon from "@/shared/assets/icons/podium-2.svg?react";
+import Podium3Icon from "@/shared/assets/icons/podium-3.svg?react";
+import BRNDIcon from "@/shared/assets/icons/brnd-podium-icon.svg?react";
+
 // Hooks
 import { Brand } from "@/hooks/brands";
 
@@ -26,7 +31,15 @@ export default function PodiumColumn({
   position,
   onClick,
 }: Readonly<PodiumColumnProps>) {
-
+  const getPositionIcon = () => {
+    if (position === 1) {
+      return <Podium1Icon />;
+    } else if (position === 2) {
+      return <Podium2Icon />;
+    } else if (position === 3) {
+      return <Podium3Icon />;
+    }
+  };
   return (
     <div
       className={classNames(
@@ -69,24 +82,15 @@ export default function PodiumColumn({
         )
       ) : onClick ? (
         <button className={styles.brand} onClick={onClick}>
-          <AddIcon />
+          <BRNDIcon />
         </button>
       ) : (
         <div className={styles.brand}>
-          <AddIcon />
+          <BRNDIcon />
         </div>
       )}
-      <div>
-        <Typography
-          size={64}
-          variant={"druk"}
-          lineHeight={80}
-          weight={"wide"}
-          className={styles.number}
-          textAlign={"center"}
-        >
-          {position}
-        </Typography>
+      <div className={styles.positionIconContainer}>
+        <div className={styles.positionIcon}>{getPositionIcon()}</div>
       </div>
     </div>
   );

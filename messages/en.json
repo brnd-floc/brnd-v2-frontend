@@ -1,0 +1,13 @@
+{
+  "landing": {
+    "hero": {
+      "headline": "THE ONCHAIN STAGE FOR TOP BRANDS",
+      "subheadline": "",
+      "openMiniapp": "Open Miniapp",
+      "goToDashboard": "Go to Dashboard"
+    },
+    "footer": {
+      "rights": "© {year} BRND. All rights reserved."
+    }
+  }
+}

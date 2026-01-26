@@ -11,6 +11,11 @@
 .header {
   flex: 0;
   display: flex;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: transparent;
+  padding-bottom: 8px;
 }
 
 .scroll {

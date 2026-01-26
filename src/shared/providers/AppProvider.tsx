@@ -16,6 +16,7 @@ import { BrandRankingsProvider } from "../contexts/BrandRankingsContext";
 
 // Components
 import NotificationPrompt from "@/shared/components/NotificationPrompt";
+
 import NotInMiniappPage from "@/pages/NotInMiniappPage";
 
 // Farcaster Miniapp Init
@@ -36,6 +37,7 @@ import {
   TodaysVoteStatus,
   ContextualTransaction,
 } from "@/shared/hooks/user";
+import NotInMiniappPage from "@/pages/NotInMiniappPage";
 
 // Global flag to ensure /me is only called once per session (for initial load)
 let hasCalledGetMe = false;

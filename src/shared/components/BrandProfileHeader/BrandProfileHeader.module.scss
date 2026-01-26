@@ -155,10 +155,84 @@
     rgba(15, 30, 60, 0.9) 100%
   );
   border: 1px solid rgba(255, 255, 255, 0.15);
-  padding: 16px;
+  padding: 8px;
   display: flex;
   flex-direction: column;
   position: relative;
+
+  // Score card background variants based on 7d trend
+  &.scoreCardPositive {
+    background: linear-gradient(
+      135deg,
+      rgba(0, 80, 0, 0.8) 0%,
+      rgba(0, 40, 0, 0.9) 100%
+    );
+    border-color: rgba(0, 255, 0, 0.3);
+  }
+
+  &.scoreCardNegative {
+    background: linear-gradient(
+      135deg,
+      rgba(80, 0, 0, 0.8) 0%,
+      rgba(40, 0, 0, 0.9) 100%
+    );
+    border-color: rgba(255, 0, 0, 0.3);
+  }
+
+  &.scoreCardNeutral {
+    background: linear-gradient(
+      135deg,
+      rgba(30, 60, 120, 0.8) 0%,
+      rgba(15, 30, 60, 0.9) 100%
+    );
+    border-color: rgba(0, 140, 255, 0.3);
+  }
+}
+
+// 7d Trend Indicator
+.trendIndicator {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 10px;
+
+  &.trendPositive {
+    background: rgba(0, 255, 0, 0.15);
+    border: 1px solid rgba(0, 255, 0, 0.3);
+    color: #00ff00;
+  }
+
+  &.trendNegative {
+    background: rgba(255, 0, 0, 0.15);
+    border: 1px solid rgba(255, 0, 0, 0.3);
+    color: #ff0000;
+  }
+
+  &.trendNeutral {
+    background: rgba(0, 140, 255, 0.15);
+    border: 1px solid rgba(0, 140, 255, 0.3);
+    color: #008cff;
+  }
+}
+
+.trendArrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  &.arrowUp {
+    transform: rotate(180deg);
+  }
 }
 
 .scoreLabel {
@@ -175,7 +249,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 28px;
+  font-size: 24px;
   line-height: 28px;
 }
 
@@ -194,4 +268,30 @@
 
 .variationText {
   color: #ffffff;
+}
+
+.scoreValueContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-top: 40px;
+}
+
+.scoreLabelSCORE {
+  color: #ffffff;
+}
+
+.scoreLabelBRND {
+  color: #8a8a8a;
+}
+
+.trendLabelContainer {
+  display: flex;
+  flex-direction: row;
+  gap: 4px;
+}
+
+.trendLabel {
+  color: #8a8a8a;
 }

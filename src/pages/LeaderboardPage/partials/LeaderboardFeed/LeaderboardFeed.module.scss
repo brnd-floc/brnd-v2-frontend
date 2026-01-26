@@ -3,8 +3,8 @@
 .layout {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
   gap: 16px;
+  height: 100%;
 }
 
 .userRankSection {
@@ -46,30 +46,32 @@
   border: 2px solid rgba(255, 255, 255, 0.2);
 }
 
+.userRankDetails {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 120px;
+}
+
 .userRankPosition {
   color: white;
   font-weight: 700;
   font-size: 24px;
+  min-width: 80px;
 }
 
-// Share section styling
-.shareSection {
+.userRankPoints {
   display: flex;
-  justify-content: center;
-  width: 222px;
-  margin: 0 auto;
+  align-items: center;
+  gap: 4px;
+  min-width: 60px;
 }
 
-.shareButton {
-  min-width: 120px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: 2px solid transparent;
-  background-clip: padding-box;
-
-  &:hover {
-    opacity: 0.9;
-    transform: translateY(-1px);
-  }
+.pointsText {
+  color: white;
+  font-weight: 500;
+  min-width: 40px;
 }
 
 .scrollContainer {
@@ -244,4 +246,119 @@
     gap: 6px;
     padding-bottom: 16px;
   }
+}
+
+// Skeleton loading animation
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.05) 25%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.05) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+}
+
+// Skeleton for user rank card
+.skeletonUserRankCard {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 20px;
+  height: 128px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.skeletonUserRankContent {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.skeletonAvatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  @extend .skeleton;
+}
+
+.skeletonRankDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skeletonPosition {
+  width: 100px;
+  height: 40px;
+  @extend .skeleton;
+  border-radius: 8px;
+}
+
+.skeletonPoints {
+  width: 70px;
+  height: 16px;
+  @extend .skeleton;
+}
+
+// Skeleton for user list item
+.skeletonUserItem {
+  display: flex;
+  flex: 1;
+  gap: 8px;
+  height: 100%;
+  flex-direction: row;
+  background: #16181d;
+  border: 1px solid #2f2f2f;
+  width: 100%;
+  padding: 8px;
+  border-radius: 8px;
+  align-items: center;
+}
+
+.skeletonItemPosition {
+  width: 28px;
+  height: 14px;
+  @extend .skeleton;
+}
+
+.skeletonItemAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  @extend .skeleton;
+}
+
+.skeletonItemUsername {
+  width: 100px;
+  height: 14px;
+  @extend .skeleton;
+}
+
+.skeletonItemScore {
+  width: 50px;
+  height: 14px;
+  margin-left: auto;
+  @extend .skeleton;
+}
+
+.skeletonItemIcon {
+  width: 15px;
+  height: 12px;
+  @extend .skeleton;
 }

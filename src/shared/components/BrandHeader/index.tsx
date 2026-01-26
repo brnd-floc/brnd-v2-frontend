@@ -10,6 +10,7 @@ import styles from "./BrandHeader.module.scss";
 // Components
 import Typography from "@/components/Typography";
 import IconButton from "@/components/IconButton";
+import BrandsList from "@/components/BrandsList";
 
 // Assets
 import Logo from "@/assets/images/logo.svg";
@@ -18,6 +19,7 @@ import GoBackIcon from "@/assets/icons/go-back-icon.svg?react";
 
 // Hooks
 import { useAuth } from "@/hooks/auth";
+import useBottomSheet from "@/hooks/ui/useBottomSheet";
 import sdk from "@farcaster/miniapp-sdk";
 
 interface BrandHeaderProps {
@@ -39,6 +41,7 @@ const BrandHeader: React.FC<BrandHeaderProps> = ({
 }) => {
   const navigate = useNavigate();
   const { data } = useAuth();
+  const { open, close } = useBottomSheet();
 
   const handleClickProfile = useCallback(() => {
     sdk.haptics.selectionChanged();
@@ -54,9 +57,30 @@ const BrandHeader: React.FC<BrandHeaderProps> = ({
     }
   }, [onBackClick, navigate, backButtonPath]);
 
+  const handleOpenBrandsSearch = useCallback(() => {
+    sdk.haptics.selectionChanged();
+    open(
+      <div className={styles.brandsSearchModal}>
+        <BrandsList
+          isSelectable={true}
+          isFinderEnabled={true}
+          config={{
+            limit: 50,
+            order: "all",
+          }}
+          onSelect={(brand) => {
+            sdk.haptics.selectionChanged();
+            close();
+            navigate(`/brand/${brand.id}`);
+          }}
+        />
+      </div>
+    );
+  }, [open, close, navigate]);
+
   return (
     <div className={classNames(styles.header, className)}>
-      {showBackButton && (
+      {showBackButton ? (
         <div className={styles.left}>
           <IconButton
             variant="solid"
@@ -64,6 +88,38 @@ const BrandHeader: React.FC<BrandHeaderProps> = ({
             onClick={handleBackClick}
             className={styles.backBtn}
           />
+        </div>
+      ) : (
+        <div className={styles.left}>
+          <div className={styles.searchBtn} onClick={handleOpenBrandsSearch}>
+            {/* Magnifying glass SVG */}
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              <circle
+                cx="11"
+                cy="11"
+                r="7"
+                stroke="#bbbbbb"
+                strokeWidth="2"
+                fill="none"
+              />
+              <line
+                x1="16.4142"
+                y1="16"
+                x2="21"
+                y2="20.5858"
+                stroke="#bbbbbb"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+            </svg>
+          </div>
         </div>
       )}
 

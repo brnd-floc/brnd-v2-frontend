@@ -13,30 +13,29 @@ import { Brand, BrandCast } from "../shared/hooks/brands";
 
 /**
  * Interface for public podium data
+ * Now matches /my-vote-history format
  */
 export interface PublicPodium {
-  transactionHash: string;
-  id: string | null;
-  user: {
-    fid: number;
-    username: string;
-    photoUrl: string | null;
-  };
+  id: string; // transactionHash
+  date: string; // ISO string
   brand1: Brand;
   brand2: Brand;
   brand3: Brand;
-  date: string;
-  day: number | null;
-  shared: boolean;
-  shareVerified: boolean;
-  shareVerifiedAt: string | null;
-  castHash: string | null;
-  brndPaidWhenCreatingPodium: number | null;
-  rewardAmount: string | null;
-  claimedAt: string | null;
-  claimTxHash: string | null;
-  signatureGeneratedAt: string | null;
-  nonce: number | null;
+  // Collectible-specific fields
+  isCollectible: boolean;
+  collectibleTokenId: number | null;
+  collectiblePrice: string | null;
+  collectibleClaimCount: number;
+  collectibleGenesisCreatorFid: number | null;
+  collectibleGenesisCreatorUsername: string | null;
+  collectibleOwnerFid: number | null;
+  collectibleOwnerUsername: string | null;
+  collectibleTotalFeesEarned: string;
+  user: {
+    username: string;
+    fid: number;
+    photoUrl: string;
+  };
 }
 
 export type BrandTimePeriod = "day" | "week" | "month" | "all";
@@ -49,6 +48,7 @@ const brandListCache = new Map<string, GetBrandListResponse>();
 
 /**
  * Response structure for recent podiums API
+ * Now matches /my-vote-history format
  */
 export interface RecentPodiumsResponse {
   count: number;
@@ -94,6 +94,7 @@ export type BrandResponse = {
   brand: Brand;
   casts: BrandCast[];
   fanCount: number;
+  voteTrend7d: number;
 };
 
 /**

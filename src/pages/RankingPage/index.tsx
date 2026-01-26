@@ -23,6 +23,9 @@ function RankingPage(): React.ReactNode {
   const location = useLocation();
   const [selectedPeriod, setSelectedPeriod] = useState<BrandTimePeriod>("all");
 
+  // Check if we're on the "New" tab
+  const isNewTab = location.pathname === "/ranking/new";
+
   // Initialize period from URL parameter
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
@@ -37,7 +40,7 @@ function RankingPage(): React.ReactNode {
     <AppLayout>
       <div className={styles.body}>
         <div className={styles.header}>
-          <BrandHeader showBackButton={true} />
+          <BrandHeader showBackButton={false} />
 
           <div className={styles.tabs}>
             <TabNavigator
@@ -59,19 +62,19 @@ function RankingPage(): React.ReactNode {
           </div>
         </div>
 
-        <div className={styles.periodFilter}>
-          <TimePeriodFilter
-            selectedPeriod={selectedPeriod}
-            onPeriodChange={setSelectedPeriod}
-          />
-        </div>
+        {/* Hide time period filter on "New" tab */}
+        {!isNewTab && (
+          <div className={styles.periodFilter}>
+            <TimePeriodFilter
+              selectedPeriod={selectedPeriod}
+              onPeriodChange={setSelectedPeriod}
+            />
+          </div>
+        )}
 
         <Routes>
           <Route path="/" element={<TopRankings period={selectedPeriod} />} />
-          <Route
-            path="/new"
-            element={<NewRankings period={selectedPeriod} />}
-          />
+          <Route path="/new" element={<NewRankings />} />
           <Route
             path="/all"
             element={<AllRankings period={selectedPeriod} />}

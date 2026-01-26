@@ -1,0 +1,447 @@
+@import "@/styles/index.scss";
+
+.container {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 0; // Allow flex children to shrink below their content size
+}
+
+.cardContent {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0; // Allow flex item to shrink below content size
+  padding: 12px 16px 16px;
+  gap: 6px;
+  margin-right: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  border-radius: 12px;
+  position: relative;
+  box-sizing: border-box;
+}
+
+// Date in top right corner
+.dateContainer {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+}
+
+.dateText {
+  color: #8a8a8a;
+}
+
+// Top section with podium and info
+.topSection {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  align-items: flex-start;
+  min-width: 0; // Allow flex item to shrink
+}
+
+// Podium section
+.podiumSection {
+  display: flex;
+  padding-top: 20px;
+}
+
+.podiumContainer {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.podiumItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transition: transform 0.3s ease;
+  position: relative; // Add this
+
+  // Metallic gradient border that fades down
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    padding: 0.5px;
+    background: linear-gradient(
+      180deg,
+      #e8e8e8 0%,
+      #b0b0b0 10%,
+      #f5f5f5 20%,
+      #888888 35%,
+      #c0c0c0 50%,
+      #a0a0a0 70%,
+      transparent 100%
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    border-radius: 8px 8px 0 0;
+    pointer-events: none;
+  }
+}
+
+.podiumItem.first {
+  transform: translateY(-12px);
+}
+
+.podiumItem.second {
+  transform: translateY(-4px);
+}
+
+.podiumItem.third {
+  transform: translateY(0);
+}
+
+.imagePlaceholder,
+.brandImage {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.numberContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 18px;
+}
+
+.numberIcon {
+  width: auto;
+  height: 14px;
+}
+
+// Info section (Creator/Owner)
+.infoSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-width: 0; // Allow flex item to shrink
+  padding-top: 4px;
+  margin-top: 12px;
+}
+
+.infoRow {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  overflow: hidden; // Prevent content overflow
+}
+
+.infoLabel {
+  color: #8a8a8a;
+  min-width: 50px;
+}
+
+.userInfo {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  min-width: 0; // Allow flex item to shrink
+  overflow: hidden; // Prevent content overflow
+}
+
+.userAvatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.ownerAvatarPlaceholder {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4a4a4a 0%, #2a2a2a 100%);
+}
+
+.username {
+  color: #ffffff;
+}
+
+.noOwner {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+}
+
+.ownerPlaceholderLine {
+  width: 60px;
+  height: 8px;
+  background: linear-gradient(90deg, #3a3a3a 0%, #2a2a2a 100%);
+  border-radius: 4px;
+}
+
+// Payment info
+.paymentInfo {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  padding-left: 4px;
+  margin-top: 4px;
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 0; // Allow flex item to shrink
+}
+
+.paidAmount {
+  color: #8a8a8a;
+}
+
+.claimedAmount {
+  background: linear-gradient(
+    90deg,
+    #ff9533 0%,
+    #ff0000 25%,
+    #0c00ff 50%,
+    #00ff00 75%,
+    #ff9533 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: rainbowShift 3s linear infinite;
+  font-weight: 600;
+}
+
+@keyframes rainbowShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+// Action button
+.actionButton {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 12px 16px;
+  width: 100%;
+  max-width: 100%; // Prevent overflow
+  height: 34px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover:not(.disabled) {
+    transform: scale(1.01);
+  }
+
+  &:active:not(.disabled) {
+    transform: scale(0.99);
+  }
+}
+
+.actionButtonText {
+  color: white;
+}
+
+// Mint button with rainbow gradient and black overlay
+.mintButton {
+  position: relative;
+  isolation: isolate;
+  padding: 8px 12px;
+  gap: 8px;
+  height: 34px;
+  border-radius: 12px;
+  backdrop-filter: blur(12px);
+  overflow: hidden;
+  background: transparent;
+  border: 1px solid transparent; // Reserve space for border
+
+  // Rainbow gradient border (outer layer)
+  &:before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    border-radius: 12px;
+    background: linear-gradient(
+      90deg,
+      #ff9533 0%,
+      #ff0000 33%,
+      #0c00ff 66%,
+      #00ff00 100%
+    );
+  }
+
+  // Black overlay background (inner layer, creates border effect)
+  &:after {
+    content: "";
+    position: absolute;
+    inset: 1px; // Inset by 1px to show the rainbow border
+    z-index: -1;
+    border-radius: 11px; // Slightly smaller to account for 1px inset
+    background: rgba(0, 0, 0, 0.75);
+  }
+
+  .actionButtonText {
+    color: #fff;
+    position: relative;
+    z-index: 1;
+  }
+}
+
+// Buy button with rainbow gradient border and light background
+.buyButton {
+  position: relative;
+  isolation: isolate;
+  padding: 8px 12px;
+  gap: 8px;
+  height: 34px;
+  border-radius: 4px;
+  backdrop-filter: blur(12px);
+  overflow: hidden;
+  background: transparent;
+  border: 1px solid transparent; // Reserve space for border
+
+  // Rainbow gradient border (outer layer)
+  &:before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -3;
+    border-radius: 4px;
+    background: linear-gradient(
+      191.75deg,
+      #fff000 0%,
+      #ff0000 33%,
+      #0e00ff 66%,
+      #00ff00 100%
+    );
+  }
+
+  // Light gradient background with green overlay (inner layer)
+  &:after {
+    content: "";
+    position: absolute;
+    inset: 1px; // Inset by 1px to show the rainbow border
+    z-index: -1;
+    border-radius: 3px; // Slightly smaller to account for 1px inset
+    background: linear-gradient(
+        360deg,
+        #eaeaea 0%,
+        rgba(255, 255, 255, 0.8) 50%,
+        #eaeaea 100%
+      ),
+      rgba(0, 255, 0, 0.12);
+    background-blend-mode: normal, overlay;
+  }
+
+  .actionButtonText {
+    color: #000000;
+    position: relative;
+    z-index: 1;
+  }
+}
+
+// Success button (just bought/minted)
+.successButton {
+  background: #000000;
+  border: 1px solid #ffffff;
+
+  .actionButtonText {
+    color: #ffffff;
+  }
+}
+
+// Owned button
+.ownedButton {
+  background: transparent;
+  border: 1px solid rgba(138, 138, 138, 0.3);
+}
+
+// Not mintable button
+.notMintableButton {
+  background: rgba(138, 138, 138, 0.2);
+  border: 1px solid rgba(138, 138, 138, 0.3);
+
+  .actionButtonText {
+    color: #8a8a8a;
+  }
+}
+
+.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.loading {
+  opacity: 0.8;
+  cursor: wait;
+}
+
+// Arrow section
+.arrowSection {
+  display: flex;
+  align-items: stretch;
+  flex-shrink: 0; // Prevent arrow from shrinking
+}
+
+.arrowButton {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 6px;
+  width: 36px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.05) 0%,
+      rgba(0, 0, 0, 0) 100%
+    ),
+    rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+// Spinner animation
+.spinner {
+  animation: spin 0.8s linear infinite;
+  color: white;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

@@ -1,83 +1,89 @@
-import React, { useCallback, useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 
 // StyleSheet
 import styles from "./LeaderboardFeed.module.scss";
 
 // Components
 import Typography from "@/components/Typography";
-import Button from "@/components/Button";
 import UserListItem from "@/shared/components/UserListItem";
+import LoaderIndicator from "@/shared/components/LoaderIndicator";
 
 // Hooks
 import { useUserLeaderboard } from "@/shared/hooks/user/useUserLeaderboard";
+import { useAuth } from "@/hooks/auth";
 
-// Components
-import LoaderIndicator from "@/shared/components/LoaderIndicator";
+// Icons
+import BPointIcon from "@/assets/icons/point-b.svg?react";
 
-// SDK
-import sdk from "@farcaster/miniapp-sdk";
+// Types
+import type { LeaderboardSeason } from "../../index";
 
-function LeaderboardFeed() {
+interface LeaderboardFeedProps {
+  season: LeaderboardSeason;
+}
+
+function LeaderboardFeed({ season }: LeaderboardFeedProps) {
   const [currentPage, setCurrentPage] = useState(1);
-  const [allUsers, setAllUsers] = useState<any[]>([]);
+  const [usersBySeasonPage, setUsersBySeasonPage] = useState<
+    Record<string, any[]>
+  >({});
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const limit = 50;
 
-  const { data, isLoading, isFetching, error, refetch } = useUserLeaderboard(
-    currentPage,
-    limit
-  );
+  const { data: authData } = useAuth();
+  const { data, isLoading, isFetching, error, refetch, isPlaceholderData } =
+    useUserLeaderboard(currentPage, limit, season);
+
+  // Reset pagination when season changes (but keep cached data)
+  useEffect(() => {
+    setCurrentPage(1);
+    setIsLoadingMore(false);
+  }, [season]);
+
+  // Cache key for current season
+  const cacheKey = `${season}`;
+
+  // Get cached users for current season
+  const allUsers = usersBySeasonPage[cacheKey] || [];
 
   /**
-   * Handles sharing user's leaderboard position
-   */
-  const handleShareLeaderboard = useCallback(async () => {
-    if (data?.currentUser) {
-      try {
-        await sdk.actions.composeCast({
-          text: `I'm #${data.currentUser.position} on the @BRND leaderboard with ${data.currentUser.points} points! `,
-          embeds: ["https://brnd.land"],
-        });
-
-        // Add haptic feedback
-        sdk.haptics.selectionChanged();
-      } catch (error) {
-        // Share operation failed
-      }
-    }
-  }, [data?.currentUser]);
-
-  /**
-   * Accumulate users from all pages
+   * Accumulate users from all pages, cached by season
+   * Only update cache when data is fresh (not placeholder from previous query)
    */
   useEffect(() => {
-    if (data?.users) {
+    if (data?.users && !isPlaceholderData) {
       if (currentPage === 1) {
-        // First page - replace all users
-
-        setAllUsers(data.users);
+        // First page - replace users for this season
+        setUsersBySeasonPage((prev) => ({
+          ...prev,
+          [cacheKey]: data.users,
+        }));
       } else {
-        // Subsequent pages - append new users
-
-        setAllUsers((prev) => {
-          // Filter out duplicates by FID
-          const existingFids = new Set(prev.map((u) => u.fid));
+        // Subsequent pages - append new users for this season
+        setUsersBySeasonPage((prev) => {
+          const existingUsers = prev[cacheKey] || [];
+          const existingFids = new Set(existingUsers.map((u) => u.fid));
           const newUsers = data.users.filter((u) => !existingFids.has(u.fid));
-          return [...prev, ...newUsers];
+          return {
+            ...prev,
+            [cacheKey]: [...existingUsers, ...newUsers],
+          };
         });
       }
       setIsLoadingMore(false);
     }
-  }, [data, currentPage]);
+  }, [data, currentPage, cacheKey, isPlaceholderData]);
 
   /**
-   * Handles the scroll event for automatic loading.
+   * Handles window scroll for infinite loading.
    * When user scrolls near the bottom, loads the next page automatically.
    */
-  const handleScrollList = useCallback(
-    (e: React.UIEvent<HTMLDivElement>) => {
-      const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
-      const calc = scrollTop + clientHeight + 50; // 50px buffer before bottom
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.scrollY || document.documentElement.scrollTop;
+      const scrollHeight = document.documentElement.scrollHeight;
+      const clientHeight = window.innerHeight;
+      const calc = scrollTop + clientHeight + 150; // 150px buffer before bottom
 
       if (
         calc >= scrollHeight &&
@@ -88,27 +94,64 @@ function LeaderboardFeed() {
         setIsLoadingMore(true);
         setCurrentPage((prev) => prev + 1);
       }
-    },
-    [isFetching, isLoadingMore, data?.pagination.hasNextPage, currentPage]
-  );
-
-  // Disable body scroll when component mounts
-  useEffect(() => {
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      document.body.style.overflow = "auto";
     };
-  }, []);
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [isFetching, isLoadingMore, data?.pagination.hasNextPage]);
 
   // Check if we have data to show
   const hasData = allUsers.length > 0;
   const hasNextPage = data?.pagination.hasNextPage;
 
-  if (isLoading && currentPage === 1) {
+  // Show skeleton when fetching first page and no cached data for this season
+  const isLoadingFirstPage = (isLoading || isFetching) && currentPage === 1 && !hasData;
+
+  // Skeleton loader for the user rank card (uses actual user avatar)
+  const renderUserRankSkeleton = () => (
+    <div className={styles.userRankSection}>
+      <div className={styles.skeletonUserRankCard}>
+        <div className={styles.skeletonUserRankContent}>
+          {authData?.photoUrl ? (
+            <img
+              src={authData.photoUrl}
+              alt={authData.username || "User"}
+              className={styles.userRankAvatar}
+            />
+          ) : (
+            <div className={styles.skeletonAvatar} />
+          )}
+          <div className={styles.skeletonRankDetails}>
+            <div className={styles.skeletonPosition} />
+            <div className={styles.skeletonPoints} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Skeleton loader for user list items
+  const renderUserListSkeleton = () => (
+    <div className={styles.usersList}>
+      {Array.from({ length: 8 }).map((_, index) => (
+        <div key={`skeleton-${index}`} className={styles.userItem}>
+          <div className={styles.skeletonUserItem}>
+            <div className={styles.skeletonItemPosition} />
+            <div className={styles.skeletonItemAvatar} />
+            <div className={styles.skeletonItemUsername} />
+            <div className={styles.skeletonItemScore} />
+            <div className={styles.skeletonItemIcon} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  if (isLoadingFirstPage) {
     return (
       <div className={styles.layout}>
-        <LoaderIndicator size={30} variant={"fullscreen"} />
+        {renderUserRankSkeleton()}
+        {renderUserListSkeleton()}
       </div>
     );
   }
@@ -121,29 +164,13 @@ function LeaderboardFeed() {
           <button
             onClick={() => {
               setCurrentPage(1);
-              setAllUsers([]);
+              setUsersBySeasonPage((prev) => ({ ...prev, [cacheKey]: [] }));
               refetch();
             }}
             className={styles.retryButton}
           >
             Try Again
           </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!hasData && !isLoading) {
-    return (
-      <div className={styles.layout}>
-        <div className={styles.empty}>
-          <div className={styles.emptyIcon}>🏆</div>
-          <Typography size={18} weight="medium">
-            No users yet!
-          </Typography>
-          <Typography size={14} className={styles.emptySubtext}>
-            Be the first to vote and appear on the leaderboard!
-          </Typography>
         </div>
       </div>
     );
@@ -165,63 +192,60 @@ function LeaderboardFeed() {
                     className={styles.userRankAvatar}
                   />
                 )}
-                <Typography
-                  size={40}
-                  weight="bold"
-                  className={styles.userRankPosition}
-                >
-                  #{data.currentUser.position}
-                </Typography>
+                <div className={styles.userRankDetails}>
+                  <Typography
+                    size={40}
+                    weight="bold"
+                    className={styles.userRankPosition}
+                  >
+                    #{data.currentUser.position}
+                  </Typography>
+                  <div className={styles.userRankPoints}>
+                    <Typography size={14} lineHeight={14} className={styles.pointsText}>
+                      {data.currentUser.points}
+                    </Typography>
+                    <BPointIcon width={15} height={12} color="#fff" />
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-
-          {/* Share button */}
-          <div className={styles.shareSection}>
-            <Button
-              caption="Share"
-              variant="primary"
-              onClick={handleShareLeaderboard}
-            />
           </div>
         </div>
       )}
 
-      {/* Scrollable container with automatic loading */}
-      <div className={styles.scrollContainer} onScroll={handleScrollList}>
-        <div className={styles.usersList}>
-          {allUsers.map((user, index) => {
-            // Calculate actual position based on accumulated index
-            const position = index + 1;
-            return (
-              <div key={`user-${user.fid}`} className={styles.userItem}>
-                <UserListItem user={user} position={position} />
-              </div>
-            );
-          })}
-
-          {/* Loading indicator when fetching more */}
-          {(isFetching || isLoadingMore) && currentPage > 1 && (
-            <div className={styles.loadingMore}>
-              <LoaderIndicator size={24} />
-              <Typography size={12} className={styles.loadingText}>
-                Loading more users...
-              </Typography>
+      {/* Users list */}
+      <div className={styles.usersList}>
+        {allUsers.map((user, index) => {
+          // Calculate actual position based on accumulated index
+          const position = index + 1;
+          return (
+            <div key={`user-${user.fid}`} className={styles.userItem}>
+              <UserListItem user={user} position={position} />
             </div>
-          )}
+          );
+        })}
 
-          {/* End of list indicator */}
-          {!hasNextPage && allUsers.length > 0 && !isLoadingMore && (
-            <div className={styles.endOfList}>
-              <Typography size={12} className={styles.endText}>
-                You've reached the end! 🎉
-              </Typography>
-              <Typography size={12} className={styles.totalText}>
-                Total: {data?.pagination.total || allUsers.length} users
-              </Typography>
-            </div>
-          )}
-        </div>
+        {/* Loading indicator when fetching more */}
+        {(isFetching || isLoadingMore) && currentPage > 1 && (
+          <div className={styles.loadingMore}>
+            <LoaderIndicator size={24} />
+            <Typography size={12} className={styles.loadingText}>
+              Loading more users...
+            </Typography>
+          </div>
+        )}
+
+        {/* End of list indicator */}
+        {!hasNextPage && allUsers.length > 0 && !isLoadingMore && (
+          <div className={styles.endOfList}>
+            <Typography size={12} className={styles.endText}>
+              You've reached the end! 🎉
+            </Typography>
+            <Typography size={12} className={styles.totalText}>
+              Total: {data?.pagination.total || allUsers.length} users
+            </Typography>
+          </div>
+        )}
       </div>
     </div>
   );

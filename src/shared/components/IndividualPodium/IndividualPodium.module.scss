@@ -1,0 +1,626 @@
+@import "@/styles/index.scss";
+
+.container {
+  /* Auto layout */
+  display: flex;
+  flex-direction: row;
+  height: fit-content;
+  width: 100%;
+  padding-top: 12px;
+  align-items: center;
+  overflow: visible;
+}
+
+.podiumOuterContainer {
+  box-sizing: border-box;
+
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 7px 10px 8px;
+
+  width: 300px;
+  height: 102.67px;
+
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(0, 0, 0, 0) 99.99%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background: linear-gradient(
+    180deg,
+    color(display-p3 1 1 1 / 0.05) 0%,
+    color(display-p3 0 0 0 / 0) 99.99%,
+    color(display-p3 1 1 1 / 0) 100%
+  );
+  border-radius: 12px;
+
+  flex: none;
+  order: 0;
+  flex-grow: 1;
+}
+
+/* Rank - Main container */
+.podiumSection {
+  /* Auto layout */
+  display: flex;
+  padding-top: 25px;
+  flex-direction: row;
+  width: fit-content;
+  height: fit-content;
+  align-self: stretch;
+}
+
+.podiumContainer {
+  /* Auto layout */
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  padding: 0px;
+  gap: 8px;
+  position: relative;
+  height: fit-content;
+}
+
+.podiumItem {
+  box-sizing: border-box;
+  /* Auto layout */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 0.15px;
+  gap: 6px;
+  flex: none;
+  flex-grow: 0;
+  transition: transform 0.3s ease;
+  position: relative;
+
+  // Metallic gradient border that fades down
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    padding: 0.3px;
+    background: linear-gradient(
+      180deg,
+      #e8e8e8 0%,
+      #b0b0b0 10%,
+      #f5f5f5 20%,
+      #888888 35%,
+      #c0c0c0 50%,
+      #a0a0a0 70%,
+      transparent 100%
+    );
+    -webkit-mask: 
+      linear-gradient(#fff 0 0) content-box, 
+      linear-gradient(#fff 0 0);
+    mask: 
+      linear-gradient(#fff 0 0) content-box, 
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    border-radius: 1.9px 1.9px 0 0;
+    pointer-events: none;
+  }
+}
+
+/* Rank 1 (center) - highest position */
+.podiumItem.first {
+  transform: translateY(-16px);
+}
+
+/* Rank 2 (left) - middle position */
+.podiumItem.second {
+  transform: translateY(-6px);
+}
+
+/* Rank 3 (right) - lowest position */
+.podiumItem.third {
+  transform: translateY(0);
+}
+
+.imagePlaceholder,
+.brandImage {
+  width: 26.18px;
+  height: 26.1px;
+  border-radius: 1.9px;
+  flex: none;
+  flex-grow: 0;
+  object-fit: cover;
+}
+
+.brandImage {
+  display: block;
+}
+
+.numberContainer {
+  /* Auto layout */
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  padding: 0px;
+  flex: none;
+  width: 100%;
+  height: 18px;
+}
+
+.numberIcon {
+  width: auto;
+  height: 18px;
+  flex: none;
+  flex-grow: 0;
+}
+
+.detailsSection {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  flex: 1 1 0;
+  min-width: 0;
+  padding-top: 10px;
+}
+
+.infoTop {
+  /* Auto layout */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 0px;
+  gap: 8px;
+  width: 99px;
+  height: 74px;
+  flex: none;
+  order: 0;
+  align-self: stretch;
+  flex-grow: 0;
+}
+
+.creatorItem {
+  /* Auto layout */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 0px;
+  gap: 4px;
+  width: 99px;
+  height: 33px;
+  flex: none;
+  order: 0;
+  align-self: stretch;
+  flex-grow: 0;
+}
+
+.ownerItem {
+  /* Auto layout */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0px;
+  gap: 4px;
+  width: 60px;
+  height: 33px;
+  flex: none;
+  order: 1;
+  flex-grow: 0;
+}
+
+.label {
+  width: auto;
+  height: 13px;
+  font-family: "Geist", sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 10px;
+  line-height: 13px;
+  color: #8a8a8a;
+  flex: none;
+  order: 0;
+  flex-grow: 0;
+}
+
+.value {
+  width: auto;
+  height: 16px;
+  font-family: "Geist", sans-serif;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 16px;
+  color: #ffffff;
+  flex: none;
+  order: 1;
+  flex-grow: 0;
+}
+
+.infoBottom {
+  /* Auto layout */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding-top: 15px;
+  gap: 4px;
+  width: 99px;
+  height: 68px;
+  flex: none;
+  order: 2;
+  flex-grow: 1;
+}
+
+.price {
+  width: 70px;
+  height: 13px;
+  font-family: "Geist", sans-serif;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 10px;
+  line-height: 13px;
+  color: #8a8a8a;
+  flex: none;
+  order: 0;
+  flex-grow: 0;
+  text-align: center;
+}
+
+.buyButton {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 8px 12px;
+  gap: 8px;
+  width: 99px;
+  height: 34px;
+  border-radius: 4px;
+  backdrop-filter: blur(12px);
+  overflow: hidden;
+  background: transparent;
+  border: 1px solid transparent; // Reserve space for border
+  cursor: pointer;
+  flex: none;
+  order: 1;
+  align-self: stretch;
+  flex-grow: 0;
+  transition: opacity 0.2s ease;
+
+  // Rainbow gradient border (outer layer)
+  &:before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -3;
+    border-radius: 4px;
+    background: linear-gradient(
+      191.75deg,
+      #fff000 0%,
+      #ff0000 33%,
+      #0e00ff 66%,
+      #00ff00 100%
+    );
+  }
+
+  // Light gradient background with green overlay (inner layer)
+  &:after {
+    content: "";
+    position: absolute;
+    inset: 1px; // Inset by 1px to show the rainbow border
+    z-index: -1;
+    border-radius: 3px; // Slightly smaller to account for 1px inset
+    background: linear-gradient(
+        360deg,
+        #eaeaea 0%,
+        rgba(255, 255, 255, 0.8) 50%,
+        #eaeaea 100%
+      ),
+      rgba(0, 255, 0, 0.12);
+    background-blend-mode: normal, overlay;
+  }
+
+  &:hover {
+    opacity: 0.9;
+  }
+
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.buyButtonText {
+  width: 27px;
+  height: 18px;
+  font-family: "Geist", sans-serif;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 125%;
+  color: #000000;
+  position: relative;
+  z-index: 1;
+  flex: none;
+  order: 0;
+  flex-grow: 0;
+}
+
+.priceHidden {
+  width: 70px;
+  height: 13px;
+  font-family: "Geist", sans-serif;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 10px;
+  line-height: 13px;
+  color: #8a8a8a;
+  opacity: 0;
+  flex: none;
+  order: 2;
+  flex-grow: 0;
+}
+
+.arrowSection {
+  /* Auto layout */
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 0px;
+  margin-left: 8px;
+
+  flex: none;
+}
+
+.arrowButton {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  width: 32px;
+  height: 102.67px;
+  background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.05) 0%,
+      rgba(0, 0, 0, 0) 99.99%,
+      rgba(255, 255, 255, 0) 100%
+    ),
+    rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+  flex: none;
+  order: 0;
+  flex-grow: 0;
+
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+.arrowIcon {
+  width: 24px;
+  height: 24px;
+}
+
+.actionButton {
+  /* button */
+  box-sizing: border-box;
+
+  /* Auto layout */
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 8px 12px;
+  gap: 8px;
+
+  width: 99px;
+  height: 34px;
+
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(0, 0, 0, 0) 99.99%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background: linear-gradient(
+    180deg,
+    color(display-p3 1 1 1 / 0.05) 0%,
+    color(display-p3 0 0 0 / 0) 99.99%,
+    color(display-p3 1 1 1 / 0) 100%
+  );
+  backdrop-filter: blur(
+    12px
+  ); /* Note: backdrop-filter has minimal browser support */
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  /* Inside auto layout */
+  flex: none;
+  order: 0;
+  align-self: stretch;
+  flex-grow: 0;
+
+  &:hover {
+    transform: scale(1.02);
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.priceContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.buyButton {
+  position: relative;
+  z-index: 0;
+  background: #18171d; // slightly off-black for inner fill
+  border-radius: 4px; // thick, rounded corners
+  padding: 0;
+  border: none;
+  width: 88px;
+
+  /* Outer glowing gradient border using a double-layer background */
+  &:before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    border-radius: 10px;
+    padding: 0;
+    background: conic-gradient(
+      #ffe45e 0deg,
+      #ff417d 90deg,
+      #617afd 180deg,
+      #20d67b 270deg,
+      #ffe45e 360deg
+    );
+    /* This gives a full color sweep as seen in the screenshot */
+    /* Glow effect: */
+    box-shadow: 0 0 8px 2px #ffe45e30, 0 0 12px 4px #617afd20;
+  }
+
+  /* Inner area of the button (content fill) */
+  &:after {
+    content: "";
+    position: absolute;
+    inset: 2px;
+    border-radius: 8px;
+    z-index: -1;
+    background: #18171d;
+  }
+
+  /* Button content styles */
+  color: #fff;
+  font-weight: 700;
+  font-size: 32px; // match screenshot
+  line-height: 1.2;
+  font-family: "Geist", "Inter", "Arial", sans-serif;
+  text-align: center;
+
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* Remove inner border or outline */
+  box-shadow: none;
+  outline: none;
+  transition: transform 0.15s;
+}
+
+.mintButton {
+  position: relative;
+  isolation: isolate;
+  padding: 0;
+  width: 99px;
+  height: 34px;
+  border-radius: 4px;
+  backdrop-filter: blur(12px);
+  overflow: hidden;
+  background: black;
+
+  /* Rainbow gradient border (outer layer) */
+  &:before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    border-radius: 4px;
+    background: linear-gradient(
+      90deg,
+      #ff9533 0%,
+      #ff0000 33%,
+      #0c00ff 66%,
+      #00ff00 100%
+    );
+  }
+
+  /* Black overlay background (inner layer, creates border effect) */
+  &:after {
+    content: "";
+    position: absolute;
+    inset: 1px; // Inset by 1px to show the rainbow border
+    z-index: -1;
+    border-radius: 4px; // Slightly smaller to account for 1px inset
+    background: rgba(0, 0, 0, 0.95);
+  }
+
+  /* Button content styles */
+  color: #fff;
+  font-weight: 700;
+  font-size: 32px; // match screenshot
+  line-height: 1.2;
+  font-family: "Geist", "Inter", "Arial", sans-serif;
+  text-align: center;
+
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* Remove inner border or outline */
+  box-shadow: none;
+  outline: none;
+  transition: transform 0.15s;
+}
+
+.ownedButton {
+  background: transparent;
+}
+
+.notMintableButton {
+  background: rgba(138, 138, 138, 0.3);
+}
+
+.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.pending {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.actionButtonText {
+  color: white;
+  position: relative;
+  z-index: 1;
+}
+
+.loading {
+  opacity: 0.8;
+  cursor: wait;
+}
+
+.spinner {
+  animation: spin 0.8s linear infinite;
+  color: white;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

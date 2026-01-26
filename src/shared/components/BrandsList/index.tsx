@@ -35,10 +35,12 @@ interface BrandsListProps {
   readonly className?: string;
   readonly isFinderEnabled?: boolean;
   readonly isSelectable?: boolean;
+  readonly positionBeingChanged?: number;
   readonly onSelect?: (brand: Brand) => void;
 }
 
 export default function BrandsList({
+  positionBeingChanged,
   value = [],
   className = "",
   onSelect,
@@ -137,7 +139,7 @@ export default function BrandsList({
     };
   }, []);
 
-  // Process incoming brands: shuffle new ones BEFORE rendering
+  // Process incoming brands: shuffle new ones BEFORE rendering (except for "new" order)
   useEffect(() => {
     if (data.brands.length === 0) {
       return;
@@ -149,18 +151,22 @@ export default function BrandsList({
     );
 
     if (newBrands.length > 0) {
-      // Shuffle new brands before adding them
-      const shuffledNew = [...newBrands].sort(() => Math.random() - 0.5);
+      // For "new" order, preserve backend sorting (by createdAt DESC)
+      // For other orders, shuffle to add variety
+      const processedBrands =
+        config.order === "new"
+          ? newBrands
+          : [...newBrands].sort(() => Math.random() - 0.5);
 
       // Mark them as known
-      shuffledNew.forEach((brand) =>
+      processedBrands.forEach((brand) =>
         knownBrandIds.current.add(brand.id.toString())
       );
 
       // Append to existing display list
-      setDisplayBrands((prev) => [...prev, ...shuffledNew]);
+      setDisplayBrands((prev) => [...prev, ...processedBrands]);
     }
-  }, [data.brands]);
+  }, [data.brands, config.order]);
 
   const renderList = () =>
     displayBrands.length > 0 ? (
@@ -227,6 +233,14 @@ export default function BrandsList({
 
   return (
     <div className={styles.layout}>
+      {positionBeingChanged && (
+        <div className={styles.positionBeingChanged}>
+          <Typography variant={"druk"} as={"p"} size={16} weight={"wide"}>
+            Select your favorite brand for the position #{positionBeingChanged}{" "}
+            of today's podium.
+          </Typography>
+        </div>
+      )}
       {isFinderEnabled && (
         <div className={styles.header}>
           <SearchInput onChangeText={setSearchQuery} />

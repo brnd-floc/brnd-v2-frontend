@@ -6,11 +6,15 @@ import { ErrorModal } from './ErrorModal';
 import { BottomAlertModal } from './BottomAlertModal';
 import { ShareBrandModal } from './ShareBrandModal';
 import { PerksModal } from './PerksModal';
+import { PodiumDetailModal } from './PodiumDetailModal';
+import { FeedPodiumDetailModal } from './FeedPodiumDetailModal';
 
 export const modals = {
   [ModalsIds.ERROR]: ErrorModal,
   [ModalsIds.BOTTOM_ALERT]: BottomAlertModal,
   [ModalsIds.SHARE_BRAND]: ShareBrandModal,
-  [ModalsIds.PERKS]: PerksModal
+  [ModalsIds.PERKS]: PerksModal,
+  [ModalsIds.PODIUM_DETAIL]: PodiumDetailModal,
+  [ModalsIds.FEED_PODIUM_DETAIL]: FeedPodiumDetailModal,
 };
 

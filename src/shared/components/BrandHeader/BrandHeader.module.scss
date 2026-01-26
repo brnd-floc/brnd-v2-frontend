@@ -65,7 +65,32 @@
   height: 100%;
 }
 
+.left {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 33px;
+  height: 33px;
+}
+
 .backBtn {
   width: 33px;
   height: 33px;
+}
+
+.searchBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 33px;
+  height: 33px;
+  cursor: pointer;
+}
+
+.brandsSearchModal {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  height: 100%;
 }

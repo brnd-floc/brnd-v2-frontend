@@ -1,13 +1,18 @@
-import { Brand } from '../../hooks/brands';
+import { User } from "@/shared/hooks/user";
+import { Brand } from "../../hooks/brands";
+import { CollectibleData, PodiumBrand } from "../../types/collectibles";
+import { IndividualPodiumProps } from "@/shared/components/IndividualPodium";
 
 /**
  * Enum representing the different types of modal identifiers.
  */
 export enum ModalsIds {
-  ERROR = 'ERROR',
-  BOTTOM_ALERT = 'BOTTOM_ALERT',
-  SHARE_BRAND = 'SHARE_BRAND',
-  PERKS = 'PERKS'
+  ERROR = "ERROR",
+  BOTTOM_ALERT = "BOTTOM_ALERT",
+  SHARE_BRAND = "SHARE_BRAND",
+  PERKS = "PERKS",
+  PODIUM_DETAIL = "PODIUM_DETAIL",
+  FEED_PODIUM_DETAIL = "FEED_PODIUM_DETAIL",
 }
 
 /**
@@ -18,6 +23,8 @@ export type ModalData = {
   [ModalsIds.BOTTOM_ALERT]: BottomAlertData;
   [ModalsIds.SHARE_BRAND]: ShareBrandModalData;
   [ModalsIds.PERKS]: PerksModalData;
+  [ModalsIds.PODIUM_DETAIL]: PodiumDetailModalData;
+  [ModalsIds.FEED_PODIUM_DETAIL]: FeedPodiumDetailModalData;
 };
 
 /**
@@ -58,8 +65,8 @@ export type ErrorModalData = {
  * @property {string} id - The unique identifier for the brand to be shared.
  */
 export type ShareBrandModalData = {
-  id: Brand['id'];
-}
+  id: Brand["id"];
+};
 
 /**
  * Type representing the data structure for a bottom alert.
@@ -76,3 +83,19 @@ export type BottomAlertData = {
  * Type representing the data structure for the perks modal.
  */
 export type PerksModalData = {};
+
+/**
+ * Type representing the data structure for the podium detail modal.
+ */
+export type PodiumDetailModalData = {
+  user?: User;
+  isLastVoteForCombination?: boolean;
+  brand1: PodiumBrand;
+  brand2: PodiumBrand;
+  brand3: PodiumBrand;
+  collectibleData: CollectibleData;
+};
+
+export type FeedPodiumDetailModalData = IndividualPodiumProps & {
+  onMintSuccess?: () => void;
+};

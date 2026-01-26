@@ -149,7 +149,23 @@ const Power: React.FC = () => {
           };
         }) || [];
 
-      setLevels(convertedLevels);
+      // Add Level 0 (BASE POWER) at the beginning - always completed
+      const level0: Level = {
+        id: 0,
+        title: "BASE POWER",
+        description: "Starting level - all users begin here",
+        multiplier: 1,
+        leaderboardPoints: 0,
+        podiumPoints: 0,
+        shareReward: 0,
+        isCompleted: true, // Always completed for all users
+        isActive: false,
+        actionType: "follow", // Not used but required by type
+        showButton: false,
+        requirement: { type: "base", value: 0, unit: "none" },
+      };
+
+      setLevels([level0, ...convertedLevels]);
     } catch (error) {
       console.error("Failed to load levels list:", error);
     } finally {
@@ -159,6 +175,20 @@ const Power: React.FC = () => {
 
   // Default levels when no backend data is available (Level 0 users)
   const getDefaultLevels = (): Level[] => [
+    {
+      id: 0,
+      title: "BASE POWER",
+      description: "Starting level - all users begin here",
+      multiplier: 1,
+      leaderboardPoints: 0,
+      podiumPoints: 0,
+      shareReward: 0,
+      isCompleted: true, // Always completed for all users
+      isActive: false,
+      actionType: "follow", // Not used but required by type
+      showButton: false,
+      requirement: { type: "base", value: 0, unit: "none" },
+    },
     {
       id: 1,
       title: "FOLLOW @BRND",
@@ -666,64 +696,147 @@ const Power: React.FC = () => {
         </div>
       ) : (
         <>
-          {/* All Levels Section */}
-          <div className={styles.upcomingSection}>
-            <div className={styles.levelsList}>
-              {levels.map((level) => {
-                // Use shared context level (includes optimistic updates)
-                const userCurrentLevel = getDisplayLevel();
-                const isNextLevel = level.id === userCurrentLevel + 1;
-                const isCompleted = level.id <= userCurrentLevel;
+          {/* Upcoming Levels Section */}
+          {(() => {
+            const userCurrentLevel = getDisplayLevel();
+            const upcomingLevels = levels.filter(
+              (level) => level.id > userCurrentLevel
+            );
+            const completedLevels = levels.filter(
+              (level) => level.id <= userCurrentLevel
+            );
 
-                return (
-                  <div
-                    key={level.id}
-                    className={`${styles.levelItem} ${
-                      isNextLevel ? styles.active : styles.locked
-                    }`}
-                    onClick={level.clickFunction}
-                  >
-                    <Typography variant="druk" weight="wide" size={20}>
-                      {level.id}
+            return (
+              <div className={styles.sectionsContainer}>
+                {upcomingLevels.length > 0 && (
+                  <div className={styles.upcomingSection}>
+                    <Typography
+                      variant="geist"
+                      weight="medium"
+                      size={14}
+                      className={styles.sectionTitle}
+                    >
+                      Upcoming Levels
                     </Typography>
+                    <div className={styles.levelsList}>
+                      {upcomingLevels.map((level) => {
+                        const isNextLevel = level.id === userCurrentLevel + 1;
 
-                    <div className={styles.levelContent}>
-                      <div className={styles.levelTitle}>
-                        <Typography
-                          variant="geist"
-                          weight="medium"
-                          size={14}
-                          lineHeight={18}
-                          className={styles.titleText}
-                        >
-                          {level.title}
-                        </Typography>
-                      </div>
+                        return (
+                          <div
+                            key={level.id}
+                            className={`${styles.levelItem} ${
+                              isNextLevel ? styles.active : styles.locked
+                            }`}
+                            onClick={level.clickFunction}
+                          >
+                            <Typography variant="druk" weight="wide" size={20}>
+                              {level.id}
+                            </Typography>
 
-                      {level.progress &&
-                        level.actionType === "streak" &&
-                        renderStreakBars(level.progress)}
-                      {level.progress &&
-                        level.actionType === "podiums" &&
-                        renderPodiumsBars(level.progress)}
-                    </div>
+                            <div className={styles.levelContent}>
+                              <div className={styles.levelTitle}>
+                                <Typography
+                                  variant="geist"
+                                  weight="medium"
+                                  size={14}
+                                  lineHeight={18}
+                                  className={styles.titleText}
+                                >
+                                  {level.title}
+                                </Typography>
+                              </div>
 
-                    <div className={styles.levelAction}>
-                      {renderActionButton(level)}
-                    </div>
+                              {level.progress &&
+                                level.actionType === "streak" &&
+                                renderStreakBars(level.progress)}
+                              {level.progress &&
+                                level.actionType === "podiums" &&
+                                renderPodiumsBars(level.progress)}
+                            </div>
 
-                    <div className={styles.levelStatus}>
-                      {isCompleted ? (
-                        <span className={styles.checkmark}>✓</span>
-                      ) : (
-                        <IncompleteTaskIcon width={18} height={18} />
-                      )}
+                            <div className={styles.levelAction}>
+                              {renderActionButton(level)}
+                            </div>
+
+                            <div className={styles.levelStatus}>
+                              <IncompleteTaskIcon width={18} height={18} />
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          </div>
+                )}
+
+                {/* Completed Levels Section */}
+                {completedLevels.length > 0 && (
+                  <div className={styles.completedSection}>
+                    <Typography
+                      variant="geist"
+                      weight="medium"
+                      size={14}
+                      className={styles.sectionTitle}
+                    >
+                      Completed Levels
+                    </Typography>
+                    <div className={styles.completedLevelsList}>
+                      {completedLevels.map((level) => {
+                        // Determine status text based on level type
+                        const getStatusText = () => {
+                          if (level.id === 0) return "Done";
+                          if (level.actionType === "follow") return "Verified";
+                          if (level.actionType === "stake") return "Staked";
+                          if (level.actionType === "streak") return "Completed";
+                          if (level.actionType === "podiums") return "Completed";
+                          if (level.actionType === "collectibles")
+                            return "Collected";
+                          return "Done";
+                        };
+
+                        return (
+                          <div
+                            key={level.id}
+                            className={styles.completedLevelItem}
+                          >
+                            <div className={styles.completedLevelNumber}>
+                              <Typography variant="druk" weight="wide" size={20}>
+                                {level.id}
+                              </Typography>
+                            </div>
+
+                            <div className={styles.completedLevelContent}>
+                              <Typography
+                                variant="geist"
+                                weight="medium"
+                                size={14}
+                                lineHeight={18}
+                                className={styles.completedLevelTitle}
+                              >
+                                {level.title}
+                              </Typography>
+                            </div>
+
+                            <div className={styles.completedStatus}>
+                              <Typography
+                                variant="geist"
+                                weight="regular"
+                                size={14}
+                                className={styles.statusText}
+                              >
+                                {getStatusText()}
+                              </Typography>
+                              <span className={styles.completedCheckmark}>✓</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
         </>
       )}
     </div>

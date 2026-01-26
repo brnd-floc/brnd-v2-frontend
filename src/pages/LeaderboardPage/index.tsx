@@ -14,37 +14,45 @@ import withProtectionRoute from "@/hocs/withProtectionRoute";
 import BrandHeader from "@/shared/components/BrandHeader";
 import Typography from "@/shared/components/Typography";
 
+export type LeaderboardSeason = "all" | "s1" | "s2";
+
 function LeaderboardPage(): React.ReactNode {
   return (
     <AppLayout>
       <div className={styles.body}>
         <div className={styles.header}>
-          <BrandHeader showBackButton={true} />
+          <BrandHeader showBackButton={false} />
 
-          <div className={styles.tabs}>
+          <div className={styles.pageTitle}>
+            <Typography variant="druk" weight="wide" className={styles.titleText}>
+              Leaderboard
+            </Typography>
+            <div className={styles.titleUnderline} />
+          </div>
+
+          <div className={styles.seasonTabs}>
             <TabNavigator
               tabs={[
                 {
-                  label: "Leaderboard",
+                  label: "All Time",
                   path: "/leaderboard",
+                },
+                {
+                  label: "S1",
+                  path: "/leaderboard/s1",
+                },
+                {
+                  label: "S2",
+                  path: "/leaderboard/s2",
                 },
               ]}
             />
           </div>
-          <div className={styles.description}>
-            <Typography
-              variant="geist"
-              weight="regular"
-              size={15}
-              textAlign="left"
-              lineHeight={0}
-            >
-              Your rank:
-            </Typography>
-          </div>
         </div>
         <Routes>
-          <Route path="/" element={<LeaderboardFeed />} />
+          <Route path="/" element={<LeaderboardFeed season="all" />} />
+          <Route path="/s1" element={<LeaderboardFeed season="s1" />} />
+          <Route path="/s2" element={<LeaderboardFeed season="s2" />} />
         </Routes>
       </div>
     </AppLayout>

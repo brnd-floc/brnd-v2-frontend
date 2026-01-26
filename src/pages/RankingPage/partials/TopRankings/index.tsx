@@ -11,7 +11,6 @@ import styles from "./TopRankings.module.scss";
 
 // Hook
 import { Brand, useBrandList } from "@/hooks/brands";
-import useDisableScrollBody from "@/hooks/ui/useDisableScrollBody";
 
 // Utils
 import { getBrandScoreVariation } from "@/utils/brand";
@@ -31,7 +30,6 @@ interface TopRankingsProps {
 function TopRankings({ period }: TopRankingsProps) {
   const navigate = useNavigate();
   const { data } = useBrandList("top", "", 1, 50, period);
-  useDisableScrollBody();
 
   // No need to manually refetch - data is already cached by BrandRankingsProvider
 
