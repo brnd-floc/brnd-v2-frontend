@@ -76,6 +76,7 @@ async function run() {
     try {
       const detail = await fetchJson(`${options.apiBase}/brand-service/brand/${id}`);
       const brand = detail?.brand;
+      const beforeCount = failures.length;
       if (!brand) {
         failures.push(`brand ${id}: missing brand in payload`);
         continue;
@@ -102,7 +103,11 @@ async function run() {
         else warnings.push(message);
       }
 
-      console.log(`✅ brand contract ok: ${id}`);
+      if (failures.length === beforeCount) {
+        console.log(`✅ brand contract ok: ${id}`);
+      } else {
+        console.log(`❌ brand contract failed: ${id}`);
+      }
     } catch (error) {
       failures.push(`brand ${id}: API fetch failed: ${error instanceof Error ? error.message : String(error)}`);
     }
