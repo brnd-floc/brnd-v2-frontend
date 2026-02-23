@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { Suspense, lazy, useCallback, useEffect, useMemo, useState } from "react";
 import {
   Navigate,
   useLocation,
@@ -6,15 +6,22 @@ import {
   useNavigate,
 } from "react-router-dom";
 
-// Components
-import PodiumView from "./partials/PodiumView";
-import ShareView from "./partials/ShareView";
-import CongratsView from "./partials/CongratsView";
-import AlreadySharedView from "./partials/AlreadySharedView";
 import LoaderIndicator from "../../shared/components/LoaderIndicator";
 
 // Types
 import { VotingViewEnum } from "./types";
+import {
+  buildVoteViewProps,
+  buildVotingState,
+  resolveFallbackUnixDate,
+  resolveVoteRecord,
+  resolveTodaysVoteUnixDate,
+  shouldAutoRedirectToTodaysVote,
+  shouldFetchFallbackVoteData,
+  shouldRedirectToVoteHome,
+  shouldRefreshAfterClaim,
+  shouldRefreshVoteData,
+} from "./viewModel";
 
 // Hooks
 import { Brand } from "@/hooks/brands";
@@ -25,37 +32,10 @@ import { useQueryClient } from "@tanstack/react-query";
 // Hocs
 import withProtectionRoute from "@/hocs/withProtectionRoute";
 
-/**
- * The 4 precise voting states that a user can be in:
- * 1. not_voted - User hasn't voted today
- * 2. voted_not_shared - User voted but hasn't shared the cast
- * 3. shared_not_claimed - User voted and shared but hasn't claimed rewards
- * 4. claimed - User has completed the full flow (voted, shared, claimed)
- */
-type VotingState =
-  | { type: "loading" }
-  | { type: "not_voted" }
-  | {
-      type: "voted_not_shared";
-      voteId: string;
-      voteTransactionHash: string | null; // Transaction hash from voting
-      brands: Brand[];
-    }
-  | {
-      type: "shared_not_claimed";
-      voteId: string;
-      voteTransactionHash: string | null; // Transaction hash from voting
-      castHash: string | null; // Cast hash from sharing on Farcaster
-      brands: Brand[];
-    }
-  | {
-      type: "claimed";
-      voteId: string;
-      voteTransactionHash: string | null; // Transaction hash from voting
-      castHash: string | null; // Cast hash from sharing on Farcaster
-      claimTransactionHash: string | null; // Transaction hash from claiming rewards
-      brands: Brand[];
-    };
+const PodiumView = lazy(() => import("./partials/PodiumView"));
+const ShareView = lazy(() => import("./partials/ShareView"));
+const CongratsView = lazy(() => import("./partials/CongratsView"));
+const AlreadySharedView = lazy(() => import("./partials/AlreadySharedView"));
 
 function VotePage(): React.ReactNode {
   const { unixDate } = useParams<{ unixDate?: string }>();
@@ -74,44 +54,39 @@ function VotePage(): React.ReactNode {
 
   // Determine if we need to fetch vote data via fallback
   // This happens when we have voteStatus but no brand data in todaysVote
-  const needsFallbackData = useMemo(() => {
-    if (!user) return false;
-
-    const hasVoteStatus = user.todaysVoteStatus?.hasVoted;
-    const hasVoteData =
-      user.todaysVote?.brand1 &&
-      user.todaysVote?.brand2 &&
-      user.todaysVote?.brand3;
-
-    // Need fallback if:
-    // 1. We have a specific unixDate but no vote data, OR
-    // 2. We have voteStatus indicating a vote exists but no brand data
-    return (
-      (unixDate && !user.todaysVote && !user.todaysVoteStatus) ||
-      (hasVoteStatus && !hasVoteData && user.todaysVoteStatus?.day)
-    );
-  }, [user, unixDate]);
+  const needsFallbackData = useMemo(
+    () => shouldFetchFallbackVoteData({ user, unixDate }),
+    [user, unixDate]
+  );
 
   // Determine which unixDate to use for fallback fetch
-  const fallbackUnixDate = useMemo(() => {
-    if (unixDate) return Number(unixDate);
-    if (user?.todaysVoteStatus?.day) return user.todaysVoteStatus.day;
-    return undefined;
-  }, [unixDate, user?.todaysVoteStatus?.day]);
+  const fallbackUnixDate = useMemo(
+    () => resolveFallbackUnixDate({ unixDate, user }),
+    [unixDate, user]
+  );
 
   const { data: fallbackVotes, isFetching: fallbackLoading } = useUserVotes(
     needsFallbackData ? fallbackUnixDate : undefined
   );
 
   // Get the best available vote data (prefer todaysVote, fallback to fetched data)
-  const votes = useMemo(() => {
-    return user?.todaysVote || fallbackVotes || null;
-  }, [user?.todaysVote, fallbackVotes]);
+  const votes = useMemo(
+    () =>
+      resolveVoteRecord({
+        userVote: user?.todaysVote,
+        fallbackVotes,
+      }),
+    [user?.todaysVote, fallbackVotes]
+  );
 
   const voteStatus = user?.todaysVoteStatus;
 
   // Loading state: true if we're loading auth OR fetching fallback data
   const isLoading = authLoading || (needsFallbackData && fallbackLoading);
+  const suspenseFallback = useMemo(
+    () => <LoaderIndicator size={30} variant="fullscreen" />,
+    []
+  );
 
   /**
    * Determines if the voting process was successful based on URL search parameters.
@@ -122,125 +97,17 @@ function VotePage(): React.ReactNode {
     [search]
   );
 
-  /**
-   * Determines the precise voting state based on user data.
-   * This is the SINGLE SOURCE OF TRUTH for the 4 voting states.
-   *
-   * State determination priority (most specific to least):
-   * 1. claimed - hasClaimed = true
-   * 2. shared_not_claimed - hasShared = true, hasClaimed = false
-   * 3. voted_not_shared - hasVoted = true, hasShared = false
-   * 4. not_voted - hasVoted = false or no vote status
-   */
-  const votingState = useMemo((): VotingState => {
-    // If we don't have user data yet, show loading
-    if (!user) {
-      return { type: "loading" };
-    }
-
-    const status = user.todaysVoteStatus;
-    // Check brands from both todaysVote and votes (fallback)
-    // Prioritize todaysVote (which includes optimistic updates) over fallback votes
-    const brandData = user.todaysVote || votes;
-    // Check if brands exist (from optimistic update or backend)
-    const hasBrandData = !!(
-      brandData?.brand1 &&
-      brandData?.brand2 &&
-      brandData?.brand3
-    );
-
-    // CRITICAL FIX: If we have vote status from optimistic update, proceed to state determination
-    // regardless of loading state. This prevents getting stuck in loading after vote transaction.
-    if (status?.hasVoted && hasBrandData) {
-      // We have both vote status and brands - proceed directly to state determination
-      // This handles optimistic updates that include brand data
-    } else if (authLoading && !hasBrandData && !status?.hasVoted) {
-      // Only show loading if we're loading auth data AND no brands available AND no vote status
-      return { type: "loading" };
-    } else if (
-      status?.hasVoted &&
-      !hasBrandData &&
-      needsFallbackData &&
-      fallbackLoading
-    ) {
-      // Show loading only if we're actively fetching fallback data
-      return { type: "loading" };
-    }
-
-    // Extract transaction hashes from user data
-    const voteTransactionHash = status?.transactionHash || null;
-    const castHash = status?.castHash || null;
-
-    // Extract claim transaction hash from contextualTransaction if it's a claim transaction
-    const claimTransactionHash =
-      user?.contextualTransaction?.transactionType === "claim"
-        ? user.contextualTransaction.transactionHash
-        : null;
-
-    // Check if user has claimed (either via status or via contextualTransaction)
-    // This handles the case where the claim transaction just completed but backend hasn't updated yet
-    const hasClaimed =
-      status?.hasClaimed || (claimTransactionHash && status?.hasShared);
-
-    // State 4: Voted, shared, and claimed rewards ✅
-    // This is the final state - user has completed everything
-    if (hasClaimed && hasBrandData) {
-      return {
-        type: "claimed",
-        voteId:
-          status.voteId ||
-          status.transactionHash ||
-          user.todaysVote?.id ||
-          votes?.id ||
-          "", // Use transaction hash as vote ID
-        voteTransactionHash,
-        castHash,
-        claimTransactionHash,
-        brands: [brandData.brand2, brandData.brand1, brandData.brand3], // UI order: 2nd, 1st, 3rd
-      };
-    }
-
-    // State 3: Voted and shared, but hasn't claimed rewards yet
-    // User needs to claim their 10x BRND rewards
-    if (status?.hasShared && status?.hasVoted && hasBrandData) {
-      return {
-        type: "shared_not_claimed",
-        voteId:
-          status.voteId ||
-          status.transactionHash ||
-          user.todaysVote?.id ||
-          votes?.id ||
-          "", // Use transaction hash as vote ID
-        voteTransactionHash,
-        castHash,
-        brands: [brandData.brand2, brandData.brand1, brandData.brand3], // UI order: 2nd, 1st, 3rd
-      };
-    }
-
-    // State 2: Voted but hasn't shared the cast
-    // User needs to share their vote on Farcaster to unlock rewards
-    // Allow this state even with optimistic update (has transaction hash but no voteId yet)
-    // Use brandData which can come from either user.todaysVote or votes
-    if (status?.hasVoted && hasBrandData) {
-      return {
-        type: "voted_not_shared",
-        voteId:
-          status.voteId ||
-          status.transactionHash ||
-          user.todaysVote?.id ||
-          votes?.id ||
-          "", // Use transaction hash as vote ID
-        voteTransactionHash,
-        brands: [brandData.brand2, brandData.brand1, brandData.brand3], // UI order: 2nd, 1st, 3rd
-      };
-    }
-
-    // Since transaction hash IS the vote ID, we no longer need special optimistic update handling
-
-    // State 1: Not voted today
-    // User can vote on their top 3 brands
-    return { type: "not_voted" };
-  }, [user, votes, authLoading, needsFallbackData]);
+  const votingState = useMemo(
+    () =>
+      buildVotingState({
+        user,
+        votes,
+        authLoading,
+        needsFallbackData,
+        fallbackLoading,
+      }),
+    [user, votes, authLoading, needsFallbackData, fallbackLoading]
+  );
 
   /**
    * Navigation function for components that need to trigger state updates.
@@ -285,58 +152,27 @@ function VotePage(): React.ReactNode {
    * - State 3 (shared_not_claimed): voteTransactionHash + castHash
    * - State 4 (claimed): voteTransactionHash + castHash + claimTransactionHash
    */
-  const viewProps = useMemo(() => {
-    // Extract data based on state type
-    if (votingState.type === "loading" || votingState.type === "not_voted") {
-      return {
-        navigateToView,
-        currentView: VotingViewEnum.PODIUM,
-        currentBrands: [] as Brand[],
-        currentVoteId: "",
-        voteTransactionHash: undefined as string | undefined,
-        claimTransactionHash: undefined as string | undefined,
-        castHash: undefined as string | undefined,
-        // Legacy prop for backward compatibility
-        transactionHash: undefined as string | undefined,
-      };
+  const viewProps = useMemo(
+    () => buildVoteViewProps({ votingState, navigateToView }),
+    [votingState, navigateToView]
+  );
+
+  const renderedView = useMemo((): React.ReactNode => {
+    switch (votingState.type) {
+      case "loading":
+        return suspenseFallback;
+      case "not_voted":
+        return <PodiumView {...viewProps} />;
+      case "voted_not_shared":
+        return <ShareView {...viewProps} />;
+      case "shared_not_claimed":
+        return <AlreadySharedView {...viewProps} />;
+      case "claimed":
+        return <CongratsView {...viewProps} />;
+      default:
+        return <PodiumView {...viewProps} />;
     }
-
-    // For states 2, 3, and 4, we have vote data
-    const baseProps = {
-      navigateToView,
-      currentView:
-        votingState.type === "voted_not_shared"
-          ? VotingViewEnum.SHARE
-          : votingState.type === "shared_not_claimed"
-          ? VotingViewEnum.SHARE
-          : VotingViewEnum.CONGRATS,
-      currentBrands: votingState.brands,
-      currentVoteId: votingState.voteId,
-      voteTransactionHash: votingState.voteTransactionHash || undefined,
-      // Legacy prop for backward compatibility (maps to voteTransactionHash)
-      transactionHash: votingState.voteTransactionHash || undefined,
-    };
-
-    // State 4: Add castHash and claimTransactionHash
-    if (votingState.type === "claimed") {
-      return {
-        ...baseProps,
-        castHash: votingState.castHash || undefined,
-        claimTransactionHash: votingState.claimTransactionHash || undefined,
-      };
-    }
-
-    // State 3: Add castHash
-    if (votingState.type === "shared_not_claimed") {
-      return {
-        ...baseProps,
-        castHash: votingState.castHash || undefined,
-      };
-    }
-
-    // State 2: Only voteTransactionHash (already in baseProps)
-    return baseProps;
-  }, [votingState, navigateToView]);
+  }, [votingState.type, viewProps, suspenseFallback]);
 
   /**
    * Auto-redirect: If user has voted today but no unixDate, redirect to today's vote
@@ -344,14 +180,17 @@ function VotePage(): React.ReactNode {
    */
   useEffect(() => {
     if (
-      !isLoading &&
-      !isTransitioning &&
-      user?.hasVotedToday &&
-      !unixDate &&
-      (user?.todaysVote?.id || user?.todaysVoteStatus?.hasVoted)
+      shouldAutoRedirectToTodaysVote({
+        isLoading,
+        isTransitioning,
+        unixDate,
+        user,
+      })
     ) {
-      const todayUnix =
-        user?.todaysVoteStatus?.day || Math.floor(Date.now() / 1000);
+      const todayUnix = resolveTodaysVoteUnixDate({
+        user,
+        nowUnix: Math.floor(Date.now() / 1000),
+      });
       navigate(`/vote/${todayUnix}`, { replace: true });
     }
   }, [isLoading, isTransitioning, user, unixDate, navigate]);
@@ -378,14 +217,18 @@ function VotePage(): React.ReactNode {
       setIsTransitioning(false);
     }
 
-    // If we detect a state change that requires data refresh, trigger it
-    if (votingState.type !== "loading" && votingState.type !== "not_voted") {
-      // Only refetch if we don't have brand data
-      const brandData = user?.todaysVote || votes;
-      if (!brandData?.brand1 && voteStatus?.hasVoted) {
-        setIsTransitioning(true);
-        refetchAuth();
-      }
+    const brandData = user?.todaysVote || votes;
+    const hasBrandData = Boolean(brandData?.brand1);
+    if (
+      shouldRefreshVoteData({
+        votingStateType: votingState.type,
+        isTransitioning,
+        hasVoteStatus: Boolean(voteStatus?.hasVoted),
+        hasBrandData,
+      })
+    ) {
+      setIsTransitioning(true);
+      refetchAuth();
     }
   }, [votingState.type, isTransitioning, votes, voteStatus, user, refetchAuth]);
 
@@ -394,13 +237,13 @@ function VotePage(): React.ReactNode {
    * This handles the transition from State 3 (shared_not_claimed) to State 4 (claimed)
    */
   useEffect(() => {
-    // If we're in State 3 and the user has just claimed, ensure we refresh data
     if (
-      votingState.type === "shared_not_claimed" &&
-      user?.todaysVoteStatus?.hasClaimed &&
-      !isTransitioning
+      shouldRefreshAfterClaim({
+        votingStateType: votingState.type,
+        hasClaimed: Boolean(user?.todaysVoteStatus?.hasClaimed),
+        isTransitioning,
+      })
     ) {
-      // User has claimed - refetch to get the claim transaction hash
       setIsTransitioning(true);
       refetchAuth();
     }
@@ -411,63 +254,21 @@ function VotePage(): React.ReactNode {
     refetchAuth,
   ]);
 
-  /**
-   * Renders the appropriate view based on the current voting state.
-   * This is the core state machine that determines the UI.
-   *
-   * State 1 (not_voted): PodiumView - User can vote on their top 3 brands
-   * State 2 (voted_not_shared): ShareView - User must share their vote (shows voteTransactionHash)
-   * State 3 (shared_not_claimed): AlreadySharedView - User must claim rewards (shows voteTransactionHash + castHash)
-   * State 4 (claimed): CongratsView - User has completed everything (shows voteTransactionHash + castHash + claimTransactionHash)
-   */
-  const renderCurrentState = (): React.ReactNode => {
-    switch (votingState.type) {
-      case "loading":
-        return <LoaderIndicator size={30} variant="fullscreen" />;
-
-      case "not_voted":
-        // State 1: User hasn't voted today - Show voting interface
-        // User can select their top 3 brands and vote
-        return <PodiumView {...viewProps} />;
-
-      case "voted_not_shared":
-        // State 2: User voted but hasn't shared - Show share interface
-        // Displays: voteTransactionHash (from voting transaction)
-        // User must share their vote on Farcaster to unlock 10x rewards
-        return <ShareView {...viewProps} />;
-
-      case "shared_not_claimed":
-        // State 3: User voted and shared but hasn't claimed - Show claim interface
-        // Displays: voteTransactionHash (from State 1) + castHash (from State 2)
-        // User must claim their 10x BRND rewards
-        return <AlreadySharedView {...viewProps} />;
-
-      case "claimed":
-        // State 4: User has completed the full flow - Show congratulations
-        // Displays: voteTransactionHash + castHash + claimTransactionHash
-        // User has successfully completed the entire voting and rewards flow
-        return <CongratsView {...viewProps} />;
-
-      default:
-        // Fallback to voting interface if state is unclear
-        // This should rarely happen, but provides a safe default
-        return <PodiumView {...viewProps} />;
-    }
-  };
-
   // Redirect if trying to view a vote that doesn't exist and user hasn't voted today
   // This prevents users from accessing invalid vote pages
   if (
-    !isLoading &&
-    !isTransitioning &&
-    unixDate &&
-    !votes?.id &&
-    !voteStatus?.hasVoted
+    shouldRedirectToVoteHome({
+      isLoading,
+      isTransitioning,
+      unixDate,
+      hasVoteRecord: Boolean(votes?.id),
+      hasVoted: Boolean(voteStatus?.hasVoted),
+    })
   ) {
     return <Navigate to="/" replace />;
   }
 
-  return renderCurrentState();
+  return <Suspense fallback={suspenseFallback}>{renderedView}</Suspense>;
 }
 
 export default withProtectionRoute(VotePage, "only-connected");
