@@ -1,5 +1,5 @@
 // src/shared/hooks/contract/useStoriesInMotion.ts
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import {
   useAccount,
   useWriteContract,
@@ -16,67 +16,114 @@ import {
   BRND_SEASON_2_CONFIG_ABI,
   ERC20_ABI,
 } from "@/config/contracts";
-import { request } from "@/services/api";
-import { BLOCKCHAIN_SERVICE, BRAND_SERVICE } from "@/config/api";
 import { useAuth } from "@/shared/hooks/auth";
+import { logFeatureError } from "@/shared/utils/logger";
+import {
+  requestAuthorizationSignature,
+  requestClaimRewardSignature,
+  requestClaimSignatureForSharedVote,
+  requestLevelUpSignature,
+  requestPowerLevelInfo,
+  requestStakeInfo,
+  requestVoteAuthorizationSignature,
+  StoriesApiResult,
+} from "./useStoriesInMotion.api";
+import {
+  retryAsync,
+  StoriesOperationToken,
+  withTimeout,
+} from "./useStoriesInMotion.async";
+import {
+  STORIES_BACKEND_TIMEOUT_MS,
+  STORIES_TRANSIENT_RETRY_POLICY,
+} from "./useStoriesInMotion.constants";
+import {
+  isAbortLikeError,
+  isSupersededOperationError,
+  getStoriesErrorMessage,
+  getStoriesErrorMeta,
+} from "./useStoriesInMotion.errors";
+import {
+  getEncodedAuthData,
+} from "./useStoriesInMotion.signatures";
+import {
+  buildTxCallbackData,
+  deriveWalletAuthorizedState,
+  getStoriesOperationFlags,
+  shouldHandleStoriesTxSuccess,
+} from "./useStoriesInMotion.txState";
+import {
+  validateWalletAuthorizedInput,
+} from "./useStoriesInMotion.validation";
+import {
+  type ClaimSignatureRequest,
+  type ConfirmOperationHandlers,
+  type ContractUserInfoTuple,
+  type FailedOperationHandlers,
+  type OnchainOperationFailure,
+  type PowerLevelInfo,
+  type StakeInfo,
+  type StoriesOperation,
+  STORIES_FALLBACK_ERRORS,
+  type TxCallbackData,
+  type UserInfo,
+} from "./useStoriesInMotion.types";
+import {
+  buildVoteWriters,
+  createOnchainWriteRunner,
+  runBrandMutationOperation,
+  runClaimExecutionOperation,
+  runVoteOperation,
+} from "./useStoriesInMotion.operations";
+import {
+  buildConfirmedOperationHandlers,
+  buildFailedOperationHandlers,
+  findFirstTopicLog,
+  handleWriteError,
+} from "./useStoriesInMotion.handlers";
+import {
+  getClaimSignatureForSharedVoteCoordinator,
+  resolveClaimSignatureRequest,
+  runLegacyClaimRewardFlow,
+  verifyShareAndGetClaimSignatureCoordinator,
+} from "./useStoriesInMotion.claim";
+import { scheduleApprovedVoteRetry } from "./useStoriesInMotion.voteRetry";
 
-// Types
-export interface AuthorizeWalletParams {
-  fid: number;
-  deadline: number;
-  signature: string;
-}
-
-export interface LevelUpParams {
-  fid: number;
-  newLevel: number;
-  deadline: number;
-  signature: string;
-}
-
-export interface VoteParams {
-  brandIds: [number, number, number];
-  authData?: string;
-}
-
-export interface ClaimRewardParams {
-  amount: string;
-  fid: number;
-  day: number;
-  deadline: number;
-  signature: string;
-}
-
-export interface UserInfo {
-  fid: number;
-  brndPowerLevel: number;
-  lastVoteDay: number;
-  totalVotes: number;
-}
-
-export interface PowerLevelInfo {
-  currentLevel: number;
-  currentPowerLevel: any;
-  nextLevel: any;
-  allLevels: any[];
-  progress: any;
-}
-
-export interface StakeInfo {
-  walletBalance: string;
-  vaultShares: string;
-  stakedAmount: string;
-  totalBalance: string;
-  addresses: string[];
-}
+export type {
+  AuthorizeWalletParams,
+  ClaimRewardParams,
+  LevelUpParams,
+  PowerLevelInfo,
+  StakeInfo,
+  UserInfo,
+  VoteParams,
+} from "./useStoriesInMotion.types";
 
 export const useStoriesInMotion = (
-  onLevelUpSuccess?: (txData: any) => void,
-  onVoteSuccess?: (txData: any) => void,
-  onClaimSuccess?: (txData: any) => void,
-  onBrandCreateSuccess?: (txData: any) => void,
-  onBrandUpdateSuccess?: (txData: any) => void,
+  onLevelUpSuccess?: (txData: TxCallbackData) => void,
+  onVoteSuccess?: (txData: TxCallbackData) => void,
+  onClaimSuccess?: (txData: TxCallbackData) => void,
+  onBrandCreateSuccess?: (txData: TxCallbackData) => void,
+  onBrandUpdateSuccess?: (txData: TxCallbackData) => void
 ) => {
+  const unwrapApiResult = <T>(result: StoriesApiResult<T>): T => {
+    if (result.ok) {
+      return result.data;
+    }
+    throw new Error(result.errorMessage);
+  };
+
+  const logStoriesError = useCallback((...args: unknown[]) => {
+    if (args.length === 0) return;
+    const [error, ...rest] = args;
+    logFeatureError({
+      feature: "stories_in_motion",
+      action: "runtime",
+      error,
+      meta: rest.length > 0 ? { details: rest } : undefined,
+    });
+  }, []);
+
   const { address: userAddress, isConnected, chainId } = useAccount();
   const { switchChain } = useSwitchChain();
   const {
@@ -93,12 +140,14 @@ export const useStoriesInMotion = (
 
   const [error, setError] = useState<string | null>(null);
   const [isWalletAuthorized, setIsWalletAuthorized] = useState(false);
-  const [lastOperation, setLastOperation] = useState<string | null>(null);
+  const [lastOperation, setLastOperation] = useState<StoriesOperation | null>(
+    null
+  );
   const [pendingVoteBrandIds, setPendingVoteBrandIds] = useState<
     [number, number, number] | null
   >(null);
   const [pendingVoteAuthData, setPendingVoteAuthData] = useState<string | null>(
-    null,
+    null
   );
   const [pendingBrandCreateData, setPendingBrandCreateData] = useState<{
     handle: string;
@@ -112,11 +161,144 @@ export const useStoriesInMotion = (
     fid: number;
     walletAddress: string;
   } | null>(null);
+  const isMountedRef = useRef(true);
+  const operationTokenRef = useRef<StoriesOperationToken>({ id: 0 });
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  const startOperationToken = useCallback(() => {
+    operationTokenRef.current = { id: operationTokenRef.current.id + 1 };
+    return operationTokenRef.current;
+  }, []);
+
+  const isOperationActive = useCallback((token: StoriesOperationToken) => {
+    return isMountedRef.current && token.id === operationTokenRef.current.id;
+  }, []);
+
+  const clearPendingVoteData = useCallback(() => {
+    setPendingVoteBrandIds(null);
+    setPendingVoteAuthData(null);
+  }, []);
+
+  const setOperationLast = useCallback((operation: StoriesOperation) => {
+    setLastOperation(operation);
+  }, []);
+
+  const clearOperationState = useCallback(
+    (operation: StoriesOperation) => {
+      switch (operation) {
+        case "approve":
+        case "vote":
+          clearPendingVoteData();
+          break;
+        case "createBrand":
+          setPendingBrandCreateData(null);
+          break;
+        case "updateBrand":
+          setPendingBrandUpdateData(null);
+          break;
+        default:
+          break;
+      }
+    },
+    [clearPendingVoteData]
+  );
+
+  const shouldIgnoreOperationError = useCallback(
+    (errorValue: unknown) =>
+      isAbortLikeError(errorValue) || isSupersededOperationError(errorValue),
+    []
+  );
+
+  const setOperationErrorIfActive = useCallback(
+    (
+      operationToken: StoriesOperationToken,
+      errorValue: unknown,
+      fallbackMessage: string
+    ) => {
+      if (
+        isOperationActive(operationToken) &&
+        !shouldIgnoreOperationError(errorValue)
+      ) {
+        setError(getStoriesErrorMessage(errorValue, fallbackMessage));
+      }
+    },
+    [isOperationActive, shouldIgnoreOperationError]
+  );
+
+  const handleOnchainOperationFailure = useCallback(
+    ({
+      operationToken,
+      errorValue,
+      fallbackMessage,
+      action,
+      includeErrorMeta = false,
+    }: OnchainOperationFailure) => {
+      logStoriesError(`❌ [${action}] Operation failed:`, errorValue);
+      if (includeErrorMeta) {
+        logStoriesError(
+          `❌ [${action}] Error details:`,
+          getStoriesErrorMeta(errorValue)
+        );
+      }
+      setOperationErrorIfActive(operationToken, errorValue, fallbackMessage);
+    },
+    [logStoriesError, setOperationErrorIfActive]
+  );
+
+  const ensureConnectedWalletForBrandMutation = useCallback(() => {
+    if (!userAddress) {
+      setError("Wallet not connected");
+      throw new Error("Wallet not connected");
+    }
+  }, [userAddress]);
 
   // Get FID from auth context
   const { data: authData } = useAuth();
   const userFid = authData?.fid ? Number(authData.fid) : null;
   const userPowerLevel = authData?.brndPowerLevel;
+
+  const resolveClaimSignatureRequestWrapper = useCallback(
+    (params: {
+      operationToken: StoriesOperationToken;
+      requestSignature: ClaimSignatureRequest;
+      voteId: string;
+      transactionHash: string;
+      recipientOverride: string;
+      castedFrom: number;
+      supersededMessage: string;
+      verificationMessage?: string;
+    }) =>
+      resolveClaimSignatureRequest({
+        ...params,
+        setError,
+        userAddress,
+        userFid,
+        assertActiveOperation: (operationToken, message) => {
+          if (!isOperationActive(operationToken)) {
+            throw new Error(message);
+          }
+        },
+      }),
+    [isOperationActive, setError, userAddress, userFid]
+  );
+
+  const getAuthorizedUserFid = useCallback(() => {
+    const authValidationError = validateWalletAuthorizedInput({
+      userAddress,
+      userFid,
+    });
+    if (authValidationError) {
+      setError(authValidationError);
+      return null;
+    }
+
+    return userFid as number;
+  }, [userAddress, userFid]);
 
   // Check if user is on correct network
   const isCorrectNetwork = chainId === BRND_SEASON_2_CONFIG.CHAIN_ID;
@@ -199,6 +381,13 @@ export const useStoriesInMotion = (
     },
   });
 
+  const refreshStoriesReads = useCallback(() => {
+    refetchUserInfo();
+    refetchBrndBalance();
+    refetchAllowance();
+    refetchVotedToday();
+  }, [refetchUserInfo, refetchBrndBalance, refetchAllowance, refetchVotedToday]);
+
   // Get vote cost based on power level (V5 contract logic)
   const getVoteCost = useCallback((powerLevel?: number): bigint => {
     if (powerLevel === undefined || powerLevel === null) return 0n;
@@ -225,191 +414,177 @@ export const useStoriesInMotion = (
       try {
         await switchChain({ chainId: BRND_SEASON_2_CONFIG.CHAIN_ID });
       } catch (error) {
-        console.error("Failed to switch network:", error);
+        logStoriesError("Failed to switch network:", error);
         setError("Please switch to Base network");
         throw error;
       }
     }
-  }, [isCorrectNetwork, switchChain]);
+  }, [isCorrectNetwork, logStoriesError, switchChain]);
 
-  // Backend API calls
-  const getAuthorizationSignature = useCallback(
-    async (deadline: number) => {
-      return await request<{
-        fid: number;
-        authData?: string;
-        signature?: string;
-      }>(`${BLOCKCHAIN_SERVICE}/authorize-wallet`, {
-        method: "POST",
-        body: {
-          walletAddress: userAddress,
-          deadline,
-        },
-      });
+  const prepareOnchainOperation = useCallback(async () => {
+    setError(null);
+    await switchToBase();
+  }, [switchToBase]);
+
+  const runOnchainWriteOperationImpl = useMemo(
+    () =>
+      createOnchainWriteRunner({
+        startOperationToken,
+        prepareOnchainOperation,
+        getAuthorizedUserFid,
+        setOperationLast,
+        handleOnchainOperationFailure,
+      }),
+    [
+      startOperationToken,
+      prepareOnchainOperation,
+      getAuthorizedUserFid,
+      setOperationLast,
+      handleOnchainOperationFailure,
+    ]
+  );
+
+  const runOnchainWriteOperation = useCallback(
+    (params: {
+      operation: StoriesOperation;
+      action: string;
+      fallbackMessage: string;
+      includeErrorMeta?: boolean;
+      requireAuthorizedUserFid?: boolean;
+      rethrowOnError?: boolean;
+      run: (context: { currentUserFid: number | null }) => Promise<void>;
+    }) =>
+      runOnchainWriteOperationImpl(params),
+    [
+      runOnchainWriteOperationImpl,
+    ]
+  );
+
+  const runStoriesApiRequest = useCallback(
+    async <T,>({
+      request,
+      timeoutMs = STORIES_BACKEND_TIMEOUT_MS,
+      timeoutLabel,
+      useTransientRetry = false,
+    }: {
+      request: () => Promise<StoriesApiResult<T>>;
+      timeoutMs?: number;
+      timeoutLabel: string;
+      useTransientRetry?: boolean;
+    }): Promise<T> => {
+      const execute = async () =>
+        withTimeout(request(), timeoutMs, timeoutLabel);
+
+      const result = useTransientRetry
+        ? await retryAsync(execute, STORIES_TRANSIENT_RETRY_POLICY)
+        : await execute();
+
+      return unwrapApiResult(result);
     },
-    [userAddress],
+    []
+  );
+
+  // Backend API adapters
+  const getAuthorizationSignature = useCallback(
+    (deadline: number) =>
+      runStoriesApiRequest({
+        request: () => requestAuthorizationSignature({ userAddress, deadline }),
+        timeoutLabel: "authorize-wallet",
+      }),
+    [runStoriesApiRequest, userAddress]
   );
 
   const getLevelUpSignature = useCallback(
-    async (newLevel: number, deadline: number) => {
-      // Verify token is available (request function will include it automatically)
-      const { getFarcasterToken } = await import("@/shared/utils/auth");
-      getFarcasterToken(); // Ensure token is available
-      // Request level up signature from backend
-
-      return await request<{
-        validation: {
-          eligible: boolean;
-          reason?: string;
-        };
-        signature: string;
-      }>(`${BLOCKCHAIN_SERVICE}/level-up`, {
-        method: "POST",
-        body: {
-          newLevel,
-          deadline,
-          walletAddress: userAddress,
-        },
-      });
-    },
-    [userAddress],
+    (newLevel: number, deadline: number) =>
+      runStoriesApiRequest({
+        request: () =>
+          requestLevelUpSignature({ userAddress, newLevel, deadline }),
+        timeoutLabel: "level-up-signature",
+      }),
+    [runStoriesApiRequest, userAddress]
   );
 
   const getVoteAuthorizationSignature = useCallback(
-    async (brandIds: [number, number, number], deadline: number) => {
-      // Verify token is available (request function will include it automatically)
-      const { getFarcasterToken } = await import("@/shared/utils/auth");
-      getFarcasterToken(); // Ensure token is available
-      // Request vote authorization signature from backend
-
-      return await request<{
-        authData: string;
-        fid: number;
-        walletAddress: string;
-        brandIds: [number, number, number];
-        deadline: number;
-        message: string;
-      }>(`${BLOCKCHAIN_SERVICE}/authorize-vote`, {
-        method: "POST",
-        body: {
-          walletAddress: userAddress,
-          brandIds,
-          deadline,
-        },
-      });
-    },
-    [userAddress],
+    (brandIds: [number, number, number], deadline: number) =>
+      runStoriesApiRequest({
+        request: () =>
+          requestVoteAuthorizationSignature({
+            userAddress,
+            brandIds,
+            deadline,
+          }),
+        timeoutMs: STORIES_TRANSIENT_RETRY_POLICY.timeoutMs,
+        timeoutLabel: "authorize-vote",
+        useTransientRetry: true,
+      }),
+    [runStoriesApiRequest, userAddress]
   );
 
   const getClaimRewardSignature = useCallback(
-    async (
+    (
       castHash: string,
       voteId: string,
       recipientAddress: string,
       transactionHash: string,
-      castedFrom: number,
-    ) => {
-      const { getFarcasterToken } = await import("@/shared/utils/auth");
-      getFarcasterToken(); // Ensure token is available
-      // Request claim signature via verify-share
-
-      const response = await request<{
-        verified: boolean;
-        pointsAwarded: number;
-        newTotalPoints: number;
-        message: string;
-        day: number;
-        claimSignature: {
-          signature: string;
-          amount: string;
-          deadline: number;
-          nonce: number;
-          canClaim: boolean;
-        } | null;
-        note?: string;
-        castHash: string;
-      }>(`${BRAND_SERVICE}/verify-share`, {
-        method: "POST",
-        body: {
-          castHash,
-          voteId,
-          recipientAddress: recipientAddress || userAddress,
-          transactionHash,
-          castedFrom,
-        },
-      });
-      return response;
-    },
-    [userAddress],
+      castedFrom: number
+    ) =>
+      runStoriesApiRequest({
+        request: () =>
+          requestClaimRewardSignature({
+            userAddress,
+            castHash,
+            voteId,
+            recipientAddress,
+            transactionHash,
+            castedFrom,
+          }),
+        timeoutMs: STORIES_TRANSIENT_RETRY_POLICY.timeoutMs,
+        timeoutLabel: "verify-share",
+        useTransientRetry: true,
+      }),
+    [runStoriesApiRequest, userAddress]
   );
 
-  // Get claim signature for already shared vote (without requiring castHash)
   const getClaimSignatureForSharedVote = useCallback(
-    async (
+    (
       voteId: string,
-      recipientAddress?: string,
-      transactionHash?: string,
-      castedFrom?: number,
-    ) => {
-      if (!castedFrom) {
-        throw new Error("Casted from is required to claim reward");
-      }
-
-      const { getFarcasterToken } = await import("@/shared/utils/auth");
-      getFarcasterToken(); // Ensure token is available
-      // Request claim signature for already shared vote
-
-      // Call verify-share with empty castHash - backend should handle already shared votes
-      const response = await request<{
-        verified: boolean;
-        pointsAwarded: number;
-        newTotalPoints: number;
-        message: string;
-        day: number;
-        claimSignature: {
-          signature: string;
-          amount: string;
-          deadline: number;
-          nonce: number;
-          canClaim: boolean;
-        } | null;
-        castHash?: string; // Backend may return the castHash for already shared votes
-        note?: string;
-      }>(`${BRAND_SERVICE}/verify-share`, {
-        method: "POST",
-        body: {
-          castHash: "", // Empty castHash indicates we want claim signature for already shared vote
-          voteId,
-          recipientAddress: recipientAddress || userAddress,
-          transactionHash,
-          castedFrom,
-        },
-      });
-
-      // Response received for shared vote, validate signature data
-
-      return response;
-    },
-    [userAddress],
+      recipientAddress: string,
+      transactionHash: string,
+      castedFrom: number
+    ) =>
+      runStoriesApiRequest({
+        request: () =>
+          requestClaimSignatureForSharedVote({
+            userAddress,
+            voteId,
+            recipientAddress,
+            transactionHash,
+            castedFrom,
+          }),
+        timeoutMs: STORIES_TRANSIENT_RETRY_POLICY.timeoutMs,
+        timeoutLabel: "verify-share-shared-vote",
+        useTransientRetry: true,
+      }),
+    [runStoriesApiRequest, userAddress]
   );
 
   const getPowerLevelInfo = useCallback(
-    async (fid: number): Promise<PowerLevelInfo> => {
-      return await request<PowerLevelInfo>(
-        `${BLOCKCHAIN_SERVICE}/power-level/${fid}`,
-        {
-          method: "GET",
-        },
-      );
-    },
-    [],
+    (fid: number): Promise<PowerLevelInfo> =>
+      runStoriesApiRequest({
+        request: () => requestPowerLevelInfo(fid),
+        timeoutLabel: "power-level-info",
+      }),
+    [runStoriesApiRequest]
   );
 
-  const getStakeInfo = useCallback(async (fid: number): Promise<StakeInfo> => {
-    return await request<StakeInfo>(`${BLOCKCHAIN_SERVICE}/user-stake/${fid}`, {
-      method: "GET",
-    });
-  }, []);
+  const getStakeInfo = useCallback(
+    (fid: number): Promise<StakeInfo> =>
+      runStoriesApiRequest({
+        request: () => requestStakeInfo(fid),
+        timeoutLabel: "stake-info",
+      }),
+    [runStoriesApiRequest]
+  );
 
   // Note: authorizeWallet function removed - the contract doesn't have a public authorizeWallet function.
   // Authorization happens automatically inside vote() and levelUpBrndPower() via the internal _authorizeWallet function.
@@ -417,240 +592,108 @@ export const useStoriesInMotion = (
   // Level up power
   const levelUpBrndPower = useCallback(
     async (targetLevel: number) => {
-      setError(null);
-      await switchToBase();
+      await runOnchainWriteOperation({
+        operation: "levelup",
+        action: "LevelUp",
+        fallbackMessage: STORIES_FALLBACK_ERRORS.LEVEL_UP,
+        requireAuthorizedUserFid: true,
+        run: async ({ currentUserFid }) => {
+          const deadline = Math.floor(Date.now() / 1000) + 3600;
+          const levelUpData = await getLevelUpSignature(targetLevel, deadline);
 
-      if (!userAddress || !userFid) {
-        setError("Wallet not authorized");
-        return;
-      }
+          if (!levelUpData.validation.eligible) {
+            throw new Error(
+              `Cannot level up: ${
+                levelUpData.validation.reason || "Requirements not met"
+              }`
+            );
+          }
 
-      try {
-        const deadline = Math.floor(Date.now() / 1000) + 3600;
-        const levelUpData = await getLevelUpSignature(targetLevel, deadline);
+          const authDeadline = Math.floor(Date.now() / 1000) + 3600;
+          const authResponse = await getAuthorizationSignature(authDeadline);
+          const authData = getEncodedAuthData(authResponse);
 
-        if (!levelUpData.validation.eligible) {
-          throw new Error(
-            `Cannot level up: ${
-              levelUpData.validation.reason || "Requirements not met"
-            }`,
-          );
-        }
-
-        setLastOperation("levelup");
-
-        // Get authorization data - this is ALREADY encoded by backend
-        const authDeadline = Math.floor(Date.now() / 1000) + 3600;
-        const authResponse = await getAuthorizationSignature(authDeadline);
-
-        // Use the authData directly (it's already encoded as bytes)
-        const authData =
-          authResponse.authData || authResponse.signature || "0x";
-
-        // Just call the contract with the already-encoded authData
-        await writeContract({
-          address: BRND_SEASON_2_CONFIG.CONTRACT,
-          abi: BRND_SEASON_2_CONFIG_ABI,
-          functionName: "levelUpBrndPower",
-          args: [
-            userFid,
-            targetLevel,
-            deadline,
-            levelUpData.signature,
-            authData, // ← Use directly, don't encode again
-          ],
-          chainId: BRND_SEASON_2_CONFIG.CHAIN_ID,
-        });
-      } catch (error: any) {
-        console.error("Level up failed:", error);
-        setError(error.message || "Level up failed");
-      }
+          await writeContract({
+            address: BRND_SEASON_2_CONFIG.CONTRACT,
+            abi: BRND_SEASON_2_CONFIG_ABI,
+            functionName: "levelUpBrndPower",
+            args: [
+              currentUserFid as number,
+              targetLevel,
+              deadline,
+              levelUpData.signature,
+              authData,
+            ],
+            chainId: BRND_SEASON_2_CONFIG.CHAIN_ID,
+          });
+        },
+      });
     },
     [
-      userAddress,
-      userFid,
-      switchToBase,
       getLevelUpSignature,
       getAuthorizationSignature,
+      runOnchainWriteOperation,
       writeContract,
-    ],
+    ]
+  );
+
+  const { submitVoteTransaction, requestVoteApproval } = useMemo(
+    () =>
+      buildVoteWriters({
+        writeContract: writeContract as (request: {
+          address: `0x${string}`;
+          abi: unknown;
+          functionName: string;
+          args?: readonly unknown[] | unknown[];
+          chainId?: number;
+        }) => Promise<unknown>,
+        setOperationLast,
+        setPendingVoteBrandIds,
+        setPendingVoteAuthData,
+      }),
+    [writeContract, setOperationLast, setPendingVoteBrandIds, setPendingVoteAuthData]
   );
 
   // Vote function - Updated for V4 contract
   const vote = useCallback(
     async (brandIds: [number, number, number]) => {
-      console.log("🗳️ [Vote] Starting vote flow", { brandIds });
-      setError(null);
-
-      console.log("🔄 [Vote] Switching to Base network...");
-      await switchToBase();
-
-      if (!userAddress) {
-        console.error("❌ [Vote] Wallet not connected");
-        setError("Wallet not connected");
-        return;
-      }
-      console.log("✅ [Vote] Wallet connected", { userAddress });
-
-      try {
-        const powerLevel = userPowerLevel;
-        const voteCost = getVoteCost(powerLevel);
-        console.log("📊 [Vote] Vote cost calculated", {
-          powerLevel,
-          voteCost: formatUnits(voteCost, 18),
-        });
-
-        // Check BRND balance
-        const balance = (brndBalance as bigint) || 0n;
-        console.log("💰 [Vote] Checking BRND balance", {
-          balance: formatUnits(balance, 18),
-          required: formatUnits(voteCost, 18),
-        });
-        if (balance < voteCost) {
-          const errorMsg = `Insufficient BRND balance. Need ${formatUnits(
-            voteCost,
-            18,
-          )} BRND, have ${formatUnits(balance, 18)} BRND`;
-          console.error("❌ [Vote]", errorMsg);
-          throw new Error(errorMsg);
-        }
-        console.log("✅ [Vote] BRND balance sufficient");
-
-        // Prepare vote-specific authorization data (if needed)
-        let authData = "0x";
-        if (!isWalletAuthorized) {
-          console.log(
-            "🔐 [Vote] Wallet not authorized, preparing vote-specific authData...",
-          );
-          if (!userFid) {
-            console.error("❌ [Vote] User not authenticated");
-            throw new Error("User not authenticated");
-          }
-
-          const deadline = Math.floor(Date.now() / 1000) + 3600;
-          console.log(
-            "📝 [Vote] Requesting vote authorization signature from backend",
-            {
-              userFid,
-              brandIds,
-              deadline,
-            },
-          );
-
-          try {
-            const voteAuth = await getVoteAuthorizationSignature(
-              brandIds,
-              deadline,
-            );
-            console.log("📥 [Vote] Received vote authorization response", {
-              hasAuthData: !!voteAuth.authData,
-              authDataPreview: voteAuth.authData,
-              message: voteAuth.message,
-            });
-
-            if (!voteAuth.authData) {
-              console.error(
-                "❌ [Vote] Failed to get vote authorization signature from backend - no authData in response",
-              );
-              throw new Error(
-                "Failed to get vote authorization signature from backend",
-              );
-            }
-
-            // Use the authData directly (it's already properly encoded by backend)
-            authData = voteAuth.authData;
-            console.log("✅ [Vote] Vote authorization data prepared", {
-              authDataLength: authData.length,
-              authDataPreview: authData.substring(0, 20) + "...",
-            });
-          } catch (authError: any) {
-            console.error("❌ [Vote] Authorization request failed:", authError);
-            console.error("❌ [Vote] Auth error details:", {
-              message: authError.message,
-              response: authError.response,
-              status: authError.status,
-            });
-            throw new Error(`Authorization failed: ${authError.message}`);
-          }
-        } else {
-          console.log(
-            "✅ [Vote] Wallet already authorized, skipping authData preparation",
-          );
-        }
-
-        // Check and handle BRND approval
-        const allowance = (brndAllowance as bigint) || 0n;
-        console.log("🔍 [Vote] Checking BRND allowance", {
-          allowance: formatUnits(allowance, 18),
-          required: formatUnits(voteCost, 18),
-        });
-        if (allowance < voteCost) {
-          console.log("⚠️ [Vote] Insufficient allowance, approval needed");
-          setPendingVoteBrandIds(brandIds);
-          setPendingVoteAuthData(authData);
-          setLastOperation("approve");
-          console.log("💾 [Vote] Stored pending vote data", {
-            brandIds,
-            hasAuthData: authData !== "0x",
-          });
-          console.log("📤 [Vote] Initiating approval transaction...");
-          await writeContract({
-            address: BRND_SEASON_2_CONFIG.BRND_TOKEN,
-            abi: ERC20_ABI,
-            functionName: "approve",
-            args: [BRND_SEASON_2_CONFIG.CONTRACT, 11111000000000000000000n],
-          });
-          console.log(
-            "✅ [Vote] Approval transaction submitted, waiting for confirmation...",
-          );
-          return;
-        }
-
-        // Approval is sufficient, proceed with vote
-        console.log("✅ [Vote] Allowance sufficient, proceeding with vote");
-        console.log("🔍 [Vote] Final transaction details:", {
-          contract: BRND_SEASON_2_CONFIG.CONTRACT,
-          brandIds,
-          authData: authData,
-          authDataLength: authData.length,
-          chainId: BRND_SEASON_2_CONFIG.CHAIN_ID,
-        });
-
-        setLastOperation("vote");
-
-        await writeContract({
-          address: BRND_SEASON_2_CONFIG.CONTRACT,
-          abi: BRND_SEASON_2_CONFIG_ABI,
-          functionName: "vote",
-          args: [brandIds, authData],
-          chainId: BRND_SEASON_2_CONFIG.CHAIN_ID,
-        });
-        console.log(
-          "✅ [Vote] Vote transaction submitted, waiting for confirmation...",
-        );
-      } catch (error: any) {
-        console.error("❌ [Vote] Vote failed:", error);
-        console.error("❌ [Vote] Error details:", {
-          message: error.message,
-          stack: error.stack,
-          name: error.name,
-        });
-        setError(error.message || "Vote failed");
-      }
+      await runVoteOperation({
+        brandIds,
+        userAddress,
+        userPowerLevel,
+        brndBalance: brndBalance as bigint | undefined,
+        brndAllowance: brndAllowance as bigint | undefined,
+        isWalletAuthorized,
+        userFid,
+        prepareOnchainOperation,
+        startOperationToken,
+        getVoteCost,
+        getVoteAuthorizationSignature,
+        requestVoteApproval,
+        submitVoteTransaction,
+        handleOnchainOperationFailure,
+        logStoriesError,
+        setError,
+        voteFallbackMessage: STORIES_FALLBACK_ERRORS.VOTE,
+      });
     },
     [
       userAddress,
-      userInfo,
+      userPowerLevel,
       brndBalance,
       brndAllowance,
       isWalletAuthorized,
       userFid,
-      switchToBase,
+      prepareOnchainOperation,
+      startOperationToken,
       getVoteCost,
-      getAuthorizationSignature,
       getVoteAuthorizationSignature,
-      writeContract,
-    ],
+      requestVoteApproval,
+      submitVoteTransaction,
+      handleOnchainOperationFailure,
+      logStoriesError,
+      setError,
+    ]
   );
 
   // Get reward amount for a power level
@@ -665,11 +708,11 @@ export const useStoriesInMotion = (
         });
         return formatUnits(rewardAmount as bigint, 18);
       } catch (error) {
-        console.error("Failed to get reward amount:", error);
+        logStoriesError("Failed to get reward amount:", error);
         return "0";
       }
     },
-    [],
+    [logStoriesError]
   );
 
   // Get brand information
@@ -683,10 +726,10 @@ export const useStoriesInMotion = (
       });
       return brandInfo;
     } catch (error) {
-      console.error("Failed to get brand info:", error);
+      logStoriesError("Failed to get brand info:", error);
       return null;
     }
-  }, []);
+  }, [logStoriesError]);
 
   // Create brand on-chain
   const createBrandOnChain = useCallback(
@@ -694,95 +737,43 @@ export const useStoriesInMotion = (
       handle: string,
       metadataHash: string,
       fid: number,
-      walletAddress: string,
-    ) => {
-      console.log("🏭 [CreateBrand] Starting brand creation on-chain", {
-        handle,
-        metadataHash,
-        fid,
-        walletAddress,
-      });
-      setError(null);
-      await switchToBase();
-
-      if (!userAddress) {
-        setError("Wallet not connected");
-        throw new Error("Wallet not connected");
-      }
-
-      // Validate inputs
-      if (!handle || handle.trim() === "") {
-        setError("Brand handle is required");
-        throw new Error("Brand handle is required");
-      }
-
-      if (!metadataHash || metadataHash.trim() === "") {
-        setError("Metadata hash (IPFS) is required");
-        throw new Error("Metadata hash (IPFS) is required");
-      }
-
-      if (!fid || fid <= 0) {
-        setError("Valid FID is required");
-        throw new Error("Valid FID is required");
-      }
-
-      // Validate wallet address format
-      if (!walletAddress || !walletAddress.match(/^0x[a-fA-F0-9]{40}$/)) {
-        setError("Invalid wallet address format");
-        throw new Error("Invalid wallet address format");
-      }
-
-      try {
-        setLastOperation("createBrand");
-        setPendingBrandCreateData({
-          handle,
-          metadataHash,
-          fid,
-          walletAddress,
-        });
-
-        console.log("📤 [CreateBrand] Sending transaction to contract", {
-          contract: BRND_SEASON_2_CONFIG.CONTRACT,
-          handle,
-          metadataHash,
-          fid,
-          walletAddress,
-          chainId: BRND_SEASON_2_CONFIG.CHAIN_ID,
-        });
-
-        // Ensure proper type casting
-        const result = await writeContract({
-          address: BRND_SEASON_2_CONFIG.CONTRACT as `0x${string}`,
-          abi: BRND_SEASON_2_CONFIG_ABI,
-          functionName: "createBrand",
-          args: [
+      walletAddress: string
+    ) =>
+      runBrandMutationOperation({
+        operation: "createBrand",
+        input: { handle, metadataHash, fid, walletAddress },
+        setPendingData: () =>
+          setPendingBrandCreateData({
             handle,
             metadataHash,
-            BigInt(fid),
-            walletAddress as `0x${string}`,
-          ],
-          chainId: BRND_SEASON_2_CONFIG.CHAIN_ID,
-        });
-
-        console.log(
-          "✅ [CreateBrand] Brand creation transaction submitted successfully",
-          { result },
-        );
-
-        return result;
-      } catch (error: any) {
-        console.error("❌ [CreateBrand] Transaction failed:", error);
-        console.error("❌ [CreateBrand] Error details:", {
-          message: error.message,
-          cause: error.cause,
-          stack: error.stack,
-        });
-        setError(error.message || "Brand creation failed");
-        setPendingBrandCreateData(null);
-        throw error;
-      }
-    },
-    [userAddress, switchToBase, writeContract],
+            fid,
+            walletAddress,
+          }),
+        clearPendingData: () => setPendingBrandCreateData(null),
+        writeRequest: () =>
+          writeContract({
+            address: BRND_SEASON_2_CONFIG.CONTRACT as `0x${string}`,
+            abi: BRND_SEASON_2_CONFIG_ABI,
+            functionName: "createBrand",
+            args: [handle, metadataHash, BigInt(fid), walletAddress as `0x${string}`],
+            chainId: BRND_SEASON_2_CONFIG.CHAIN_ID,
+          }),
+        fallbackErrorMessage: "Brand creation failed",
+        featureAction: "CreateBrand",
+        setError,
+        switchToBase,
+        ensureConnectedWalletForBrandMutation,
+        setOperationLast,
+        logStoriesError,
+      }),
+    [
+      ensureConnectedWalletForBrandMutation,
+      logStoriesError,
+      setOperationLast,
+      setError,
+      switchToBase,
+      writeContract,
+    ]
   );
 
   const updateBrandOnChain = useCallback(
@@ -790,95 +781,48 @@ export const useStoriesInMotion = (
       brandId: number,
       metadataHash: string,
       fid: number,
-      walletAddress: string,
-    ) => {
-      console.log("🔄 [UpdateBrand] Starting brand update on-chain", {
-        brandId,
-        metadataHash,
-        fid,
-        walletAddress,
-      });
-      setError(null);
-      await switchToBase();
-
-      if (!userAddress) {
-        setError("Wallet not connected");
-        throw new Error("Wallet not connected");
-      }
-
-      // Validate inputs
-      if (!brandId || brandId <= 0) {
-        setError("Valid brand ID is required");
-        throw new Error("Valid brand ID is required");
-      }
-
-      if (!metadataHash || metadataHash.trim() === "") {
-        setError("Metadata hash (IPFS) is required");
-        throw new Error("Metadata hash (IPFS) is required");
-      }
-
-      if (!fid || fid <= 0) {
-        setError("Valid FID is required");
-        throw new Error("Valid FID is required");
-      }
-
-      // Validate wallet address format
-      if (!walletAddress || !walletAddress.match(/^0x[a-fA-F0-9]{40}$/)) {
-        setError("Invalid wallet address format");
-        throw new Error("Invalid wallet address format");
-      }
-
-      try {
-        setLastOperation("updateBrand");
-        setPendingBrandUpdateData({
-          brandId,
-          metadataHash,
-          fid,
-          walletAddress,
-        });
-
-        console.log("📤 [UpdateBrand] Sending transaction to contract", {
-          contract: BRND_SEASON_2_CONFIG.CONTRACT,
-          brandId,
-          metadataHash,
-          fid,
-          walletAddress,
-          chainId: BRND_SEASON_2_CONFIG.CHAIN_ID,
-        });
-
-        // Ensure proper type casting
-        const result = await writeContract({
-          address: BRND_SEASON_2_CONFIG.CONTRACT as `0x${string}`,
-          abi: BRND_SEASON_2_CONFIG_ABI,
-          functionName: "updateBrand",
-          args: [
-            brandId as number,
+      walletAddress: string
+    ) =>
+      runBrandMutationOperation({
+        operation: "updateBrand",
+        input: { brandId, metadataHash, fid, walletAddress },
+        setPendingData: () =>
+          setPendingBrandUpdateData({
+            brandId,
             metadataHash,
-            BigInt(fid),
-            walletAddress as `0x${string}`,
-          ],
-          chainId: BRND_SEASON_2_CONFIG.CHAIN_ID,
-        });
-
-        console.log(
-          "✅ [UpdateBrand] Brand update transaction submitted successfully",
-          { result },
-        );
-
-        return result;
-      } catch (error: any) {
-        console.error("❌ [UpdateBrand] Transaction failed:", error);
-        console.error("❌ [UpdateBrand] Error details:", {
-          message: error.message,
-          cause: error.cause,
-          stack: error.stack,
-        });
-        setError(error.message || "Brand update failed");
-        setPendingBrandUpdateData(null);
-        throw error;
-      }
-    },
-    [userAddress, switchToBase, writeContract],
+            fid,
+            walletAddress,
+          }),
+        clearPendingData: () => setPendingBrandUpdateData(null),
+        writeRequest: () =>
+          writeContract({
+            address: BRND_SEASON_2_CONFIG.CONTRACT as `0x${string}`,
+            abi: BRND_SEASON_2_CONFIG_ABI,
+            functionName: "updateBrand",
+            args: [
+              brandId as number,
+              metadataHash,
+              BigInt(fid),
+              walletAddress as `0x${string}`,
+            ],
+            chainId: BRND_SEASON_2_CONFIG.CHAIN_ID,
+          }),
+        fallbackErrorMessage: "Brand update failed",
+        featureAction: "UpdateBrand",
+        setError,
+        switchToBase,
+        ensureConnectedWalletForBrandMutation,
+        setOperationLast,
+        logStoriesError,
+      }),
+    [
+      ensureConnectedWalletForBrandMutation,
+      logStoriesError,
+      setOperationLast,
+      setError,
+      switchToBase,
+      writeContract,
+    ]
   );
 
   // Verify share and get claim signature (does not execute transaction)
@@ -888,66 +832,19 @@ export const useStoriesInMotion = (
       voteId: string,
       transactionHash: string,
       recipientOverride: string,
-      castedFrom: number,
-    ) => {
-      setError(null);
-
-      if (!userAddress || !userFid) {
-        throw new Error("Wallet not authorized");
-      }
-
-      if (!voteId || voteId.trim() === "") {
-        throw new Error("Vote ID is required to claim reward");
-      }
-
-      if (!castedFrom || castedFrom <= 0) {
-        throw new Error("Casted from is required to claim reward");
-      }
-
-      console.log(
-        "🔐 [ClaimReward] Verifying share and getting claim signature",
-        {
-          castHash,
-          voteId,
-          recipientAddress: userAddress,
-          transactionHash,
-          castedFrom,
-        },
-      );
-
-      const verifyData = await getClaimRewardSignature(
+      castedFrom: number
+    ) =>
+      verifyShareAndGetClaimSignatureCoordinator({
+        startOperationToken,
+        resolveRequest: resolveClaimSignatureRequestWrapper,
         castHash,
         voteId,
-        recipientOverride || userAddress, // Use override if provided
         transactionHash,
+        recipientOverride,
         castedFrom,
-      );
-
-      console.log("📥 [ClaimReward] Received verify-share response", {
-        verified: verifyData.verified,
-        hasClaimSignature: !!verifyData.claimSignature,
-        day: verifyData.day,
-        amount: verifyData.claimSignature?.amount,
-      });
-
-      if (!verifyData.verified) {
-        throw new Error("Share verification failed");
-      }
-
-      if (!verifyData.claimSignature) {
-        throw new Error(
-          "Claim signature not generated. Please ensure recipientAddress was provided.",
-        );
-      }
-
-      return {
-        claimSignature: verifyData.claimSignature,
-        day: verifyData.day,
-        amount: verifyData.claimSignature.amount,
-        castHash: verifyData.castHash,
-      };
-    },
-    [userAddress, userFid, getClaimRewardSignature],
+        getClaimRewardSignature,
+      }),
+    [startOperationToken, resolveClaimSignatureRequestWrapper, getClaimRewardSignature]
   );
 
   // Get claim signature for already shared vote (without castHash)
@@ -957,61 +854,18 @@ export const useStoriesInMotion = (
       voteId: string,
       transactionHash: string,
       recipientOverride: string,
-      castedFrom: number,
-    ) => {
-      if (!castedFrom) {
-        throw new Error("Casted from is required to claim reward");
-      }
-
-      setError(null);
-
-      if (!userAddress || !userFid) {
-        throw new Error("Wallet not authorized");
-      }
-
-      if (!voteId || voteId.trim() === "") {
-        throw new Error("Vote ID is required to claim reward");
-      }
-
-      console.log(
-        "🔐 [ClaimReward] Getting claim signature for already shared vote",
-        {
-          voteId, // UUID string (e.g., "6f8ab718-a65d-4f12-aee5-c3e8ce74f8b7")
-          recipientAddress: userAddress,
-          transactionHash,
-          castedFrom,
-        },
-      );
-
-      const verifyData = await getClaimSignatureForSharedVote(
+      castedFrom: number
+    ) =>
+      getClaimSignatureForSharedVoteCoordinator({
+        startOperationToken,
+        resolveRequest: resolveClaimSignatureRequestWrapper,
+        getClaimSignatureForSharedVote,
         voteId,
-        recipientOverride || userAddress,
         transactionHash,
+        recipientOverride,
         castedFrom,
-      );
-
-      console.log("📥 [ClaimReward] Received claim signature for shared vote", {
-        verified: verifyData.verified,
-        hasClaimSignature: !!verifyData.claimSignature,
-        day: verifyData.day,
-        amount: verifyData.claimSignature?.amount,
-        castHash: verifyData.castHash,
-      });
-
-      if (!verifyData.claimSignature) {
-        throw new Error(
-          "Claim signature not available. Please ensure the vote was shared and verified.",
-        );
-      }
-
-      return {
-        claimSignature: verifyData.claimSignature,
-        day: verifyData.day,
-        amount: verifyData.claimSignature.amount,
-        castHash: verifyData.castHash || "", // Backend may return castHash for already shared votes
-      };
-    },
-    [userAddress, userFid, getClaimSignatureForSharedVote],
+      }),
+    [getClaimSignatureForSharedVote, startOperationToken, resolveClaimSignatureRequestWrapper]
   );
 
   // Execute claim reward transaction (after verification)
@@ -1026,50 +880,25 @@ export const useStoriesInMotion = (
         canClaim: boolean;
       },
       day: number,
-      recipient: string,
+      recipient: string
     ) => {
-      setError(null);
-      await switchToBase();
-
-      if (!userAddress || !userFid) {
-        setError("Wallet not authorized");
-        return;
-      }
-
-      try {
-        setLastOperation("claimReward");
-
-        const args = [
-          recipient, // recipient
-          claimSignature.amount, // amount
-          userFid, // fid
-          day, // day
-          castHash, // castHash
-          claimSignature.deadline, // deadline
-          claimSignature.signature, // signature
-        ];
-
-        await writeContract({
-          address: BRND_SEASON_2_CONFIG.CONTRACT,
-          abi: BRND_SEASON_2_CONFIG_ABI,
-          functionName: "claimReward",
-          args,
-          chainId: BRND_SEASON_2_CONFIG.CHAIN_ID,
-        });
-      } catch (error: any) {
-        // Try to parse revert reason if available
-        if (error.message) {
-          const revertMatch = error.message.match(/revert reason: (.+)/i);
-          if (revertMatch) {
-            console.error("❌ [ClaimReward] Revert reason:", revertMatch[1]);
-          }
-        }
-
-        setError(error.message || "Claim reward failed");
-        throw error;
-      }
+      await runClaimExecutionOperation({
+        castHash,
+        claimSignature,
+        day,
+        recipient,
+        runOnchainWriteOperation,
+        writeContract: writeContract as (request: {
+          address: `0x${string}`;
+          abi: unknown;
+          functionName: string;
+          args?: readonly unknown[] | unknown[];
+          chainId?: number;
+        }) => Promise<unknown>,
+        claimFallbackMessage: STORIES_FALLBACK_ERRORS.CLAIM_REWARD,
+      });
     },
-    [userFid, switchToBase, writeContract],
+    [runOnchainWriteOperation, writeContract]
   );
 
   // Claim reward with signature (legacy - combines verification and execution)
@@ -1080,263 +909,176 @@ export const useStoriesInMotion = (
       voteId: string,
       transactionHash: string,
       recipient: string,
-      castedFrom: number,
-    ) => {
-      try {
-        const { claimSignature, day } = await verifyShareAndGetClaimSignature(
-          castHash,
-          voteId,
-          transactionHash,
-          recipient,
-          castedFrom,
-        );
-        await executeClaimReward(
-          castHash,
-          claimSignature,
-          day,
-          recipient || userAddress!, // Pass recipient
-        );
-      } catch (error: any) {
-        console.error("❌ [ClaimReward] Claim reward failed:", error);
-        setError(error.message || "Claim reward failed");
-        throw error;
-      }
+      castedFrom: number
+    ) =>
+      runLegacyClaimRewardFlow({
+        castHash,
+        voteId,
+        transactionHash,
+        recipient,
+        castedFrom,
+        verifyShareAndGetClaimSignature,
+        executeClaimReward,
+        userAddress,
+        shouldIgnoreOperationError,
+        logStoriesError,
+        setError,
+      }),
+    [
+      verifyShareAndGetClaimSignature,
+      executeClaimReward,
+      userAddress,
+      shouldIgnoreOperationError,
+      logStoriesError,
+    ]
+  );
+
+  const handleApprovedOperation = useCallback(() => {
+    scheduleApprovedVoteRetry({
+      pendingVoteBrandIds,
+      startOperationToken,
+      isOperationActive,
+      refetchAllowance,
+      pendingVoteAuthData,
+      isWalletAuthorized,
+      userFid,
+      getVoteAuthorizationSignature,
+      submitVoteTransaction,
+      clearPendingVoteData,
+      logStoriesError,
+    });
+  }, [
+    pendingVoteBrandIds,
+    refetchAllowance,
+    pendingVoteAuthData,
+    isWalletAuthorized,
+    userFid,
+    getVoteAuthorizationSignature,
+    submitVoteTransaction,
+    clearPendingVoteData,
+    startOperationToken,
+    isOperationActive,
+    logStoriesError,
+  ]);
+
+  const handleVoteOperationSuccess = useCallback(
+    (txData: TxCallbackData) => {
+      clearPendingVoteData();
+      setTimeout(() => {
+        refetchUserInfo();
+        refetchAuthorizedFid();
+      }, 1000);
+
+      onVoteSuccess?.(txData);
     },
-    [verifyShareAndGetClaimSignature, executeClaimReward, userAddress],
+    [clearPendingVoteData, refetchUserInfo, refetchAuthorizedFid, onVoteSuccess]
+  );
+
+  const handleCreateBrandSuccess = useCallback(
+    (txData: TxCallbackData) => {
+      const brandCreatedEvent = findFirstTopicLog(receipt?.logs);
+      const brandCreateTxData = {
+        ...txData,
+        brandData: pendingBrandCreateData,
+        event: brandCreatedEvent,
+      };
+      setPendingBrandCreateData(null);
+      onBrandCreateSuccess?.(brandCreateTxData);
+    },
+    [receipt?.logs, pendingBrandCreateData, onBrandCreateSuccess]
+  );
+
+  const handleUpdateBrandSuccess = useCallback(
+    (txData: TxCallbackData) => {
+      const brandUpdatedEvent = findFirstTopicLog(receipt?.logs);
+      const brandUpdateTxData = {
+        ...txData,
+        brandData: pendingBrandUpdateData,
+        event: brandUpdatedEvent,
+      };
+      setPendingBrandUpdateData(null);
+      onBrandUpdateSuccess?.(brandUpdateTxData);
+    },
+    [receipt?.logs, pendingBrandUpdateData, onBrandUpdateSuccess]
+  );
+
+  const confirmedOperationHandlers = useMemo<ConfirmOperationHandlers>(
+    () =>
+      buildConfirmedOperationHandlers({
+        onLevelUpSuccess,
+        onClaimSuccess,
+        handleApprovedOperation,
+        handleVoteOperationSuccess,
+        handleCreateBrandSuccess,
+        handleUpdateBrandSuccess,
+      }),
+    [
+      handleApprovedOperation,
+      handleVoteOperationSuccess,
+      handleCreateBrandSuccess,
+      handleUpdateBrandSuccess,
+      onClaimSuccess,
+      onLevelUpSuccess,
+    ]
+  );
+
+  const handleConfirmedOperation = useCallback(
+    (operation: StoriesOperation, txData: TxCallbackData) => {
+      const handler = confirmedOperationHandlers[operation];
+      handler?.(txData);
+    },
+    [confirmedOperationHandlers]
+  );
+
+  const failedOperationHandlers = useMemo<FailedOperationHandlers>(
+    () => buildFailedOperationHandlers({ clearOperationState }),
+    [clearOperationState]
+  );
+
+  const handleOperationWriteError = useCallback(
+    (operation: StoriesOperation, errorMessage: string) => {
+      handleWriteError({
+        operation,
+        errorMessage,
+        logStoriesError,
+        failedOperationHandlers,
+        setLastOperation,
+        setError,
+      });
+    },
+    [failedOperationHandlers, logStoriesError]
   );
 
   // Handle transaction errors - clear operation state on error
   useEffect(() => {
     if (writeError && lastOperation) {
-      console.error("❌ [Transaction] Transaction failed", {
-        operation: lastOperation,
-        error: writeError.message,
-      });
-      // Clear the operation state so isApproving/isVoting become false
-      // This allows the UI to show error state instead of "Approval Complete"
-      setLastOperation(null);
-      setError(writeError.message || "Transaction failed");
-      // Clear pending vote data on error
-      setPendingVoteBrandIds(null);
-      setPendingVoteAuthData(null);
+      handleOperationWriteError(
+        lastOperation,
+        writeError.message || "Transaction failed"
+      );
     }
-  }, [writeError, lastOperation]);
+  }, [writeError, lastOperation, handleOperationWriteError]);
 
   // Handle transaction success
   useEffect(() => {
-    if (isConfirmed && receipt && lastOperation) {
-      console.log("🎉 [Transaction] Transaction confirmed", {
+    if (
+      shouldHandleStoriesTxSuccess({
+        isConfirmed,
+        hasReceipt: Boolean(receipt),
+        lastOperation,
+      }) &&
+      receipt &&
+      lastOperation
+    ) {
+      const txData = buildTxCallbackData({
+        transactionHash: receipt.transactionHash,
+        blockNumber: receipt.blockNumber,
         operation: lastOperation,
-        txHash: receipt.transactionHash,
-        blockNumber: Number(receipt.blockNumber),
       });
-      const txData = {
-        txHash: receipt.transactionHash,
-        blockNumber: Number(receipt.blockNumber),
-        operation: lastOperation,
-      };
 
-      // Refresh data
-      refetchUserInfo();
-      refetchBrndBalance();
-      refetchAllowance();
-      refetchVotedToday();
+      refreshStoriesReads();
 
-      // Call appropriate success callback
-      switch (lastOperation) {
-        // Note: "authorize" case removed - authorization now happens automatically inside vote() and levelUpBrndPower()
-        case "levelup":
-          onLevelUpSuccess?.(txData);
-          break;
-        case "approve":
-          console.log("✅ [Approve] Approval transaction confirmed", {
-            txHash: receipt.transactionHash,
-            blockNumber: Number(receipt.blockNumber),
-          });
-          // After approval, automatically retry voting if brand IDs are available
-          if (pendingVoteBrandIds) {
-            console.log("🔄 [Approve] Auto-retrying vote after approval", {
-              brandIds: pendingVoteBrandIds,
-              hasPendingAuthData: !!pendingVoteAuthData,
-            });
-            // Wait a bit for allowance to update, then retry vote
-            setTimeout(async () => {
-              try {
-                console.log("🔄 [Approve] Refreshing allowance...");
-                // Refresh allowance first
-                await refetchAllowance();
-                console.log("✅ [Approve] Allowance refreshed");
-
-                // Use stored authData or prepare new one if needed
-                let authDataToUse = pendingVoteAuthData || "0x";
-                console.log("🔍 [Approve] Checking authData", {
-                  hasStoredAuthData: !!pendingVoteAuthData,
-                  isWalletAuthorized,
-                  authDataToUse: authDataToUse !== "0x" ? "present" : "empty",
-                });
-
-                // If wallet is not authorized and we don't have authData, prepare it
-                if (
-                  !isWalletAuthorized &&
-                  (!authDataToUse || authDataToUse === "0x")
-                ) {
-                  console.log(
-                    "🔐 [Approve] Wallet not authorized, preparing vote-specific authData...",
-                  );
-                  if (userFid && pendingVoteBrandIds) {
-                    const deadline = Math.floor(Date.now() / 1000) + 3600;
-                    console.log(
-                      "📝 [Approve] Requesting vote authorization signature",
-                      {
-                        userFid,
-                        brandIds: pendingVoteBrandIds,
-                        deadline,
-                      },
-                    );
-                    const voteAuth = await getVoteAuthorizationSignature(
-                      pendingVoteBrandIds,
-                      deadline,
-                    );
-                    console.log(
-                      "📥 [Approve] Received vote authorization response",
-                      {
-                        hasAuthData: !!voteAuth.authData,
-                        message: voteAuth.message,
-                      },
-                    );
-
-                    if (!voteAuth.authData) {
-                      console.error(
-                        "❌ [Approve] Failed to get vote authorization signature from backend",
-                      );
-                      throw new Error(
-                        "Failed to get vote authorization signature from backend",
-                      );
-                    }
-
-                    // Use the authData directly (it's already properly encoded)
-                    authDataToUse = voteAuth.authData;
-                    console.log(
-                      "✅ [Approve] Vote authorization data prepared",
-                      {
-                        authDataLength: authDataToUse.length,
-                      },
-                    );
-                  }
-                }
-
-                // Retry vote with stored brand IDs and authData
-                console.log("📤 [Approve] Initiating vote transaction...", {
-                  brandIds: pendingVoteBrandIds,
-                  hasAuthData: authDataToUse !== "0x",
-                });
-                setLastOperation("vote");
-                await writeContract({
-                  address: BRND_SEASON_2_CONFIG.CONTRACT,
-                  abi: BRND_SEASON_2_CONFIG_ABI,
-                  functionName: "vote",
-                  args: [pendingVoteBrandIds, authDataToUse],
-                  chainId: BRND_SEASON_2_CONFIG.CHAIN_ID,
-                });
-                console.log(
-                  "✅ [Approve] Vote transaction submitted after approval",
-                );
-
-                setPendingVoteBrandIds(null);
-                setPendingVoteAuthData(null);
-                console.log("🧹 [Approve] Cleared pending vote data");
-              } catch (error) {
-                console.error(
-                  "❌ [Approve] Auto-retry vote after approval failed:",
-                  error,
-                );
-                console.error("❌ [Approve] Error details:", {
-                  message: (error as any).message,
-                  stack: (error as any).stack,
-                });
-                setPendingVoteBrandIds(null);
-                setPendingVoteAuthData(null);
-              }
-            }, 1000);
-          } else {
-            console.log(
-              "⚠️ [Approve] No pending vote brand IDs, skipping auto-retry",
-            );
-          }
-          break;
-        case "vote":
-          console.log("✅ [Vote] Vote transaction confirmed", {
-            txHash: receipt.transactionHash,
-            blockNumber: Number(receipt.blockNumber),
-          });
-          // Clear pending vote data on successful vote
-          setPendingVoteBrandIds(null);
-          setPendingVoteAuthData(null);
-          console.log("🧹 [Vote] Cleared pending vote data");
-
-          // Refresh authorization data since voting may have authorized the wallet
-          setTimeout(() => {
-            refetchUserInfo();
-            refetchAuthorizedFid();
-            console.log(
-              "🔄 [Vote] Refreshed user info and authorization status after vote",
-            );
-          }, 1000);
-
-          onVoteSuccess?.(txData);
-          break;
-        case "claimReward":
-          onClaimSuccess?.(txData);
-          break;
-        case "createBrand":
-          console.log("✅ [CreateBrand] Brand creation transaction confirmed", {
-            txHash: receipt.transactionHash,
-            blockNumber: Number(receipt.blockNumber),
-            brandData: pendingBrandCreateData,
-          });
-          // Extract brandId from event logs if available
-          const brandCreatedEvent = receipt.logs?.find((log: any) => {
-            // Try to decode BrandCreated event
-            try {
-              // Event signature: BrandCreated(uint16 indexed brandId, string handle, uint256 fid, address walletAddress, uint256 createdAt)
-              return log.topics && log.topics.length > 0;
-            } catch {
-              return false;
-            }
-          });
-          const brandCreateTxData = {
-            ...txData,
-            brandData: pendingBrandCreateData,
-            event: brandCreatedEvent,
-          };
-          setPendingBrandCreateData(null);
-          onBrandCreateSuccess?.(brandCreateTxData);
-          break;
-        case "updateBrand":
-          console.log("✅ [UpdateBrand] Brand update transaction confirmed", {
-            txHash: receipt.transactionHash,
-            blockNumber: Number(receipt.blockNumber),
-            brandData: pendingBrandUpdateData,
-          });
-          // Extract brandId from event logs if available
-          const brandUpdatedEvent = receipt.logs?.find((log: any) => {
-            // Try to decode BrandUpdated event
-            try {
-              // Event signature: BrandUpdated(uint16 indexed brandId, string newMetadataHash, uint256 newFid, address newWalletAddress)
-              return log.topics && log.topics.length > 0;
-            } catch {
-              return false;
-            }
-          });
-          const brandUpdateTxData = {
-            ...txData,
-            brandData: pendingBrandUpdateData,
-            event: brandUpdatedEvent,
-          };
-          setPendingBrandUpdateData(null);
-          onBrandUpdateSuccess?.(brandUpdateTxData);
-          break;
-      }
+      handleConfirmedOperation(lastOperation, txData);
 
       setLastOperation(null);
     }
@@ -1344,55 +1086,37 @@ export const useStoriesInMotion = (
     isConfirmed,
     receipt,
     lastOperation,
-    pendingVoteBrandIds,
-    pendingVoteAuthData,
-    isWalletAuthorized,
-    userFid,
-    getAuthorizationSignature,
-    getVoteAuthorizationSignature,
-    writeContract,
-    onLevelUpSuccess,
-    onVoteSuccess,
-    onClaimSuccess,
-    onBrandCreateSuccess,
-    onBrandUpdateSuccess,
-    pendingBrandCreateData,
-    pendingBrandUpdateData,
-    refetchUserInfo,
-    refetchBrndBalance,
-    refetchAllowance,
-    refetchVotedToday,
-    refetchAuthorizedFid,
+    handleConfirmedOperation,
+    refreshStoriesReads,
   ]);
 
+  const operationFlags = useMemo(
+    () => getStoriesOperationFlags(lastOperation),
+    [lastOperation]
+  );
+
   // Parse user info
-  const parsedUserInfo: UserInfo | null = userInfo
-    ? {
-        fid: Number((userInfo as any)[0]),
-        brndPowerLevel: Number((userInfo as any)[1]),
-        lastVoteDay: Number((userInfo as any)[2]),
-        totalVotes: Number((userInfo as any)[3]),
-      }
-    : null;
+  const parsedUserInfo: UserInfo | null = useMemo(() => {
+    if (!userInfo) return null;
+    const tuple = userInfo as ContractUserInfoTuple;
+    return {
+      fid: Number(tuple[0]),
+      brndPowerLevel: Number(tuple[1]),
+      lastVoteDay: Number(tuple[2]),
+      totalVotes: Number(tuple[3]),
+    };
+  }, [userInfo]);
 
   // Update authorization status based on contract data
   // Check if the wallet is authorized by comparing FID from auth context with contract
   useEffect(() => {
-    const fidFromContract = authorizedFid ? Number(authorizedFid) : 0;
-    const fidFromUserInfo = parsedUserInfo?.fid || 0;
-    const fidFromAuth = userFid || 0;
-
-    // Wallet is authorized if contract has a FID that matches the auth context FID
-    if (fidFromContract > 0 && fidFromContract === fidFromAuth) {
-      setIsWalletAuthorized(true);
-    } else if (fidFromUserInfo > 0 && fidFromUserInfo === fidFromAuth) {
-      setIsWalletAuthorized(true);
-    } else if (fidFromAuth > 0) {
-      // User is authenticated but wallet not yet authorized
-      setIsWalletAuthorized(false);
-    } else {
-      setIsWalletAuthorized(false);
-    }
+    setIsWalletAuthorized(
+      deriveWalletAuthorizedState({
+        authorizedFid: authorizedFid as bigint | undefined,
+        userInfoFid: parsedUserInfo?.fid || 0,
+        userFid,
+      })
+    );
   }, [authorizedFid, parsedUserInfo, userFid]);
 
   return {
@@ -1418,10 +1142,10 @@ export const useStoriesInMotion = (
     hash,
     receipt,
     error: error || (writeError ? writeError.message : null),
-    isApproving: lastOperation === "approve",
-    isVoting: lastOperation === "vote",
-    isCreatingBrand: lastOperation === "createBrand",
-    isUpdatingBrand: lastOperation === "updateBrand",
+    isApproving: operationFlags.isApproving,
+    isVoting: operationFlags.isVoting,
+    isCreatingBrand: operationFlags.isCreatingBrand,
+    isUpdatingBrand: operationFlags.isUpdatingBrand,
 
     // Loading states
     isLoadingUserInfo,
@@ -1449,10 +1173,7 @@ export const useStoriesInMotion = (
 
     // Refresh functions
     refreshData: () => {
-      refetchUserInfo();
-      refetchBrndBalance();
-      refetchAllowance();
-      refetchVotedToday();
+      refreshStoriesReads();
       refetchAuthorizedFid();
     },
   };

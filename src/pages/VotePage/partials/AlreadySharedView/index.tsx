@@ -1,11 +1,8 @@
-import { useCallback, useState, useEffect } from "react";
-import { formatUnits } from "viem";
+import { useCallback, useState, useEffect, useRef } from "react";
 
 // Components
 import Podium from "@/components/Podium";
 import Typography from "@/components/Typography";
-import Button from "@/components/Button";
-import LoaderIndicator from "@/shared/components/LoaderIndicator";
 
 import { useAccount, useReadContract } from "wagmi";
 import {
@@ -25,9 +22,24 @@ import styles from "./AlreadySharedView.module.scss";
 
 // Assets
 import Logo from "@/assets/images/logo.svg";
-import sdk from "@farcaster/miniapp-sdk";
-import VoteHashIcon from "@/shared/assets/icons/vote-hash.svg?react";
-import ExternalLinkIconShare from "@/shared/assets/icons/external-link-icon-share.svg?react";
+import { getMiniAppClientFid } from "@/shared/utils/farcasterActions";
+import { triggerNotificationHaptic } from "@/shared/utils/haptics";
+import { logFeatureError } from "@/shared/utils/logger";
+import {
+  isAbortLikeError,
+  isSupersededOperationError,
+} from "@/shared/hooks/contract/useStoriesInMotion.public";
+import {
+  getAlreadySharedClaimState,
+  getAlreadySharedErrorMessage,
+  getAlreadySharedFeedbackState,
+  getAlreadySharedHasClaimed,
+  getAlreadySharedVisibilityState,
+  shouldRenderAlreadySharedLoadingState,
+} from "./viewModel";
+import { AlreadySharedStatusPanel } from "./AlreadySharedStatusPanel";
+import { AlreadySharedClaimAction } from "./AlreadySharedClaimAction";
+import { AlreadySharedWalletInfo } from "./AlreadySharedWalletInfo";
 
 interface AlreadySharedViewProps extends VotingViewProps {}
 
@@ -68,13 +80,15 @@ export default function AlreadySharedView({
     undefined, // onVoteSuccess
     // onClaimSuccess
     async (txData) => {
-      sdk.haptics.notificationOccurred("success");
+      triggerNotificationHaptic("success");
 
       const claimTxHash = txData?.txHash;
       if (!claimTxHash) {
-        console.error(
-          "❌ [AlreadySharedView] No transaction hash in claim success data"
-        );
+        logFeatureError({
+          feature: "already_shared_view",
+          action: "claim_success",
+          error: "No transaction hash in claim success data",
+        });
         setIsClaiming(false);
         setIsLoadingClaimData(false);
         setClaimError(null);
@@ -122,14 +136,48 @@ export default function AlreadySharedView({
   const [isLoadingClaimData, setIsLoadingClaimData] = useState(false);
   const [isClaiming, setIsClaiming] = useState(false);
   const [claimError, setClaimError] = useState<string | null>(null);
+  const claimOperationRef = useRef(0);
+
+  const startClaimOperation = useCallback(() => {
+    claimOperationRef.current += 1;
+    return claimOperationRef.current;
+  }, []);
+
+  const isClaimOperationActive = useCallback((operationId: number) => {
+    return claimOperationRef.current === operationId;
+  }, []);
+
+  const resetClaimLoadingIfActive = useCallback(
+    (operationId: number) => {
+      if (!isClaimOperationActive(operationId)) {
+        return false;
+      }
+      setIsLoadingClaimData(false);
+      setIsClaiming(false);
+      return true;
+    },
+    [isClaimOperationActive]
+  );
+
+  const applyClaimErrorIfActive = useCallback(
+    (operationId: number, message: string) => {
+      if (!resetClaimLoadingIfActive(operationId)) {
+        return false;
+      }
+      setClaimError(message);
+      return true;
+    },
+    [resetClaimLoadingIfActive]
+  );
 
   // Check if user has claimed - if so, the state machine should transition to State 4
   // This prevents showing claiming UI when we've already transitioned
-  const hasClaimed =
-    authData?.todaysVoteStatus?.hasClaimed ||
-    (authData?.contextualTransaction?.transactionType === "claim" &&
-      authData?.contextualTransaction?.transactionHash &&
-      authData?.todaysVoteStatus?.hasShared);
+  const hasClaimed = getAlreadySharedHasClaimed({
+    hasClaimedToday: authData?.todaysVoteStatus?.hasClaimed,
+    contextualTransactionType: authData?.contextualTransaction?.transactionType,
+    contextualTransactionHash: authData?.contextualTransaction?.transactionHash,
+    hasSharedToday: authData?.todaysVoteStatus?.hasShared,
+  });
 
   // Reset claiming state if we've transitioned to claimed state
   useEffect(() => {
@@ -167,6 +215,7 @@ export default function AlreadySharedView({
     ) {
       return;
     }
+    const operationId = startClaimOperation();
 
     // If we already have claim data, execute directly
     if (claimData) {
@@ -178,16 +227,23 @@ export default function AlreadySharedView({
           claimData.castHash,
           claimData.claimSignature,
           claimData.day,
-          claimData.recipientAddress // ADD THIS
+          claimData.recipientAddress
         );
-      } catch (error: any) {
-        console.error("❌ [AlreadySharedView] Claim reward failed:", error);
-        // Always clear all loading states on error
-        setIsClaiming(false);
-        setIsLoadingClaimData(false);
-        setClaimError(
-          error.message || "Failed to claim reward. Please try again."
+      } catch (error: unknown) {
+        if (isAbortLikeError(error) || isSupersededOperationError(error)) {
+          resetClaimLoadingIfActive(operationId);
+          return;
+        }
+        const errorMessage = getAlreadySharedErrorMessage(
+          error,
+          "Failed to claim reward. Please try again."
         );
+        logFeatureError({
+          feature: "already_shared_view",
+          action: "claim_reward",
+          error,
+        });
+        applyClaimErrorIfActive(operationId, errorMessage);
       }
       return;
     }
@@ -202,24 +258,26 @@ export default function AlreadySharedView({
     setClaimError(null);
 
     try {
-      const context = await sdk.context;
-      const clientFid = context.client.clientFid;
+      const clientFid = await getMiniAppClientFid();
 
       const result = await getClaimSignatureForSharedVote(
         currentVoteId,
         transactionHash || "",
-        rewardRecipient, // ADD THIS (3rd param)
+        rewardRecipient,
         clientFid
       );
 
       if (result.claimSignature && result.claimSignature.canClaim) {
+        if (!isClaimOperationActive(operationId)) {
+          return;
+        }
         const recipient = rewardRecipient || connectedWallet!;
-        const newClaimData = {
-          castHash: result.castHash || "",
-          claimSignature: result.claimSignature,
-          day: result.day,
-          recipientAddress: recipient, // ADD THIS
-        };
+          const newClaimData = {
+            castHash: result.castHash || "",
+            claimSignature: result.claimSignature,
+            day: result.day,
+            recipientAddress: recipient,
+          };
         setClaimData(newClaimData);
         setIsLoadingClaimData(false);
 
@@ -229,22 +287,26 @@ export default function AlreadySharedView({
           newClaimData.castHash,
           newClaimData.claimSignature,
           newClaimData.day,
-          newClaimData.recipientAddress // ADD THIS
+          newClaimData.recipientAddress
         );
       } else {
         throw new Error("Cannot claim - already claimed or not eligible");
       }
-    } catch (error: any) {
-      console.error(
-        "❌ [AlreadySharedView] Failed to get claim signature:",
-        error
+    } catch (error: unknown) {
+      if (isAbortLikeError(error) || isSupersededOperationError(error)) {
+        resetClaimLoadingIfActive(operationId);
+        return;
+      }
+      const errorMessage = getAlreadySharedErrorMessage(
+        error,
+        "Failed to get claim signature. Please try again."
       );
-      // Always clear all loading states on error
-      setIsLoadingClaimData(false);
-      setIsClaiming(false);
-      setClaimError(
-        error.message || "Failed to get claim signature. Please try again."
-      );
+      logFeatureError({
+        feature: "already_shared_view",
+        action: "get_claim_signature",
+        error,
+      });
+      applyClaimErrorIfActive(operationId, errorMessage);
     }
   }, [
     claimData,
@@ -256,30 +318,43 @@ export default function AlreadySharedView({
     isClaimPending,
     isClaimConfirming,
     isLoadingClaimData,
-    rewardRecipient, // ADD
-    connectedWallet, // ADD
+    rewardRecipient,
+    connectedWallet,
+    startClaimOperation,
+    isClaimOperationActive,
+    resetClaimLoadingIfActive,
+    applyClaimErrorIfActive,
   ]);
 
-  // Determine button state
-  const getButtonState = () => {
-    if (isLoadingClaimData) return "Authorizing...";
-    if (isClaimPending) return "Confirm in wallet...";
-    if (isClaimConfirming) return "Processing...";
-    if (isClaiming) return "Claiming...";
-    if (claimData) {
-      const claimAmount = parseFloat(
-        formatUnits(BigInt(claimData.claimSignature.amount), 18)
-      );
-      return `Claim ${claimAmount.toFixed(0)} $BRND`;
-    }
-    return "Claim Rewards";
-  };
-
-  const isLoading =
-    isLoadingClaimData || isClaiming || isClaimPending || isClaimConfirming;
+  const alreadySharedActionVm = getAlreadySharedClaimState({
+    hasClaimData: Boolean(claimData),
+    isLoadingClaimData,
+    isClaiming,
+    isClaimPending,
+    isClaimConfirming,
+    hasClaimed,
+    claimAmountWei: claimData?.claimSignature.amount,
+  });
+  const alreadySharedUiState = alreadySharedActionVm.uiState;
+  const feedbackState = getAlreadySharedFeedbackState({
+    transactionHash,
+    claimAmountWei: claimData?.claimSignature.amount,
+    showReady: alreadySharedUiState.showReady,
+    claimError,
+    contractError,
+  });
+  const visibilityState = getAlreadySharedVisibilityState({
+    isWalletMismatch: Boolean(isWalletMismatch),
+    rewardRecipient,
+  });
 
   // Show loading state if data is missing
-  if (!currentBrands || currentBrands.length < 3 || !currentVoteId) {
+  if (
+    shouldRenderAlreadySharedLoadingState({
+      hasCurrentBrands: Boolean(currentBrands && currentBrands.length >= 3),
+      hasCurrentVoteId: Boolean(currentVoteId),
+    })
+  ) {
     return (
       <div className={styles.body}>
         <div className={styles.container}>
@@ -308,82 +383,7 @@ export default function AlreadySharedView({
         </Typography>
       </div>
 
-      {/* Show share message */}
-      <div className={styles.shareMessage}>
-        <Typography
-          variant={"geist"}
-          weight={"medium"}
-          size={12}
-          lineHeight={16}
-          textAlign={"center"}
-        >
-          Claim your daily $BRND rewards
-        </Typography>
-      </div>
-
-      {/* Show vote transaction if available */}
-      <div className={styles.transactionsContainer}>
-        {transactionHash && (
-          <div className={styles.transactionChip}>
-            <div className={styles.transactionHeader}>
-              <span className={styles.transactionIcon}>
-                <VoteHashIcon />
-              </span>
-              <span className={styles.transactionText}>
-                Vote Txn: {transactionHash.slice(0, 6)}...
-                {transactionHash.slice(-4)}
-              </span>
-              <a
-                href={`https://basescan.org/tx/${transactionHash}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={styles.txLink}
-                title="View on Base Explorer"
-              >
-                <ExternalLinkIconShare />
-              </a>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Show claim ready status */}
-      {claimData &&
-        !isLoadingClaimData &&
-        !isClaiming &&
-        !isClaimPending &&
-        !isClaimConfirming && (
-          <div className={styles.verificationMessage}>
-            <Typography
-              variant={"geist"}
-              weight={"medium"}
-              size={14}
-              lineHeight={18}
-              textAlign={"center"}
-            >
-              ✅ Ready to claim{" "}
-              {parseFloat(
-                formatUnits(BigInt(claimData.claimSignature.amount), 18)
-              ).toFixed(0)}{" "}
-              $BRND
-            </Typography>
-          </div>
-        )}
-
-      {/* Show claim error */}
-      {(claimError || contractError) && (
-        <div className={styles.errorMessage}>
-          <Typography
-            variant={"geist"}
-            weight={"medium"}
-            size={14}
-            lineHeight={18}
-            textAlign={"center"}
-          >
-            {claimError || contractError}
-          </Typography>
-        </div>
-      )}
+      <AlreadySharedStatusPanel {...feedbackState} />
 
       <div className={styles.box}>
         <div className={styles.podium}>
@@ -394,31 +394,17 @@ export default function AlreadySharedView({
           />
 
           <div className={styles.action}>
-            <Button
-              caption={getButtonState()}
-              className={styles.button}
-              iconLeft={isLoading ? <LoaderIndicator size={16} /> : undefined}
-              onClick={handleClickClaim}
-              disabled={isLoading || !!hasClaimed}
+            <AlreadySharedClaimAction
+              buttonCaption={alreadySharedActionVm.buttonCaption}
+              isLoading={alreadySharedUiState.isLoading}
+              buttonDisabled={alreadySharedUiState.buttonDisabled}
+              onClaim={handleClickClaim}
             />
           </div>
-          {isWalletMismatch && rewardRecipient && (
-            <div className={styles.walletWarning}>
-              <Typography
-                variant={"geist"}
-                weight={"medium"}
-                size={12}
-                lineHeight={16}
-                textAlign={"center"}
-              >
-                ⚠️ You voted through another miniapp client using that wallet.
-                Your daily rewards will be sent to your registered wallet:{" "}
-                {`${rewardRecipient.slice(0, 6)}...${rewardRecipient.slice(
-                  -4
-                )}`}
-              </Typography>
-            </div>
-          )}
+          <AlreadySharedWalletInfo
+            isWalletMismatch={visibilityState.showWalletInfo}
+            rewardRecipient={rewardRecipient}
+          />
         </div>
       </div>
     </div>
