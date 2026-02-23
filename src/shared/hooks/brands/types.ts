@@ -29,6 +29,7 @@ export type Brand = {
   ticker?: string;
   contractAddress?: string;
   tickerTokenId?: string;
+  onChainFid?: number | null;
   guardianHandle?: string | null;
   guardianFid?: number | null;
   guardianPfp?: string | null;
