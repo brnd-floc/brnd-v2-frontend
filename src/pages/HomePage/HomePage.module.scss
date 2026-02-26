@@ -1,22 +1,14 @@
 @import "@/styles/index.scss";
 
 .body {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  @include baseLayout();
+  @include appPageBody(0, 10px, 0);
   height: calc(100vh - 80px);
   overflow: hidden;
-  padding: 0 10px;
-  margin: 0 auto;
   position: relative;
 }
 
 .header {
-  display: flex;
-  align-items: center;
-  flex-direction: column;
-  justify-content: center;
+  @include columnAlign(0, center, center);
   flex-shrink: 0;
   padding: 4px 0;
 }
@@ -32,8 +24,7 @@
 
 .periodFilter {
   width: 100%;
-  display: flex;
-  justify-content: flex-start;
+  @include rowAlignCenter(0, flex-start);
   padding-top: 6px; // 8px above
   padding-bottom: 8px; // 12px below
   padding-left: 0;

@@ -1,21 +1,13 @@
 @import "@/styles/index.scss";
 
 .body {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  @include baseLayout();
-
+  @include appPageBody(0, 10px, 0);
   height: 100vh;
   overflow-y: auto;
-  padding: 0 10px;
 }
 
 .header {
-  display: flex;
-  align-items: center;
-  flex-direction: column;
-  justify-content: center;
+  @include columnAlign(0, center, center);
   padding: 4px 0;
 }
 
