@@ -8,11 +8,29 @@ import { useAuth } from '@/shared/hooks/auth';
 import { useModal } from '@/shared/hooks/ui/useModal';
 import { ModalsIds } from '@/shared/providers/ModalProvider/types';
 import Typography from '@/components/Typography';
-import IndividualPodium, { MintingStep } from '@/shared/components/IndividualPodium';
+import IndividualPodium, {
+  MintingStep,
+  IndividualPodiumProps,
+} from '@/shared/components/IndividualPodium';
 import LoaderIndicator from '@/shared/components/LoaderIndicator';
 import Button from '@/shared/components/Button';
 import { CollectibleData } from '@/shared/types/collectibles';
-import { UserVoteHistory } from '@/shared/hooks/user/types';
+import { User, UserVoteHistory } from '@/shared/hooks/user/types';
+
+type VoteHistoryWithCollectibles = UserVoteHistory & {
+  isCollectible?: boolean;
+  isLastVoteForCombination?: boolean;
+  collectibleTokenId?: number | null;
+  collectiblePrice?: string | null;
+  collectibleClaimCount?: number;
+  collectibleGenesisCreatorFid?: number | null;
+  collectibleGenesisCreatorUsername?: string | null;
+  collectibleOwnerFid?: number | null;
+  collectibleOwnerUsername?: string | null;
+  collectibleOwner?: Partial<User> | null;
+  collectibleTotalFeesEarned?: string;
+  user?: Partial<User> | null;
+};
 
 function MyPodium() {
   const navigate = useNavigate();
@@ -133,11 +151,11 @@ function MyPodium() {
       let hasChanges = false;
 
       successfulPodiums.forEach((_, podiumId) => {
-        const vote = Object.values(history.data).find(
-          (v: UserVoteHistory) => v.id === podiumId
+        const vote = (Object.values(history.data) as VoteHistoryWithCollectibles[]).find(
+          (v) => v.id === podiumId
         );
         // If the real data now shows it's a collectible, remove from optimistic map
-        if (vote && (vote as any).isCollectible) {
+        if (vote?.isCollectible) {
           updatedSuccessful.delete(podiumId);
           hasChanges = true;
         }
@@ -187,37 +205,45 @@ function MyPodium() {
 
   // Transform vote to collectible data
   // Note: UserVoteHistory may have collectible fields at runtime even though they're not in the type
-  const toCollectibleData = (
-    vote: UserVoteHistory & {
-      isCollectible?: boolean;
-      isLastVoteForCombination?: boolean;
-      collectibleTokenId?: number | null;
-      collectiblePrice?: string | null;
-      collectibleClaimCount?: number;
-      collectibleGenesisCreatorFid?: number | null;
-      collectibleGenesisCreatorUsername?: string | null;
-      collectibleOwnerFid?: number | null;
-      collectibleOwnerUsername?: string | null;
-      collectibleOwner?: { fid: number; username: string; photoUrl: string } | null;
-      collectibleTotalFeesEarned?: string;
-    }
-  ): CollectibleData => ({
-    isCollectible: (vote as any).isCollectible ?? false,
-    tokenId: (vote as any).collectibleTokenId ?? null,
-    price: (vote as any).collectiblePrice || '1000000000000000000000000', // 1M BRND default
-    claimCount: (vote as any).collectibleClaimCount ?? 0,
-    genesisCreatorFid: (vote as any).collectibleGenesisCreatorFid ?? null,
+  const toCollectibleData = (vote: VoteHistoryWithCollectibles): CollectibleData => ({
+    isCollectible: vote.isCollectible ?? false,
+    tokenId: vote.collectibleTokenId ?? null,
+    price: vote.collectiblePrice || '1000000000000000000000000', // 1M BRND default
+    claimCount: vote.collectibleClaimCount ?? 0,
+    genesisCreatorFid: vote.collectibleGenesisCreatorFid ?? null,
     genesisCreatorUsername:
-      (vote as any).collectibleGenesisCreatorUsername ?? null,
-    ownerFid: (vote as any).collectibleOwnerFid ?? null,
-    ownerUsername: (vote as any).collectibleOwnerUsername ?? null,
-    ownerPhotoUrl: (vote as any).collectibleOwner?.photoUrl ?? null,
-    totalFeesEarned: (vote as any).collectibleTotalFeesEarned ?? '0',
+      vote.collectibleGenesisCreatorUsername ?? null,
+    ownerFid: vote.collectibleOwnerFid ?? null,
+    ownerUsername: vote.collectibleOwnerUsername ?? null,
+    ownerPhotoUrl: vote.collectibleOwner?.photoUrl ?? null,
+    totalFeesEarned: vote.collectibleTotalFeesEarned ?? '0',
   });
 
   // Get isLastVoteForCombination from vote data
-  const getIsLastVoteForCombination = (vote: UserVoteHistory): boolean => {
-    return (vote as any).isLastVoteForCombination ?? false;
+  const getIsLastVoteForCombination = (
+    vote: VoteHistoryWithCollectibles
+  ): boolean => {
+    return vote.isLastVoteForCombination ?? false;
+  };
+
+  const toPodiumUser = (
+    userCandidate?: Partial<User> | null,
+    fallback?: Partial<User> | null
+  ): User | null => {
+    const source = userCandidate ?? fallback;
+    if (!source?.fid || !source.username) {
+      return null;
+    }
+
+    return {
+      fid: Number(source.fid),
+      username: source.username,
+      photoUrl: source.photoUrl ?? '',
+      createdAt: source.createdAt ?? '',
+      points: source.points ?? 0,
+      hasVotedToday: source.hasVotedToday ?? false,
+      isNewUser: source.isNewUser ?? false,
+    };
   };
 
   if (isLoading && pageId === 1) {
@@ -274,9 +300,9 @@ function MyPodium() {
       {history && (
         <div className={styles.view} onScroll={handleScrollList}>
           <ul className={styles.list}>
-            {Object.values(history.data).map((vote: UserVoteHistory) => {
+            {(Object.values(history.data) as VoteHistoryWithCollectibles[]).map((vote) => {
               const collectibleData = toCollectibleData(vote);
-              const podiumUser = ((vote as any).user ?? authData) as any;
+              const podiumUser = toPodiumUser(vote.user, authData);
               if (!podiumUser) return null;
               const brandIds: [number, number, number] = [
                 vote.brand1.id,
@@ -284,9 +310,30 @@ function MyPodium() {
                 vote.brand3.id,
               ];
               const isProcessing = processingPodiumId === vote.id;
-              const collectibleTokenId = (vote as any).collectibleTokenId;
+              const collectibleTokenId = vote.collectibleTokenId;
               const isLastVoteForCombination =
                 getIsLastVoteForCombination(vote);
+
+              const individualPodium: NonNullable<
+                IndividualPodiumProps['podium']
+              > = {
+                ...vote,
+                user: {
+                  fid: podiumUser.fid,
+                  username: podiumUser.username,
+                },
+                collectibleTokenId:
+                  vote.collectibleTokenId !== null &&
+                  vote.collectibleTokenId !== undefined
+                    ? String(vote.collectibleTokenId)
+                    : null,
+                claimed: false,
+                brndPaidWhenCreatingPodium: null,
+                collectibleOwner:
+                  vote.collectibleOwner
+                    ? toPodiumUser(vote.collectibleOwner, authData) ?? undefined
+                    : undefined,
+              };
 
               // Apply optimistic update if this podium was successfully transacted
               const hasSucceeded = successfulPodiums.has(vote.id);
@@ -304,7 +351,7 @@ function MyPodium() {
               return (
                 <li key={vote.id} className={styles.item}>
                   <IndividualPodium
-                    podium={vote as any}
+                    podium={individualPodium}
                     user={podiumUser}
                     brand1={vote.brand1}
                     brand2={vote.brand2}
