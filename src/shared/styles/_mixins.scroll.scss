@@ -5,6 +5,27 @@
   overflow: hidden;
 }
 
+@mixin appScrollbar($thumb: #202020, $thumb-hover: #272727, $radius: 4px) {
+  &::-webkit-scrollbar {
+    width: 4px;
+    border-radius: $radius;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: $radius;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $thumb;
+    border-radius: $radius;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: $thumb-hover;
+  }
+}
+
 @mixin scrollListColumn($gap: $space-3, $padding-bottom: $space-3) {
   display: flex;
   flex-direction: column;
