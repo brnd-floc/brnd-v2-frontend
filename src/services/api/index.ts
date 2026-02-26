@@ -17,7 +17,7 @@ export const DEFAULT_HEADERS = {
 /**
  * Custom JSON parser that preserves large numbers as strings
  */
-function parseJSONWithBigInt(text: string): any {
+function parseJSONWithBigInt(text: string): unknown {
   return JSON.parse(text, (_key, value) => {
     // If the value is a string that looks like a large integer, keep it as string
     if (typeof value === 'string' && /^\d{19,}$/.test(value)) {
@@ -74,22 +74,18 @@ export async function request<T>(
     }),
   };
 
-  try {
-    const response = await fetch(fullUrl.toString(), config);
+  const response = await fetch(fullUrl.toString(), config);
 
-    if (!response.ok) {
-      throw new Error(`Error: ${response.statusText}`);
-    }
-
-    // ⚠️ CRITICAL FIX: Don't use response.json() - it corrupts large numbers!
-    // Instead, get text and parse with custom handler
-    const text = await response.text();
-    const data: T = parseJSONWithBigInt(text);
-
-    return data;
-  } catch (error) {
-    throw error;
+  if (!response.ok) {
+    throw new Error(`Error: ${response.statusText}`);
   }
+
+  // ⚠️ CRITICAL FIX: Don't use response.json() - it corrupts large numbers!
+  // Instead, get text and parse with custom handler
+  const text = await response.text();
+  const data = parseJSONWithBigInt(text) as T;
+
+  return data;
 }
 
 /**

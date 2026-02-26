@@ -194,17 +194,13 @@ export interface AirdropCheckResponse {
  * @returns A promise that resolves with airdrop check data including eligibility, points, and completed tasks.
  */
 export const checkUserAirdrop = async (): Promise<AirdropCheckResponse> => {
-  try {
-    const response = await request<AirdropCheckResponse>(
-      `${AIRDROP_SERVICE}/check-user`,
-      {
-        method: 'GET',
-      }
-    );
-    return response;
-  } catch (error) {
-    throw error;
-  }
+  const response = await request<AirdropCheckResponse>(
+    `${AIRDROP_SERVICE}/check-user`,
+    {
+      method: 'GET',
+    }
+  );
+  return response;
 };
 
 /**

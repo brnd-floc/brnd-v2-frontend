@@ -15,6 +15,16 @@ import {
 
 import { readContract } from 'wagmi/actions';
 
+type OnchainUserTuple = readonly [bigint, bigint, bigint, bigint];
+
+type OnchainUser = {
+  fid: number;
+  brndPowerLevel: number;
+  lastVoteDay: number;
+  totalVotes: number;
+  hasVotedToday: boolean;
+};
+
 /**
  * Retrieves the current user's information from the authentication service.
  *
@@ -30,10 +40,12 @@ import { readContract } from 'wagmi/actions';
  * @returns A promise that resolves with the user's complete profile data
  */
 
-export const getOnchainUser = async (fid: number): Promise<{ user: any }> => {
+export const getOnchainUser = async (
+  fid: number
+): Promise<{ user: OnchainUser }> => {
   const day = Math.floor(Date.now() / 86400000);
 
-  const [user, _hasVotedToday, currentDay] = await Promise.all([
+  const [userResult, hasVotedToday, currentDay] = await Promise.all([
     readContract(config, {
       address: BRND_SEASON_2_CONFIG.CONTRACT as `0x${string}`,
       abi: BRND_SEASON_2_CONFIG_ABI,
@@ -56,12 +68,15 @@ export const getOnchainUser = async (fid: number): Promise<{ user: any }> => {
     console.log('SOMEHOW THE DAYS DONT MATCH, CONTACT JP');
   }
 
+  const user = userResult as OnchainUserTuple;
+
   return {
     user: {
-      fid: Number((user as any)[0]),
-      brndPowerLevel: Number((user as any)[1]),
-      lastVoteDay: Number((user as any)[2]),
-      totalVotes: Number((user as any)[3]),
+      fid: Number(user[0]),
+      brndPowerLevel: Number(user[1]),
+      lastVoteDay: Number(user[2]),
+      totalVotes: Number(user[3]),
+      hasVotedToday: Boolean(hasVotedToday),
     },
   };
 };

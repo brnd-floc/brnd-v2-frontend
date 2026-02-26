@@ -34,7 +34,8 @@ import Button from '@/shared/components/Button';
 
 interface PodiumViewProps extends VotingViewProps {}
 
-export default function PodiumView({}: PodiumViewProps) {
+export default function PodiumView(props: PodiumViewProps) {
+  void props;
   const navigate = useNavigate();
   const location = useLocation();
   const { openModal } = useModal();
@@ -48,7 +49,7 @@ export default function PodiumView({}: PodiumViewProps) {
 
   const [isVotingOnChain, setIsVotingOnChain] = useState(false);
   const [voteCompleted, setVoteCompleted] = useState(false);
-  const [_voteCost, setVoteCost] = useState<string>('0');
+  const [, setVoteCost] = useState<string>('0');
   const [, setVotedBrands] = useState<Brand[] | null>(null);
   // Use ref to access current votedBrands in async callback
   const votedBrandsRef = useRef<Brand[] | null>(null);
@@ -292,8 +293,10 @@ export default function PodiumView({}: PodiumViewProps) {
       // The isConnected state will update automatically when connection succeeds
       // If there's an error, it will be available in connectError
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Wallet connection failed:', error);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error occurred';
 
       // Show user-friendly error message
       openModal(ModalsIds.BOTTOM_ALERT, {
@@ -305,7 +308,7 @@ export default function PodiumView({}: PodiumViewProps) {
             </Typography>
             <br />
             <Typography size={12}>
-              {error.message || 'Unknown error occurred'}
+              {errorMessage}
             </Typography>
           </div>
         ),
@@ -387,8 +390,12 @@ export default function PodiumView({}: PodiumViewProps) {
         await voteOnChain(brandIds);
 
         // Success handling is now done in the onVoteSuccess callback
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('❌ [PodiumView] Voting error:', error);
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : 'Failed to submit your vote. Please try again.';
 
         // Always clear voting state on error to prevent stuck spinners
         setIsVotingOnChain(false);
@@ -400,7 +407,7 @@ export default function PodiumView({}: PodiumViewProps) {
         sdk.haptics.notificationOccurred('error');
 
         openModal(ModalsIds.TRANSACTION_ERROR, {
-          error: error.message || 'Failed to submit your vote. Please try again.',
+          error: errorMessage,
           route: window.location.pathname,
           timestamp: new Date().toISOString(),
           transactionType: 'Vote Transaction',
