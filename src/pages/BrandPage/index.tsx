@@ -1,4 +1,5 @@
 // Dependencies
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 // StyleSheet
@@ -21,28 +22,63 @@ import withProtectionRoute from "@/hocs/withProtectionRoute";
 // Hooks
 import { useBrand } from "@/hooks/brands";
 import { useAuth } from "@/hooks/auth";
-import useDisableScrollBody from "@/hooks/ui/useDisableScrollBody";
 
 // Utils
 import { shortenNumber } from "@/utils/number";
-import sdk from "@farcaster/miniapp-sdk";
+import { RiCheckLine, RiClipboardLine } from "react-icons/ri";
 
 function BrandPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id?: string }>();
   const { data: user } = useAuth();
   const { data, isLoading } = useBrand(Number(id));
-  useDisableScrollBody();
+  const [isTickerContractCopied, setIsTickerContractCopied] =
+    useState<boolean>(false);
 
   /**
    * Determines if the footer should be visible based on the user's voting status.
    *
    * @type {boolean} - True if the user has voted today, false otherwise.
-   */
+  */
   const isFooterVisible = user && !user.hasVotedToday;
 
   // Get actual fan count from backend response (unique users who voted for this brand)
   const totalFans = data?.fanCount || 0;
+
+  useEffect(() => {
+    if (!isTickerContractCopied) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setIsTickerContractCopied(false);
+    }, 1500);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [isTickerContractCopied]);
+
+  const handleCopyTickerContract = useCallback(async () => {
+    const contractAddress = data?.brand?.contractAddress;
+    if (!contractAddress) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(contractAddress);
+      setIsTickerContractCopied(true);
+    } catch {
+      // No-op: clipboard can be unavailable in some embedded contexts.
+    }
+  }, [data?.brand?.contractAddress]);
+
+  const guardianHandle = data?.brand?.guardianHandle
+    ? data.brand.guardianHandle.startsWith("@")
+      ? data.brand.guardianHandle
+      : `@${data.brand.guardianHandle}`
+    : "";
+  const guardianFid = data?.brand?.guardianFid ?? data?.brand?.onChainFid;
 
   return (
     <AppLayout>
@@ -53,11 +89,12 @@ function BrandPage() {
           </div>
         ) : (
           <>
-            {/* New Brand Profile Header */}
-            <BrandProfileHeader
-              brand={data.brand}
-              voteTrend7d={data.voteTrend7d}
-            />
+            <div className={styles.stickyHeader}>
+              <BrandProfileHeader
+                brand={data.brand}
+                voteTrend7d={data.voteTrend7d}
+              />
+            </div>
 
             <div className={styles.container}>
               <div className={styles.grid}>
@@ -128,47 +165,98 @@ function BrandPage() {
                 )}
 
                 {/* Guardian */}
-                {data.brand.guardianFid && (
+                {guardianFid && (
                   <UserProfileGridItem
                     onClick={() => {
-                      sdk.actions.viewProfile({ fid: data.brand.guardianFid! });
+                      window.open(
+                        `https://warpcast.com/~/profiles/${guardianFid}`,
+                        "_blank",
+                      );
                     }}
                     variant="primary"
                     title="GUARDIAN"
                   >
                     <div className={styles.guardianContent}>
-                      <img
-                        src={data.brand.guardianPfp}
-                        alt="Guardian"
-                        className={styles.guardianAvatar}
-                      />
+                      {data.brand.guardianPfp && (
+                        <img
+                          src={data.brand.guardianPfp}
+                          alt="Guardian"
+                          className={styles.guardianAvatar}
+                        />
+                      )}
                       <Typography
                         variant="geist"
                         weight="medium"
                         size={12}
                         lineHeight={14}
                       >
-                        @{data.brand.guardianHandle}
+                        {guardianHandle || `FID ${guardianFid}`}
                       </Typography>
+                      {guardianHandle && (
+                        <Typography
+                          variant="geist"
+                          weight="regular"
+                          size={11}
+                          lineHeight={13}
+                        >
+                          {`FID ${guardianFid}`}
+                        </Typography>
+                      )}
+                      {!guardianHandle && (
+                        <Typography
+                          variant="geist"
+                          weight="regular"
+                          size={11}
+                          lineHeight={13}
+                        >
+                          Tap to view profile
+                        </Typography>
+                      )}
                     </div>
                   </UserProfileGridItem>
                 )}
 
                 {/* Ticker */}
-                {data.brand.ticker && (
+                {(data.brand.ticker || data.brand.contractAddress) && (
                   <UserProfileGridItem
                     title="TICKER"
                     onClick={() => {
-                      sdk.actions.swapToken({
-                        sellToken: `eip155:8453/erc20:${data.brand.contractAddress}`,
-                        buyToken:
-                          "eip155:8453/erc20:0x41Ed0311640A5e489A90940b1c33433501a21B07",
-                        sellAmount: "1000000",
-                      });
+                      if (data.brand.contractAddress) {
+                        void handleCopyTickerContract();
+                      }
                     }}
-                    value={data.brand.ticker}
-                    subtext=""
-                  />
+                  >
+                    <div className={styles.tickerContent}>
+                      {data.brand.contractAddress && (
+                        <button
+                          type="button"
+                          className={styles.tickerCopyButton}
+                          aria-label="Copy ticker contract address"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            void handleCopyTickerContract();
+                          }}
+                        >
+                          {isTickerContractCopied ? (
+                            <RiCheckLine />
+                          ) : (
+                            <RiClipboardLine />
+                          )}
+                        </button>
+                      )}
+
+                      <Typography
+                        as="h1"
+                        variant="geist"
+                        weight="semiBold"
+                        size={16}
+                        lineHeight={20}
+                        className={styles.tickerValue}
+                      >
+                        {data.brand.ticker || "NO TICKER"}
+                      </Typography>
+                    </div>
+                  </UserProfileGridItem>
                 )}
               </div>
 
@@ -227,6 +315,12 @@ function BrandPage() {
                 })
               }
             />
+          </div>
+        )}
+
+        {isTickerContractCopied && (
+          <div className={styles.copyToast} role="status" aria-live="polite">
+            Contract copied
           </div>
         )}
       </div>

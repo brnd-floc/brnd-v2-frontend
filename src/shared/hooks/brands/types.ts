@@ -28,9 +28,11 @@ export type Brand = {
   fanCount: number;
   ticker?: string;
   contractAddress?: string;
-  guardianHandle?: string;
-  guardianFid?: number;
-  guardianPfp?: string;
+  tickerTokenId?: string;
+  onChainFid?: number | null;
+  guardianHandle?: string | null;
+  guardianFid?: number | null;
+  guardianPfp?: string | null;
 };
 
 export type Category = {
