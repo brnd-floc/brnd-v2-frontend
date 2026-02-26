@@ -1,0 +1,88 @@
+@mixin textGradientLight {
+  background:
+    linear-gradient(360deg, #FFFFFF 0%, rgba(255, 255, 255, 0.7) 50%, #FFFFFF 100%),
+    linear-gradient(191.75deg, #FFF000 0%, #FF0000 33%, #0E00FF 66%, #00FF00 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+@mixin voteTitleGradient {
+  background:
+    linear-gradient(360deg, #eaeaea -17.87%, rgba(255, 255, 255, 0.8) 48.51%, #ffffff 114.88%),
+    linear-gradient(194.71deg, #fff000 -12.38%, #ff0000 29.54%, #0e00ff 71.46%, #00ff00 114.65%),
+    linear-gradient(0deg, #ffffff, #ffffff),
+    #eaeaea;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+@mixin brndGradientSurface(
+  $start: #eaeaea,
+  $end: #eaeaea,
+  $base: transparent
+) {
+  background:
+    linear-gradient(360deg, $start 0%, rgba(255, 255, 255, 0.8) 50%, $end 100%),
+    linear-gradient(191.75deg, #fff000 0%, #ff0000 33%, #0e00ff 66%, #00ff00 100%),
+    $base;
+}
+
+@mixin fontGeist {
+  font-family: "Geist", sans-serif;
+}
+
+@mixin fontGeistLegacy {
+  font-family: "Geist", "Inter", "Arial", sans-serif;
+}
+
+@mixin fontDrukWide {
+  font-family: "Druk Wide";
+}
+
+@mixin mutedMetaLabel($min-width: null, $uppercase: false) {
+  color: #8a8a8a;
+  @if $min-width != null {
+    min-width: $min-width;
+  }
+  @if $uppercase {
+    text-transform: uppercase;
+  }
+}
+
+@mixin translucentUpperLabel($alpha: 0.5) {
+  color: rgba(255, 255, 255, $alpha);
+  text-transform: uppercase;
+}
+
+@mixin metricText(
+  $size,
+  $line-height,
+  $weight,
+  $color,
+  $height: auto
+) {
+  @include fontGeist();
+  font-style: normal;
+  font-weight: $weight;
+  font-size: $size;
+  line-height: $line-height;
+  color: $color;
+  height: $height;
+}
+
+@mixin upperFieldLabel(
+  $width: 100%,
+  $height: 13px,
+  $line-height: 125%
+) {
+  width: $width;
+  height: $height;
+  font-weight: 400;
+  font-size: 10px;
+  line-height: $line-height;
+  @include translucentUpperLabel();
+  flex: none;
+  align-self: stretch;
+}

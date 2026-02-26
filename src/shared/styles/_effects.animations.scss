@@ -1,0 +1,39 @@
+@mixin claimedRainbowText($duration: 3s, $weight: 600) {
+  background: linear-gradient(
+    90deg,
+    #ff9533 0%,
+    #ff0000 25%,
+    #0c00ff 50%,
+    #00ff00 75%,
+    #ff9533 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: brndRainbowShift $duration linear infinite;
+  font-weight: $weight;
+}
+
+@mixin spinnerLoop($duration: 0.8s) {
+  animation: brndSpin $duration linear infinite;
+  color: currentColor;
+}
+
+@keyframes brndRainbowShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+@keyframes brndSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

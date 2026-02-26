@@ -1,0 +1,28 @@
+@mixin glassSurface($middle-stop: 99.99%) {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(0, 0, 0, 0) $middle-stop,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background: linear-gradient(
+    180deg,
+    color(display-p3 1 1 1 / 0.05) 0%,
+    color(display-p3 0 0 0 / 0) $middle-stop,
+    color(display-p3 1 1 1 / 0) 100%
+  );
+}
+
+@mixin neutralOutlinedState($border-alpha: 0.3) {
+  background: transparent;
+  border: 1px solid rgba(138, 138, 138, $border-alpha);
+}
+
+@mixin neutralMutedState($bg-alpha: 0.2, $border-alpha: 0.3) {
+  background: rgba(138, 138, 138, $bg-alpha);
+  border: 1px solid rgba(138, 138, 138, $border-alpha);
+}
+
+@mixin neutralFilledState($bg-alpha: 0.3) {
+  background: rgba(138, 138, 138, $bg-alpha);
+}
