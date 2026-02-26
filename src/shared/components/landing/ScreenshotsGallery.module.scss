@@ -113,6 +113,42 @@
   border-radius: 1rem;
 }
 
+.imageCol1 {
+  grid-column: 1;
+}
+
+.imageCol2 {
+  grid-column: 2;
+}
+
+.imageCol3 {
+  grid-column: 3;
+}
+
+.imageCol4 {
+  grid-column: 4;
+}
+
+.imageCol5 {
+  grid-column: 5;
+}
+
+.imageCol6 {
+  grid-column: 6;
+}
+
+.imageCol7 {
+  grid-column: 7;
+}
+
+.imageRow1 {
+  grid-row: 1;
+}
+
+.imageRow3 {
+  grid-row: 3;
+}
+
 .image {
   height: 100%;
   width: 100%;
@@ -125,4 +161,8 @@
   overflow: hidden;
   border-radius: 1rem;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+.scalerCenter {
+  grid-area: 2 / 4;
 }

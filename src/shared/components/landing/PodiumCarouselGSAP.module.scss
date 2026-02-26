@@ -32,7 +32,7 @@
   padding-left: 1.5rem;
   padding-right: 1.5rem;
   overflow: hidden;
-  background-color: #18181b;
+  background-color: #020303;
 }
 
 .loadingContainer {
@@ -63,6 +63,8 @@
   width: 100%;
   height: 500px;
   overflow: hidden;
+  perspective: 300px;
+  perspective-origin: 50% 50%;
 
   @include sm {
     height: 600px;
@@ -81,6 +83,7 @@
   height: 200px;
   z-index: 50;
   pointer-events: none;
+  background: linear-gradient(to bottom, #020303 0%, rgba(2, 3, 3, 0) 100%);
 }
 
 .gradientBottom {
@@ -91,6 +94,7 @@
   height: 300px;
   z-index: 50;
   pointer-events: none;
+  background: linear-gradient(to top, #020303 0%, rgba(2, 3, 3, 0) 100%);
 }
 
 .podiumCard {
@@ -103,6 +107,7 @@
   overflow: hidden;
   background-color: #0a0a0a;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.45);
   transform: translate3d(-50%, -50%, 0);
   opacity: 0;
 
@@ -125,10 +130,16 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-left: 1.5rem;
-  padding-right: 1.5rem;
-  padding-top: 1.25rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-top: 1rem;
   padding-bottom: 0.75rem;
+
+  @include sm {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    padding-top: 1.25rem;
+  }
 }
 
 .userInfo {
@@ -152,9 +163,10 @@
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background-color: #27272a;
+  background: linear-gradient(180deg, #27272a 0%, #1f1f22 100%);
   font-size: 0.875rem;
-  color: #71717a;
+  color: #e4e4e7;
+  border: 1px solid rgba(255, 255, 255, 0.16);
 }
 
 .username {
@@ -165,7 +177,7 @@
 
 .date {
   font-size: 0.875rem;
-  color: #71717a;
+  color: #a1a1aa;
   font-family: monospace;
 }
 
@@ -274,22 +286,22 @@
 .brandPlaceholder {
   width: 100%;
   height: 100%;
-  background-color: #27272a;
+  background: radial-gradient(circle at top, #303038 0%, #1c1c22 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.5rem;
-  color: #52525b;
+  color: #f4f4f5;
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .rankNumber {
+  display: block;
   font-size: 1.5rem;
   font-weight: 900;
   font-family: var(--font-display, 'Inter', sans-serif);
+  line-height: 1;
   margin-top: auto;
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
 
   @include sm {
     font-size: 2.25rem;
@@ -301,15 +313,21 @@
 }
 
 .rankNumber1st {
-  background: linear-gradient(to bottom, #fde047, #eab308);
+  color: #fde68a;
 }
 
 .rankNumber2nd {
-  background: linear-gradient(to bottom, #e5e7eb, #9ca3af);
+  color: #f4f4f5;
 }
 
 .rankNumber3rd {
-  background: linear-gradient(to bottom, #fb923c, #ea580c);
+  color: #fdba74;
+}
+
+@supports ((-webkit-background-clip: text) and (-webkit-text-fill-color: transparent)) {
+  .rankNumber {
+    @include textGradientLight;
+  }
 }
 
 .brandName {

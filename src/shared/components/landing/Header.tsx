@@ -9,15 +9,9 @@ export function Header() {
   const t = useTranslations("landing.hero");
   const [isScrolled, setIsScrolled] = useState(false);
 
-  const dashboardUrl = import.meta.env.VITE_DASHBOARD_URL;
-  if (!dashboardUrl) {
-    throw new Error("VITE_DASHBOARD_URL is required");
-  }
-
-  const miniappUrl = import.meta.env.VITE_MINIAPP_URL;
-  if (!miniappUrl) {
-    throw new Error("VITE_MINIAPP_URL is required");
-  }
+  const dashboardUrl = import.meta.env.VITE_DASHBOARD_URL || "https://brnd.land";
+  const miniappUrl =
+    import.meta.env.VITE_MINIAPP_URL || "https://miniapp.brndland.com";
 
   useEffect(() => {
     const handleScroll = () => {

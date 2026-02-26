@@ -5,15 +5,8 @@ import styles from "./StickyBottomBar.module.scss"
 export function StickyBottomBar() {
     const t = useTranslations('landing.hero')
 
-    const dashboardUrl = import.meta.env.VITE_DASHBOARD_URL
-    if (!dashboardUrl) {
-        throw new Error('VITE_DASHBOARD_URL is required')
-    }
-
-    const miniappUrl = import.meta.env.VITE_MINIAPP_URL
-    if (!miniappUrl) {
-        throw new Error('VITE_MINIAPP_URL is required')
-    }
+    const dashboardUrl = import.meta.env.VITE_DASHBOARD_URL || "https://brnd.land"
+    const miniappUrl = import.meta.env.VITE_MINIAPP_URL || "https://miniapp.brndland.com"
 
     return (
         <div className={styles.container}>
