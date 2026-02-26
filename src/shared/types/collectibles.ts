@@ -44,7 +44,7 @@ export interface VoteHistoryItem {
   collectibleTotalFeesEarned: string;
 }
 
-export type ActivityEventType = "mint" | "sale" | "transfer";
+export type ActivityEventType = 'mint' | 'sale' | 'transfer';
 
 export interface ActivityEvent {
   id: number;

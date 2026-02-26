@@ -1,15 +1,15 @@
 // Dependencies
-import React, { useState, useEffect } from "react";
-import { NavLink, useLocation } from "react-router-dom";
-import { motion } from "framer-motion";
-import classNames from "clsx";
+import React, { useState, useEffect } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import classNames from 'clsx';
 
 // Stylesheet
-import styles from "./ProfileTabNavigator.module.scss";
+import styles from './ProfileTabNavigator.module.scss';
 
 // Components
-import Typography from "../Typography";
-import { useDebounce } from "react-use";
+import Typography from '../Typography';
+import { useDebounce } from 'react-use';
 
 interface TabNavigatorProps {
   tabs: Array<{ path: string; label: string }>;
@@ -45,10 +45,10 @@ const TabNavigator: React.FC<TabNavigatorProps> = ({ tabs }) => {
 
   useEffect(() => {
     updateIndicator();
-    window.addEventListener("resize", updateIndicator);
+    window.addEventListener('resize', updateIndicator);
 
     return () => {
-      window.removeEventListener("resize", updateIndicator);
+      window.removeEventListener('resize', updateIndicator);
     };
   }, [activeIndex]);
 
@@ -74,7 +74,7 @@ const TabNavigator: React.FC<TabNavigatorProps> = ({ tabs }) => {
             isPathActive(tab.path) && styles.active
           )}
         >
-          <Typography variant={"geist"} weight={"bold"} size={16}>
+          <Typography variant={'geist'} weight={'bold'} size={16}>
             {tab.label}
           </Typography>
         </NavLink>
@@ -83,7 +83,7 @@ const TabNavigator: React.FC<TabNavigatorProps> = ({ tabs }) => {
         className={styles.indicator}
         initial={{ x: 0, width: 0 }}
         animate={{ x: indicatorOffset, width: indicatorWidth }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
       />
     </nav>
   );

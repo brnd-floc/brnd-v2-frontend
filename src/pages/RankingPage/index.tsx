@@ -1,37 +1,37 @@
 // Dependencies
-import React, { useState, useEffect } from "react";
-import { Routes, Route, useLocation } from "react-router-dom";
+import React, { useState, useEffect } from 'react';
+import { Routes, Route, useLocation } from 'react-router-dom';
 
 // StyleSheet
-import styles from "./RankingPage.module.scss";
+import styles from './RankingPage.module.scss';
 
 // Components
-import AppLayout from "../../shared/layouts/AppLayout";
-import TopRankings from "./partials/TopRankings";
-import NewRankings from "./partials/NewRankings";
-import AllRankings from "./partials/AllRankings";
-import TabNavigator from "@/components/TabNavigator";
+import AppLayout from '../../shared/layouts/AppLayout';
+import TopRankings from './partials/TopRankings';
+import NewRankings from './partials/NewRankings';
+import AllRankings from './partials/AllRankings';
+import TabNavigator from '@/components/TabNavigator';
 
 // Hocs
-import withProtectionRoute from "@/hocs/withProtectionRoute";
-import BrandHeader from "@/shared/components/BrandHeader";
+import withProtectionRoute from '@/hocs/withProtectionRoute';
+import BrandHeader from '@/shared/components/BrandHeader';
 import TimePeriodFilter, {
   BrandTimePeriod,
-} from "@/shared/components/TimePeriodFilter";
+} from '@/shared/components/TimePeriodFilter';
 
 function RankingPage(): React.ReactNode {
   const location = useLocation();
-  const [selectedPeriod, setSelectedPeriod] = useState<BrandTimePeriod>("all");
+  const [selectedPeriod, setSelectedPeriod] = useState<BrandTimePeriod>('all');
 
   // Check if we're on the "New" tab
-  const isNewTab = location.pathname === "/ranking/new";
+  const isNewTab = location.pathname === '/ranking/new';
 
   // Initialize period from URL parameter
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
-    const periodParam = urlParams.get("period") as BrandTimePeriod;
+    const periodParam = urlParams.get('period') as BrandTimePeriod;
 
-    if (periodParam && ["day", "week", "month", "all"].includes(periodParam)) {
+    if (periodParam && ['day', 'week', 'month', 'all'].includes(periodParam)) {
       setSelectedPeriod(periodParam);
     }
   }, [location.search]);
@@ -46,16 +46,16 @@ function RankingPage(): React.ReactNode {
             <TabNavigator
               tabs={[
                 {
-                  label: "Top",
-                  path: "/ranking",
+                  label: 'Top',
+                  path: '/ranking',
                 },
                 {
-                  label: "New",
-                  path: "/ranking/new",
+                  label: 'New',
+                  path: '/ranking/new',
                 },
                 {
-                  label: "All",
-                  path: "/ranking/all",
+                  label: 'All',
+                  path: '/ranking/all',
                 },
               ]}
             />
@@ -85,4 +85,4 @@ function RankingPage(): React.ReactNode {
   );
 }
 
-export default withProtectionRoute(RankingPage, "only-connected");
+export default withProtectionRoute(RankingPage, 'only-connected');

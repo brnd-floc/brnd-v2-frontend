@@ -1,19 +1,19 @@
-import React, { useMemo, useEffect } from "react";
-import classNames from "clsx";
-import sdk from "@farcaster/miniapp-sdk";
-import { BaseModalProps, FeedPodiumDetailModalData } from "../../types";
-import Typography from "@/shared/components/Typography";
-import Podium1Icon from "@/shared/assets/icons/podium-1.svg?react";
-import Podium2Icon from "@/shared/assets/icons/podium-2.svg?react";
-import Podium3Icon from "@/shared/assets/icons/podium-3.svg?react";
-import BRNDPodiumIcon from "@/shared/assets/icons/brnd-podium.svg?react";
-import { usePodiumCollectibles } from "@/shared/hooks/contract/usePodiumCollectibles";
-import styles from "./FeedPodiumDetailModal.module.scss";
-import { useAuth } from "@/shared/hooks/auth";
+import React, { useMemo, useEffect } from 'react';
+import classNames from 'clsx';
+import sdk from '@farcaster/miniapp-sdk';
+import { BaseModalProps, FeedPodiumDetailModalData } from '../../types';
+import Typography from '@/shared/components/Typography';
+import Podium1Icon from '@/shared/assets/icons/podium-1.svg?react';
+import Podium2Icon from '@/shared/assets/icons/podium-2.svg?react';
+import Podium3Icon from '@/shared/assets/icons/podium-3.svg?react';
+import BRNDPodiumIcon from '@/shared/assets/icons/brnd-podium.svg?react';
+import { usePodiumCollectibles } from '@/shared/hooks/contract/usePodiumCollectibles';
+import styles from './FeedPodiumDetailModal.module.scss';
+import { useAuth } from '@/shared/hooks/auth';
 
 // Format large numbers (1000000 -> "1M", 1200000 -> "1.2M")
 const formatPrice = (priceStr: string | null): string => {
-  if (!priceStr) return "1M";
+  if (!priceStr) return '1M';
   const priceInBrnd = Number(priceStr) / 1e18;
   if (priceInBrnd >= 1000000) {
     const millions = priceInBrnd / 1000000;
@@ -27,14 +27,14 @@ const formatPrice = (priceStr: string | null): string => {
 
 // Format time ago display (UTC-based)
 const getTimeAgo = (dateStr: string | undefined): string => {
-  if (!dateStr) return "";
+  if (!dateStr) return '';
 
   const nowUtc = Date.now();
 
   // Normalize date format
-  let normalizedDate = dateStr.replace(" ", "T");
-  if (!normalizedDate.endsWith("Z")) {
-    normalizedDate += "Z";
+  let normalizedDate = dateStr.replace(' ', 'T');
+  if (!normalizedDate.endsWith('Z')) {
+    normalizedDate += 'Z';
   }
 
   const createdUtc = new Date(normalizedDate).getTime();
@@ -44,7 +44,7 @@ const getTimeAgo = (dateStr: string | undefined): string => {
   const CLOCK_SKEW_THRESHOLD = 10 * 60 * 1000;
   if (diffInMs < 0) {
     if (Math.abs(diffInMs) <= CLOCK_SKEW_THRESHOLD) {
-      return "Just now";
+      return 'Just now';
     }
     diffInMs = 0;
   }
@@ -53,20 +53,20 @@ const getTimeAgo = (dateStr: string | undefined): string => {
   const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
   const diffInDays = Math.floor(diffInHours / 24);
 
-  if (diffInMinutes < 1) return "Just now";
+  if (diffInMinutes < 1) return 'Just now';
   if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
   if (diffInHours < 24) {
     return `${diffInHours}h ago`;
   }
-  if (diffInDays === 1) return "Yesterday";
+  if (diffInDays === 1) return 'Yesterday';
   if (diffInDays < 7) return `${diffInDays}d ago`;
 
   const createdDate = new Date(createdUtc);
   return createdDate.toLocaleDateString(undefined, {
-    timeZone: "UTC",
-    year: "numeric",
-    month: "short",
-    day: "numeric",
+    timeZone: 'UTC',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
   });
 };
 
@@ -98,14 +98,14 @@ export const FeedPodiumDetailModal: React.FC<
     error: txError,
   } = usePodiumCollectibles(
     (txData) => {
-      console.log("Podium claimed!", txData);
-      sdk.haptics.notificationOccurred("success");
+      console.log('Podium claimed!', txData);
+      sdk.haptics.notificationOccurred('success');
       onMintSuccess?.();
       handleClose?.();
     },
     (txData) => {
-      console.log("Podium bought!", txData);
-      sdk.haptics.notificationOccurred("success");
+      console.log('Podium bought!', txData);
+      sdk.haptics.notificationOccurred('success');
       onMintSuccess?.();
       handleClose?.();
     }
@@ -119,7 +119,7 @@ export const FeedPodiumDetailModal: React.FC<
   // Price calculations per contract:
   // - Mint price: BASE_PRICE (stored in collectibleData.price)
   // - Buy price: lastSalePrice * 1.2 (20% increase each sale)
-  const lastSalePrice = collectibleData.price || "1000000000000000000000000"; // 1M BRND default
+  const lastSalePrice = collectibleData.price || '1000000000000000000000000'; // 1M BRND default
   const buyPrice = String(Math.floor(Number(lastSalePrice) * 1.2));
 
   const mintPrice = formatPrice(lastSalePrice);
@@ -143,13 +143,13 @@ export const FeedPodiumDetailModal: React.FC<
   // Haptic feedback when error occurs
   useEffect(() => {
     if (txError) {
-      sdk.haptics.notificationOccurred("error");
+      sdk.haptics.notificationOccurred('error');
     }
   }, [txError]);
 
   const handleBuyOrMint = async () => {
     if (isOwned || isNotMintable) return;
-    sdk.haptics.impactOccurred("medium");
+    sdk.haptics.impactOccurred('medium');
     if (canBuy && tokenId) {
       await buyPodium(tokenId);
     } else if (canMint) {
@@ -169,20 +169,20 @@ export const FeedPodiumDetailModal: React.FC<
   const getButtonText = (): string => {
     // Show success state first if transaction just succeeded
     if (hasSucceeded) {
-      return successType === "buy" ? "Bought!" : "Minted!";
+      return successType === 'buy' ? 'Bought!' : 'Minted!';
     }
     if (canMint) return `Mint · ${mintPrice} $BRND`;
-    if (isOwned) return "Owned";
-    if (isNotMintable) return "Not mintable";
+    if (isOwned) return 'Owned';
+    if (isNotMintable) return 'Not mintable';
     if (canBuy) return `Buy · ${displayBuyPrice} $BRND`;
-    return "Not mintable";
+    return 'Not mintable';
   };
 
   const getLoadingText = (): string => {
-    if (isApproving) return "Approving...";
-    if (isConfirming) return "Confirming...";
-    if (isClaimingPodium) return "Minting...";
-    if (isBuyingPodium) return "Buying...";
+    if (isApproving) return 'Approving...';
+    if (isConfirming) return 'Confirming...';
+    if (isClaimingPodium) return 'Minting...';
+    if (isBuyingPodium) return 'Buying...';
     return getButtonText();
   };
 
@@ -269,7 +269,7 @@ export const FeedPodiumDetailModal: React.FC<
               size={12}
               className={styles.podiumLabel}
             >
-              {brand2?.name ?? ""}
+              {brand2?.name ?? ''}
             </Typography>
           </div>
 
@@ -293,7 +293,7 @@ export const FeedPodiumDetailModal: React.FC<
               size={12}
               className={styles.podiumLabel}
             >
-              {brand1?.name ?? ""}
+              {brand1?.name ?? ''}
             </Typography>
           </div>
 
@@ -317,7 +317,7 @@ export const FeedPodiumDetailModal: React.FC<
               size={12}
               className={styles.podiumLabel}
             >
-              {brand3?.name ?? ""}
+              {brand3?.name ?? ''}
             </Typography>
           </div>
         </div>
@@ -366,7 +366,7 @@ export const FeedPodiumDetailModal: React.FC<
               size={12}
               className={styles.creatorUsername}
             >
-              @{user?.username ?? ""}
+              @{user?.username ?? ''}
             </Typography>
           </div>
         </div>
@@ -419,17 +419,17 @@ export const FeedPodiumDetailModal: React.FC<
         {/* Paid/Claimed info */}
         {podium?.brndPaidWhenCreatingPodium &&
           Number(podium.brndPaidWhenCreatingPodium) > 0 && (
-            <div className={styles.paymentInfo}>
-              <Typography size={12} className={styles.paidAmount}>
+          <div className={styles.paymentInfo}>
+            <Typography size={12} className={styles.paidAmount}>
                 Paid {podium.brndPaidWhenCreatingPodium} $BRND
-              </Typography>
-              {podium?.claimed && (
-                <Typography size={12} className={styles.claimedAmount}>
+            </Typography>
+            {podium?.claimed && (
+              <Typography size={12} className={styles.claimedAmount}>
                   Claimed {podium.brndPaidWhenCreatingPodium * 10} $BRND
-                </Typography>
-              )}
-            </div>
-          )}
+              </Typography>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Error */}

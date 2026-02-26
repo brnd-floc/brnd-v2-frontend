@@ -1,33 +1,33 @@
 // Update: /src/pages/HomePage/partials/TrendBrands/index.tsx
 
 // Dependencies
-import { useCallback, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useCallback, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 // Components
-import BrandCard from "@/components/cards/BrandCard";
-import { BrandListItem } from "@/components/BrandListItem";
+import BrandCard from '@/components/cards/BrandCard';
+import { BrandListItem } from '@/components/BrandListItem';
 
 // StyleSheet
-import styles from "./TrendBrands.module.scss";
+import styles from './TrendBrands.module.scss';
 
 // Hook
-import { Brand, useBrandList } from "@/hooks/brands";
-import useDisableScrollBody from "@/hooks/ui/useDisableScrollBody";
+import { Brand, useBrandList } from '@/hooks/brands';
+import useDisableScrollBody from '@/hooks/ui/useDisableScrollBody';
 
 // Utils
-import { getBrandScoreVariation } from "@/utils/brand";
+import { getBrandScoreVariation } from '@/utils/brand';
 import {
   calculateSmartPeriodScores,
   processBrandsWithSmartScoring,
-} from "@/utils/smartPeriodScoring"; // NEW
+} from '@/utils/smartPeriodScoring'; // NEW
 
 // Assets
-import BrandOfTheWeek from "@/assets/images/brand-of-the-week.svg?react";
-import BrandOfTheMonth from "@/assets/images/brand-of-the-month.svg?react";
-import AllTimeBrand from "@/assets/images/all-time-brand.svg?react";
+import BrandOfTheWeek from '@/assets/images/brand-of-the-week.svg?react';
+import BrandOfTheMonth from '@/assets/images/brand-of-the-month.svg?react';
+import AllTimeBrand from '@/assets/images/all-time-brand.svg?react';
 
-import { BrandTimePeriod } from "@/shared/components/TimePeriodFilter";
+import { BrandTimePeriod } from '@/shared/components/TimePeriodFilter';
 
 interface TrendBrandsProps {
   period: BrandTimePeriod;
@@ -35,7 +35,7 @@ interface TrendBrandsProps {
 
 function TrendBrands({ period }: TrendBrandsProps) {
   const navigate = useNavigate();
-  const { data, refetch } = useBrandList("top", "", 1, 10, period);
+  const { data, refetch } = useBrandList('top', '', 1, 10, period);
   useDisableScrollBody();
 
   useEffect(() => {
@@ -47,15 +47,15 @@ function TrendBrands({ period }: TrendBrandsProps) {
     if (!data?.brands) return [];
 
     // Apply smart scoring to fix period inconsistencies
-    const mappedPeriod = period === "day" ? "daily" : period;
-    return processBrandsWithSmartScoring(data.brands, mappedPeriod as "week" | "month" | "all" | "daily");
+    const mappedPeriod = period === 'day' ? 'daily' : period;
+    return processBrandsWithSmartScoring(data.brands, mappedPeriod as 'week' | 'month' | 'all' | 'daily');
   }, [data?.brands, period]);
 
   const getScoreForPeriod = useCallback(
     (brand: Brand): number => {
       // NEW: Use smart scoring instead of raw backend scores
-      const mappedPeriod = period === "day" ? "daily" : period;
-      const smartScores = calculateSmartPeriodScores(brand, mappedPeriod as "week" | "month" | "all" | "daily");
+      const mappedPeriod = period === 'day' ? 'daily' : period;
+      const smartScores = calculateSmartPeriodScores(brand, mappedPeriod as 'week' | 'month' | 'all' | 'daily');
       return smartScores.score;
     },
     [period]
@@ -64,8 +64,8 @@ function TrendBrands({ period }: TrendBrandsProps) {
   const getStateScoreForPeriod = useCallback(
     (brand: Brand): number => {
       // NEW: Use smart scoring for state scores too
-      const mappedPeriod = period === "day" ? "daily" : period;
-      const smartScores = calculateSmartPeriodScores(brand, mappedPeriod as "week" | "month" | "all" | "daily");
+      const mappedPeriod = period === 'day' ? 'daily' : period;
+      const smartScores = calculateSmartPeriodScores(brand, mappedPeriod as 'week' | 'month' | 'all' | 'daily');
       return smartScores.stateScore;
     },
     [period]
@@ -73,13 +73,13 @@ function TrendBrands({ period }: TrendBrandsProps) {
 
   const getBannerSvg = useCallback((period: BrandTimePeriod) => {
     switch (period) {
-      case "day":
+      case 'day':
         return <BrandOfTheWeek />;
-      case "week":
+      case 'week':
         return <BrandOfTheWeek />;
-      case "month":
+      case 'month':
         return <BrandOfTheMonth />;
-      case "all":
+      case 'all':
         return <AllTimeBrand />;
       default:
         return null;
@@ -97,7 +97,7 @@ function TrendBrands({ period }: TrendBrandsProps) {
   /**
    * Handles the click event on a brand card and navigates to the brand's page.
    */
-  const handleClickCard = useCallback((id: Brand["id"]) => {
+  const handleClickCard = useCallback((id: Brand['id']) => {
     navigate(`/brand/${id}`);
   }, []);
 
@@ -109,9 +109,9 @@ function TrendBrands({ period }: TrendBrandsProps) {
             <div className={styles.image}>{getBannerSvg(period)}</div>
             <div className={styles.brand}>
               <BrandCard
-                size={"l"}
+                size={'l'}
                 selected={true}
-                orientation={"center"}
+                orientation={'center'}
                 className={styles.brandCard}
                 name={mainBrand.name}
                 photoUrl={mainBrand.imageUrl}

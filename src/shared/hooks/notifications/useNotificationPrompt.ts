@@ -1,9 +1,9 @@
 // src/components/NotificationPrompt/hooks.ts
 
-import { useState, useCallback } from "react";
-import sdk from "@farcaster/miniapp-sdk";
-import { NotificationPromptState } from "@/shared/components/NotificationPrompt/types";
-import { markUserPrompted } from "@/shared/utils/notifications";
+import { useState, useCallback } from 'react';
+import sdk from '@farcaster/miniapp-sdk';
+import { NotificationPromptState } from '@/shared/components/NotificationPrompt/types';
+import { markUserPrompted } from '@/shared/utils/notifications';
 
 /**
  * Custom hook for managing notification prompt state and actions
@@ -32,11 +32,11 @@ export const useNotificationPrompt = (
         onComplete?.(true);
       }, 2000);
     } catch (error) {
-      console.error("Failed to add miniapp:", error);
+      console.error('Failed to add miniapp:', error);
       setState((prev) => ({
         ...prev,
         isLoading: false,
-        error: error instanceof Error ? error.message : "Failed to add miniapp",
+        error: error instanceof Error ? error.message : 'Failed to add miniapp',
       }));
 
       // Still mark as prompted and complete (user might have already added it)

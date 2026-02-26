@@ -1,14 +1,14 @@
 // Dependencies
-import React from "react";
-import classNames from "clsx";
+import React from 'react';
+import classNames from 'clsx';
 
 // StyleSheet
-import styles from "./Button.module.scss";
-import Typography from "../Typography";
-import LoaderIndicator from "../LoaderIndicator";
+import styles from './Button.module.scss';
+import Typography from '../Typography';
+import LoaderIndicator from '../LoaderIndicator';
 
 interface ButtonProps {
-  variant?: "primary" | "secondary" | "outline" | "underline";
+  variant?: 'primary' | 'secondary' | 'outline' | 'underline';
   caption: string;
   iconLeft?: React.ReactNode;
   iconRight?: React.ReactNode;
@@ -19,11 +19,11 @@ interface ButtonProps {
 }
 
 const Button: React.FC<ButtonProps> = ({
-  variant = "primary",
+  variant = 'primary',
   caption,
   iconLeft,
   iconRight,
-  className = "",
+  className = '',
   onClick,
   disabled = false,
   loading = false,
@@ -34,7 +34,7 @@ const Button: React.FC<ButtonProps> = ({
     disabled={disabled || loading}
   >
     <div className={styles.container}>
-      {variant === "primary" && <span className={styles.effect} />}
+      {variant === 'primary' && <span className={styles.effect} />}
       {loading ? (
         <div className={styles.loadingContainer}>
           <LoaderIndicator size={16} />
@@ -44,8 +44,8 @@ const Button: React.FC<ButtonProps> = ({
           {iconLeft && <div className={styles.icon}>{iconLeft}</div>}
           <div className={styles.caption}>
             <Typography
-              variant={"geist"}
-              weight={"medium"}
+              variant={'geist'}
+              weight={'medium'}
               size={16}
               lineHeight={20}
             >

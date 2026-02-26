@@ -1,19 +1,19 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useConnect } from "wagmi";
-import { useContractWagmi } from "@/shared/hooks/contract/useContractWagmi";
-import styles from "./StakePage.module.scss";
-import Typography from "@/shared/components/Typography";
-import Button from "@/shared/components/Button";
-import sdk from "@farcaster/miniapp-sdk";
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useConnect } from 'wagmi';
+import { useContractWagmi } from '@/shared/hooks/contract/useContractWagmi';
+import styles from './StakePage.module.scss';
+import Typography from '@/shared/components/Typography';
+import Button from '@/shared/components/Button';
+import sdk from '@farcaster/miniapp-sdk';
 
 export default function StakePage() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<"stake" | "withdraw">("stake");
-  const [stakeAmount, setStakeAmount] = useState("");
-  const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [activeTab, setActiveTab] = useState<'stake' | 'withdraw'>('stake');
+  const [stakeAmount, setStakeAmount] = useState('');
+  const [withdrawAmount, setWithdrawAmount] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
-  const [txHash, setTxHash] = useState("");
+  const [txHash, setTxHash] = useState('');
 
   // Optimistic balance updates
   const [optimisticBrndBalance, setOptimisticBrndBalance] = useState<
@@ -48,11 +48,11 @@ export default function StakePage() {
   } = useContractWagmi(
     // onStakeSuccess
     (txData) => {
-      console.log("Stake successful!", txData);
-      sdk.haptics.notificationOccurred("success");
+      console.log('Stake successful!', txData);
+      sdk.haptics.notificationOccurred('success');
       setTxHash(txData.txHash);
       setShowSuccess(true);
-      setStakeAmount("");
+      setStakeAmount('');
 
       // Calculate optimistic balance updates using balances from before the transaction
       const currentBalance = parseFloat(
@@ -84,11 +84,11 @@ export default function StakePage() {
     },
     // onWithdrawSuccess
     (txData) => {
-      console.log("Withdraw successful!", txData);
-      sdk.haptics.notificationOccurred("success");
+      console.log('Withdraw successful!', txData);
+      sdk.haptics.notificationOccurred('success');
       setTxHash(txData.txHash);
       setShowSuccess(true);
-      setWithdrawAmount("");
+      setWithdrawAmount('');
 
       // Calculate optimistic balance updates using balances from before the transaction
       const currentBalance = parseFloat(
@@ -147,7 +147,7 @@ export default function StakePage() {
       // Only refresh once when component mounts and wallet is connected
       refreshBrndBalances();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [isConnected]); // Only depend on isConnected, not activeTab
 
   // Clear optimistic updates when real balances have been updated to match
@@ -155,10 +155,10 @@ export default function StakePage() {
   useEffect(() => {
     if (!optimisticBrndBalance && !optimisticStakedAmount) return;
 
-    const optimisticBalance = parseFloat(optimisticBrndBalance || "0");
-    const optimisticStaked = parseFloat(optimisticStakedAmount || "0");
-    const realBalance = parseFloat(brndBalance || "0");
-    const realStaked = parseFloat(stakedBrndAmount || "0");
+    const optimisticBalance = parseFloat(optimisticBrndBalance || '0');
+    const optimisticStaked = parseFloat(optimisticStakedAmount || '0');
+    const realBalance = parseFloat(brndBalance || '0');
+    const realStaked = parseFloat(stakedBrndAmount || '0');
 
     // If real balances are close to optimistic (within 0.01), clear optimistic updates
     // This means the RPC refetch has completed
@@ -185,7 +185,7 @@ export default function StakePage() {
     }
 
     console.log(
-      "inside the handleStake function",
+      'inside the handleStake function',
       stakeAmount,
       getDisplayBrndBalance()
     );
@@ -238,7 +238,7 @@ export default function StakePage() {
     if (maxAmount > 0) {
       setStakeAmount(maxAmount.toString());
     } else {
-      setStakeAmount("0");
+      setStakeAmount('0');
     }
   };
 
@@ -255,13 +255,13 @@ export default function StakePage() {
     if (maxAmount > 0) {
       setWithdrawAmount(maxAmount.toString());
     } else {
-      setWithdrawAmount("0");
+      setWithdrawAmount('0');
     }
   };
 
   const formatNumber = (num: string) => {
     const n = parseFloat(num);
-    if (isNaN(n)) return "0";
+    if (isNaN(n)) return '0';
     if (n >= 1000000) return `${(n / 1000000).toFixed(2)}M`;
     if (n >= 1000) return `${(n / 1000).toFixed(2)}K`;
     return n.toFixed(2);
@@ -355,7 +355,7 @@ export default function StakePage() {
                 >
                   <li style={{ marginBottom: 4 }}>
                     <Typography variant="geist" size={14}>
-                      Stake BRND to level up - powered by{" "}
+                      Stake BRND to level up - powered by{' '}
                       <span
                         className={styles.tellerLink}
                         onClick={() => {
@@ -388,13 +388,13 @@ export default function StakePage() {
             <button
               onClick={() => {
                 sdk.haptics.selectionChanged();
-                setActiveTab("stake");
+                setActiveTab('stake');
                 // Only clear success message when switching tabs
                 // Don't clear optimistic updates - let them persist until real balances update
                 setShowSuccess(false);
               }}
               className={`${styles.tab} ${
-                activeTab === "stake" ? styles.tabActive : ""
+                activeTab === 'stake' ? styles.tabActive : ''
               }`}
               disabled={isPending || isConfirming}
             >
@@ -403,13 +403,13 @@ export default function StakePage() {
             <button
               onClick={() => {
                 sdk.haptics.selectionChanged();
-                setActiveTab("withdraw");
+                setActiveTab('withdraw');
                 // Only clear success message when switching tabs
                 // Don't clear optimistic updates - let them persist until real balances update
                 setShowSuccess(false);
               }}
               className={`${styles.tab} ${
-                activeTab === "withdraw" ? styles.tabWithdrawActive : ""
+                activeTab === 'withdraw' ? styles.tabWithdrawActive : ''
               }`}
               disabled={isPending || isConfirming}
             >
@@ -419,7 +419,7 @@ export default function StakePage() {
 
           {/* Content */}
           <div className={styles.content}>
-            {activeTab === "stake" ? (
+            {activeTab === 'stake' ? (
               // Stake Tab
               <div className={styles.formContainer}>
                 <div className={styles.inputGroup}>
@@ -431,8 +431,8 @@ export default function StakePage() {
                       onChange={(e) => {
                         const value = e.target.value;
                         // Remove decimals - only allow whole numbers
-                        const wholeNumber = value.includes(".")
-                          ? value.split(".")[0]
+                        const wholeNumber = value.includes('.')
+                          ? value.split('.')[0]
                           : value;
                         setStakeAmount(wholeNumber);
                       }}
@@ -461,22 +461,22 @@ export default function StakePage() {
                   {stakeAmount &&
                     parseFloat(stakeAmount) >
                       parseFloat(getDisplayBrndBalance()) && (
-                      <p className={styles.errorText}>
+                    <p className={styles.errorText}>
                         ⚠️ INSUFFICIENT BALANCE
-                      </p>
-                    )}
+                    </p>
+                  )}
                 </div>
 
                 <Button
                   variant="primary"
                   caption={
                     !isConnected
-                      ? "🔗 Connect Wallet"
+                      ? '🔗 Connect Wallet'
                       : isPending
-                      ? "CONFIRM IN WALLET..."
-                      : isConfirming
-                      ? "PROCESSING..."
-                      : "Stake $BRND"
+                        ? 'CONFIRM IN WALLET...'
+                        : isConfirming
+                          ? 'PROCESSING...'
+                          : 'Stake $BRND'
                   }
                   onClick={handleStake}
                   loading={isConfirming}
@@ -505,8 +505,8 @@ export default function StakePage() {
                       onChange={(e) => {
                         const value = e.target.value;
                         // Remove decimals - only allow whole numbers
-                        const wholeNumber = value.includes(".")
-                          ? value.split(".")[0]
+                        const wholeNumber = value.includes('.')
+                          ? value.split('.')[0]
                           : value;
                         setWithdrawAmount(wholeNumber);
                       }}
@@ -520,7 +520,7 @@ export default function StakePage() {
                         (isLoadingBrndBalances && !stakedBrndAmount)
                       }
                       max={
-                        activeTab === "withdraw"
+                        activeTab === 'withdraw'
                           ? parseFloat(getDisplayStakedAmount())
                           : parseFloat(getDisplayBrndBalance())
                       }
@@ -540,49 +540,49 @@ export default function StakePage() {
                   {withdrawAmount &&
                     parseFloat(withdrawAmount) >
                       parseFloat(getDisplayStakedAmount()) && (
-                      <p className={styles.errorText}>
+                    <p className={styles.errorText}>
                         ⚠️ INSUFFICIENT STAKED BALANCE
-                      </p>
-                    )}
+                    </p>
+                  )}
                 </div>
 
                 {/* Withdrawal delay warning */}
                 {!isLoadingWithdrawDelayInfo &&
                   secondsUntilWithdrawable > 0 && (
-                    <div className={styles.withdrawalDelayWarning}>
-                      <Typography variant="geist" weight="medium" size={14}>
+                  <div className={styles.withdrawalDelayWarning}>
+                    <Typography variant="geist" weight="medium" size={14}>
                         ⏰ Withdrawal Delay Active
-                      </Typography>
-                      <Typography
-                        variant="geist"
-                        size={14}
-                        className={styles.delayText}
-                      >
-                        You can withdraw again in{" "}
-                        {formatTimeRemaining(secondsUntilWithdrawable)}
-                      </Typography>
-                      <Typography
-                        variant="geist"
-                        size={12}
-                        className={styles.delaySubtext}
-                      >
-                        The vault has a{" "}
-                        {Math.floor(withdrawDelayTimeSeconds / 60)} minute delay
+                    </Typography>
+                    <Typography
+                      variant="geist"
+                      size={14}
+                      className={styles.delayText}
+                    >
+                        You can withdraw again in{' '}
+                      {formatTimeRemaining(secondsUntilWithdrawable)}
+                    </Typography>
+                    <Typography
+                      variant="geist"
+                      size={12}
+                      className={styles.delaySubtext}
+                    >
+                        The vault has a{' '}
+                      {Math.floor(withdrawDelayTimeSeconds / 60)} minute delay
                         between deposits and withdrawals for security.
-                      </Typography>
-                    </div>
-                  )}
+                    </Typography>
+                  </div>
+                )}
 
                 <Button
                   variant="primary"
                   caption={
                     !isConnected
-                      ? "🔗 Connect Wallet"
+                      ? '🔗 Connect Wallet'
                       : isPending
-                      ? "CONFIRM IN WALLET..."
-                      : isConfirming
-                      ? "PROCESSING..."
-                      : "Withdraw $BRND"
+                        ? 'CONFIRM IN WALLET...'
+                        : isConfirming
+                          ? 'PROCESSING...'
+                          : 'Withdraw $BRND'
                   }
                   onClick={handleWithdraw}
                   disabled={
@@ -613,8 +613,8 @@ export default function StakePage() {
               <div className={styles.errorBanner}>
                 <div>
                   <Typography variant="geist" weight="medium" size={14}>
-                    {error.includes("execution reverted: SR")
-                      ? "Withdrawal failed: You may need to wait before making another withdrawal. The vault has a cooldown period for consecutive withdrawals."
+                    {error.includes('execution reverted: SR')
+                      ? 'Withdrawal failed: You may need to wait before making another withdrawal. The vault has a cooldown period for consecutive withdrawals.'
                       : error}
                   </Typography>
                 </div>
@@ -623,7 +623,7 @@ export default function StakePage() {
 
             {/* Success Message */}
             {showSuccess && txHash && (
-              <div style={{ marginTop: "16px", textAlign: "center" }}>
+              <div style={{ marginTop: '16px', textAlign: 'center' }}>
                 <Typography
                   variant="geist"
                   weight="medium"

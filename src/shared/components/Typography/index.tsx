@@ -1,22 +1,22 @@
 // Dependencies
-import React from "react";
-import classNames from "clsx";
+import React from 'react';
+import classNames from 'clsx';
 
 // StyleSheet
-import styles from "./Typography.module.scss";
+import styles from './Typography.module.scss';
 
 // Types
-import { TypographyProps } from "./types";
+import { TypographyProps } from './types';
 
 const Typography: React.FC<TypographyProps> = ({
-  as: Component = "p",
-  variant = "geist",
-  weight = variant === "druk" ? "wide" : "regular",
+  as: Component = 'p',
+  variant = 'geist',
+  weight = variant === 'druk' ? 'wide' : 'regular',
   size = undefined,
   lineHeight = undefined,
   children,
-  className = "",
-  textAlign = "left",
+  className = '',
+  textAlign = 'left',
 }) => (
   <Component
     className={classNames(

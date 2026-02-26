@@ -1,31 +1,31 @@
 // Dependencies
-import React, { useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 // StyleSheet
-import styles from "./ClaimAirdrop.module.scss";
+import styles from './ClaimAirdrop.module.scss';
 
 // Components
-import Typography from "@/shared/components/Typography";
-import Button from "@/shared/components/Button";
-import IconButton from "@/shared/components/IconButton";
-import AirdropSvg from "@/shared/assets/images/airdrop.svg?react";
+import Typography from '@/shared/components/Typography';
+import Button from '@/shared/components/Button';
+import IconButton from '@/shared/components/IconButton';
+import AirdropSvg from '@/shared/assets/images/airdrop.svg?react';
 
-import Confetti from "react-confetti-boom";
+import Confetti from 'react-confetti-boom';
 
-import UnicornStudioAnimation from "@/shared/components/UnicornStudioAnimation";
+import UnicornStudioAnimation from '@/shared/components/UnicornStudioAnimation';
 
 // Hooks
-import { useAirdropClaim } from "@/shared/hooks/contract/useAirdropClaim";
-import { useAuth } from "@/shared/hooks/auth/useAuth";
-import { useAirdropCheck } from "@/shared/hooks/user/useAirdropCheck";
-import { useAirdropClaimStatus } from "@/shared/hooks/user/useAirdropClaimStatus";
-import { useAccount } from "wagmi";
+import { useAirdropClaim } from '@/shared/hooks/contract/useAirdropClaim';
+import { useAuth } from '@/shared/hooks/auth/useAuth';
+import { useAirdropCheck } from '@/shared/hooks/user/useAirdropCheck';
+import { useAirdropClaimStatus } from '@/shared/hooks/user/useAirdropClaimStatus';
+import { useAccount } from 'wagmi';
 
 // Assets
-import GoBackIcon from "@/assets/icons/go-back-icon.svg?react";
-import sdk from "@farcaster/miniapp-sdk";
-import airdropBackgroundImage from "@/shared/assets/images/airdrop-background.png";
+import GoBackIcon from '@/assets/icons/go-back-icon.svg?react';
+import sdk from '@farcaster/miniapp-sdk';
+import airdropBackgroundImage from '@/shared/assets/images/airdrop-background.png';
 
 interface ClaimAirdropProps {
   airdropData?: {
@@ -46,13 +46,13 @@ const ElectricDigits: React.FC<{ amount: string; isLoading: boolean }> = ({
 }) => {
   // Format with 9 digits padding for loading state
   const formatAmountWithPadding = (amt: string) => {
-    const numericValue = amt.replace(/[^0-9]/g, "");
-    return numericValue.padStart(9, "0").replace(/(\d{3})(?=\d)/g, "$1,");
+    const numericValue = amt.replace(/[^0-9]/g, '');
+    return numericValue.padStart(9, '0').replace(/(\d{3})(?=\d)/g, '$1,');
   };
 
   // Format actual number without padding for loaded state
   const formatAmountActual = (amt: string) => {
-    const numericValue = amt.replace(/[^0-9]/g, "");
+    const numericValue = amt.replace(/[^0-9]/g, '');
     const num = parseInt(numericValue, 10);
     return num.toLocaleString();
   };
@@ -60,19 +60,19 @@ const ElectricDigits: React.FC<{ amount: string; isLoading: boolean }> = ({
   const loadingFormattedAmount = formatAmountWithPadding(amount);
   const actualFormattedAmount = formatAmountActual(amount);
   const [displayDigits, setDisplayDigits] = React.useState<string[]>(
-    loadingFormattedAmount.split("")
+    loadingFormattedAmount.split('')
   );
 
   React.useEffect(() => {
     if (!isLoading) {
-      setDisplayDigits(actualFormattedAmount.split(""));
+      setDisplayDigits(actualFormattedAmount.split(''));
       return;
     }
 
     // Initialize with random digits (9 digits with padding)
     setDisplayDigits(
-      loadingFormattedAmount.split("").map((char) => {
-        if (char === "," || char === ".") return char;
+      loadingFormattedAmount.split('').map((char) => {
+        if (char === ',' || char === '.') return char;
         return Math.floor(Math.random() * 10).toString();
       })
     );
@@ -80,7 +80,7 @@ const ElectricDigits: React.FC<{ amount: string; isLoading: boolean }> = ({
     // Haptic feedback interval - call frequently during loading
     const hapticInterval = setInterval(() => {
       try {
-        sdk.haptics.impactOccurred("light");
+        sdk.haptics.impactOccurred('light');
       } catch (error) {
         // Silently fail if haptics not available
       }
@@ -88,8 +88,8 @@ const ElectricDigits: React.FC<{ amount: string; isLoading: boolean }> = ({
 
     const interval = setInterval(() => {
       setDisplayDigits((prev) => {
-        return loadingFormattedAmount.split("").map((char, index) => {
-          if (char === "," || char === ".") return char;
+        return loadingFormattedAmount.split('').map((char, index) => {
+          if (char === ',' || char === '.') return char;
           // More aggressive random changes for electric effect
           if (Math.random() > 0.4) {
             return Math.floor(Math.random() * 10).toString();
@@ -133,7 +133,7 @@ const BlurryLoadingNumber: React.FC<{
   className?: string;
 }> = ({ value, isLoading, className }) => {
   const stringValue =
-    typeof value === "number" ? value.toLocaleString() : value;
+    typeof value === 'number' ? value.toLocaleString() : value;
   const [displayValue, setDisplayValue] = React.useState(stringValue);
 
   React.useEffect(() => {
@@ -145,14 +145,14 @@ const BlurryLoadingNumber: React.FC<{
     const interval = setInterval(() => {
       // Generate random numbers that roughly match the original format
       const randomValue = stringValue
-        .split("")
+        .split('')
         .map((char) => {
-          if (char === "," || char === "." || char === "#" || char === "X")
+          if (char === ',' || char === '.' || char === '#' || char === 'X')
             return char;
-          if (char === "—") return "—";
+          if (char === '—') return '—';
           return Math.floor(Math.random() * 10).toString();
         })
-        .join("");
+        .join('');
 
       setDisplayValue(randomValue);
     }, 100); // Update every 100ms for blurry effect
@@ -162,10 +162,10 @@ const BlurryLoadingNumber: React.FC<{
 
   return (
     <span
-      className={`${className || ""} ${isLoading ? styles.blurryLoading : ""}`}
+      className={`${className || ''} ${isLoading ? styles.blurryLoading : ''}`}
       style={{
-        filter: isLoading ? "blur(1px)" : "none",
-        transition: "filter 0.3s ease",
+        filter: isLoading ? 'blur(1px)' : 'none',
+        transition: 'filter 0.3s ease',
       }}
     >
       {displayValue}
@@ -311,14 +311,14 @@ function ClaimAirdrop({
     setClaimError(null); // Clear previous errors when starting new claim
 
     if (!address) {
-      setClaimError("Please connect your wallet");
-      sdk.haptics.notificationOccurred("error");
+      setClaimError('Please connect your wallet');
+      sdk.haptics.notificationOccurred('error');
       return;
     }
 
     if (!authData?.fid) {
-      setClaimError("Authentication required");
-      sdk.haptics.notificationOccurred("error");
+      setClaimError('Authentication required');
+      sdk.haptics.notificationOccurred('error');
       return;
     }
 
@@ -331,28 +331,28 @@ function ClaimAirdrop({
       // Airdrop claim failed
 
       // Handle specific error messages from backend
-      let errorMessage = "Claim failed. Please try again.";
+      let errorMessage = 'Claim failed. Please try again.';
 
-      if (error.message.includes("not enabled")) {
-        errorMessage = "Claiming is not enabled yet. Please check back later.";
-      } else if (error.message.includes("not set")) {
-        errorMessage = "Airdrop is being prepared. Please check back soon.";
-      } else if (error.message.includes("already claimed")) {
-        errorMessage = "You have already claimed your airdrop.";
-      } else if (error.message.includes("not verified")) {
-        errorMessage = "Please verify your wallet address on Farcaster first.";
-      } else if (error.message.includes("not eligible")) {
-        errorMessage = "You are not eligible for this airdrop.";
+      if (error.message.includes('not enabled')) {
+        errorMessage = 'Claiming is not enabled yet. Please check back later.';
+      } else if (error.message.includes('not set')) {
+        errorMessage = 'Airdrop is being prepared. Please check back soon.';
+      } else if (error.message.includes('already claimed')) {
+        errorMessage = 'You have already claimed your airdrop.';
+      } else if (error.message.includes('not verified')) {
+        errorMessage = 'Please verify your wallet address on Farcaster first.';
+      } else if (error.message.includes('not eligible')) {
+        errorMessage = 'You are not eligible for this airdrop.';
       } else if (
-        error.message.includes("revert") ||
-        error.message.includes("Reverted")
+        error.message.includes('revert') ||
+        error.message.includes('Reverted')
       ) {
         // Use the error message directly if it contains revert information
         errorMessage = error.message;
       }
 
       setClaimError(errorMessage);
-      sdk.haptics.notificationOccurred("error");
+      sdk.haptics.notificationOccurred('error');
     }
   };
 
@@ -394,7 +394,7 @@ function ClaimAirdrop({
           deg={270}
           effectInterval={888}
           effectCount={13}
-          colors={["#fff100", "#ff0000", "#0c00ff", "#00ff00"]}
+          colors={['#fff100', '#ff0000', '#0c00ff', '#00ff00']}
         />
         <div className={styles.container}>
           {/* Header */}
@@ -446,12 +446,12 @@ function ClaimAirdrop({
               {hasAuthAirdropData && authAirdropData.tokenAllocation
                 ? Number(authAirdropData.tokenAllocation).toLocaleString()
                 : claimStatus?.data?.eligibility?.amount
-                ? Number(claimStatus.data.eligibility.amount).toLocaleString()
-                : finalAirdropData?.calculation?.tokenAllocation
-                ? Number(
-                    finalAirdropData.calculation.tokenAllocation
-                  ).toLocaleString()
-                : "0"}
+                  ? Number(claimStatus.data.eligibility.amount).toLocaleString()
+                  : finalAirdropData?.calculation?.tokenAllocation
+                    ? Number(
+                      finalAirdropData.calculation.tokenAllocation
+                    ).toLocaleString()
+                    : '0'}
             </Typography>
 
             {/* Token Symbol */}
@@ -485,15 +485,15 @@ function ClaimAirdrop({
                     (hasAuthAirdropData && authAirdropData.tokenAllocation
                       ? Number(authAirdropData.tokenAllocation).toLocaleString()
                       : claimStatus?.data?.eligibility?.amount
-                      ? Number(
+                        ? Number(
                           claimStatus.data.eligibility.amount
                         ).toLocaleString()
-                      : finalAirdropData?.calculation?.tokenAllocation) || "0"
+                        : finalAirdropData?.calculation?.tokenAllocation) || '0'
                   } tokens\n\nClaim yours on this miniapp:`,
-                  embeds: ["https://brnd.land"],
-                  channelKey: "brnd",
+                  embeds: ['https://brnd.land'],
+                  channelKey: 'brnd',
                 });
-                navigate("/");
+                navigate('/');
               }}
               caption="Share"
             />
@@ -518,7 +518,7 @@ function ClaimAirdrop({
             className={styles.backBtn}
           />
           <div className={styles.airdropTitle}>
-            {" "}
+            {' '}
             <AirdropSvg />
           </div>
         </div>
@@ -590,7 +590,7 @@ function ClaimAirdrop({
                       hasAuthAirdropData
                         ? authAirdropData.leaderboardPosition
                         : finalAirdropData?.calculation?.leaderboardPosition ||
-                          "—"
+                          '—'
                     }`}
                     isLoading={isLoadingAmount}
                   />
@@ -611,7 +611,7 @@ function ClaimAirdrop({
           {/* Multipliers */}
           <div
             className={styles.multipliersPill}
-            style={{ display: "flex", alignItems: "center", gap: 4 }}
+            style={{ display: 'flex', alignItems: 'center', gap: 4 }}
           >
             <Typography
               className={styles.multipliersText}
@@ -644,7 +644,7 @@ function ClaimAirdrop({
               weight="condensed"
               variant="druk"
               className={`${styles.claimableAmount} ${
-                isLoadingAmount ? styles.loading : ""
+                isLoadingAmount ? styles.loading : ''
               }`}
             >
               <ElectricDigits
@@ -653,9 +653,9 @@ function ClaimAirdrop({
                   (hasAuthAirdropData && authAirdropData.tokenAllocation
                     ? authAirdropData.tokenAllocation.toString()
                     : claimStatus?.data?.eligibility?.amount
-                    ? claimStatus.data.eligibility.amount
-                    : finalAirdropData?.calculation?.tokenAllocation?.toString()) ||
-                  "0"
+                      ? claimStatus.data.eligibility.amount
+                      : finalAirdropData?.calculation?.tokenAllocation?.toString()) ||
+                  '0'
                 }
                 isLoading={isLoadingAmount}
               />
@@ -689,8 +689,8 @@ function ClaimAirdrop({
                   className={styles.errorText}
                 >
                   {hookTransactionError
-                    ? "This error occurred during the transaction. Please check the console for more details."
-                    : "Please check the console for more details."}
+                    ? 'This error occurred during the transaction. Please check the console for more details.'
+                    : 'Please check the console for more details.'}
                 </Typography>
               )}
             </div>
@@ -710,18 +710,18 @@ function ClaimAirdrop({
             }
             caption={
               hasClaimedFromAuth
-                ? "Already Claimed"
+                ? 'Already Claimed'
                 : isClaimStatusLoading && !hasClaimedFromAuth
-                ? "Loading..."
-                : claimStatus?.success && claimStatus.data.hasClaimed
-                ? "Already Claimed"
-                : claimStatus?.success && !claimStatus.data.canClaim
-                ? claimStatus.data.reason
-                : isClaiming
-                ? "Claiming..."
-                : isConfirming
-                ? "Confirming..."
-                : "Claim your $BRND"
+                  ? 'Loading...'
+                  : claimStatus?.success && claimStatus.data.hasClaimed
+                    ? 'Already Claimed'
+                    : claimStatus?.success && !claimStatus.data.canClaim
+                      ? claimStatus.data.reason
+                      : isClaiming
+                        ? 'Claiming...'
+                        : isConfirming
+                          ? 'Confirming...'
+                          : 'Claim your $BRND'
             }
           />
         </div>

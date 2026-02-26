@@ -1,20 +1,20 @@
 // src/shared/components/UserProfileHeader/index.tsx
 
-import React, { useCallback, useContext } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useCallback, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 // StyleSheet
-import styles from "./UserProfileHeader.module.scss";
+import styles from './UserProfileHeader.module.scss';
 
 // Components
-import Typography from "@/components/Typography";
+import Typography from '@/components/Typography';
 
 // Hooks
-import { useAuth } from "@/hooks/auth";
-import { useContractWagmi } from "@/shared/hooks/contract/useContractWagmi";
-import { usePowerLevel } from "@/shared/contexts/PowerLevelContext";
-import sdk from "@farcaster/miniapp-sdk";
-import { AuthContext } from "@/shared/providers/AppProvider";
+import { useAuth } from '@/hooks/auth';
+import { useContractWagmi } from '@/shared/hooks/contract/useContractWagmi';
+import { usePowerLevel } from '@/shared/contexts/PowerLevelContext';
+import sdk from '@farcaster/miniapp-sdk';
+import { AuthContext } from '@/shared/providers/AppProvider';
 
 interface UserProfileHeaderProps {
   showBackButton?: boolean;
@@ -41,7 +41,7 @@ const UserProfileHeader: React.FC<UserProfileHeaderProps> = ({
 
   // Helper function to format large numbers
   const formatBrndAmount = useCallback((amount: string): string => {
-    if (!amount || amount === "0") return "0";
+    if (!amount || amount === '0') return '0';
 
     const numAmount = parseFloat(amount);
     if (numAmount >= 1000000) {
@@ -76,23 +76,23 @@ const UserProfileHeader: React.FC<UserProfileHeaderProps> = ({
 
   const handleAdmin = useCallback(() => {
     sdk.haptics.selectionChanged();
-    navigate("/admin");
+    navigate('/admin');
   }, [navigate]);
 
   const handleSwap = useCallback(() => {
     sdk.haptics.selectionChanged();
     sdk.actions.swapToken({
-      sellToken: "eip155:8453/erc20:0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      sellToken: 'eip155:8453/erc20:0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
       /**
        * CAIP-19 token ID. For example, OP ETH:
        * eip155:10/native
        */
-      buyToken: "eip155:8453/erc20:0x41Ed0311640A5e489A90940b1c33433501a21B07",
+      buyToken: 'eip155:8453/erc20:0x41Ed0311640A5e489A90940b1c33433501a21B07',
       /**
        * Sell token amount, as numeric string.
        * For example, 1 USDC: 1000000
        */
-      sellAmount: "8",
+      sellAmount: '8',
     });
   }, []);
 
@@ -135,7 +135,7 @@ const UserProfileHeader: React.FC<UserProfileHeaderProps> = ({
             <button
               onClick={() => {
                 sdk.haptics.selectionChanged();
-                navigate("/stake");
+                navigate('/stake');
               }}
               className={styles.stakeButton}
             >

@@ -1,27 +1,27 @@
 // Dependencies
-import { useMemo, useContext } from "react";
-import { useProfile } from "@farcaster/auth-kit";
-import { motion } from "framer-motion";
-import { AuthContext } from "@/shared/providers/AppProvider";
+import { useMemo, useContext } from 'react';
+import { useProfile } from '@farcaster/auth-kit';
+import { motion } from 'framer-motion';
+import { AuthContext } from '@/shared/providers/AppProvider';
 
 // StyleSheet
-import styles from "./LoginPage.module.scss";
+import styles from './LoginPage.module.scss';
 
 // Assets
-import Logo from "@/assets/images/logo.svg";
-import BRNDImage1 from "@/assets/images/brnd-intro-imgs/png-brnd-brand-page.png";
-import BRNDImage2 from "@/assets/images/brnd-intro-imgs/png-brnd-grid.png";
-import BRNDImage3 from "@/assets/images/brnd-intro-imgs/png-brnd-indicators.png";
-import BRNDImage4 from "@/assets/images/brnd-intro-imgs/png-brnd-podium.png";
-import BRNDImage5 from "@/assets/images/brnd-intro-imgs/png-brnd-ui-elements.png";
-import BRNDImage6 from "@/assets/images/brnd-intro-imgs/png-brnd-user-rank.png";
+import Logo from '@/assets/images/logo.svg';
+import BRNDImage1 from '@/assets/images/brnd-intro-imgs/png-brnd-brand-page.png';
+import BRNDImage2 from '@/assets/images/brnd-intro-imgs/png-brnd-grid.png';
+import BRNDImage3 from '@/assets/images/brnd-intro-imgs/png-brnd-indicators.png';
+import BRNDImage4 from '@/assets/images/brnd-intro-imgs/png-brnd-podium.png';
+import BRNDImage5 from '@/assets/images/brnd-intro-imgs/png-brnd-ui-elements.png';
+import BRNDImage6 from '@/assets/images/brnd-intro-imgs/png-brnd-user-rank.png';
 
 // Components
-import Typography from "@/components/Typography";
-import LoaderIndicator from "@/shared/components/LoaderIndicator";
+import Typography from '@/components/Typography';
+import LoaderIndicator from '@/shared/components/LoaderIndicator';
 
 // Hocs
-import withProtectionRoute from "@/hocs/withProtectionRoute";
+import withProtectionRoute from '@/hocs/withProtectionRoute';
 
 const images = [
   BRNDImage1,
@@ -61,7 +61,7 @@ function LoginPage() {
                     transition: {
                       duration: 0.5,
                       delay: i / 20,
-                      type: "spring",
+                      type: 'spring',
                       stiffness: 100,
                     },
                   },
@@ -128,7 +128,7 @@ function LoginPage() {
           >
             <a
               href={`https://farcaster.xyz/~/inbox/create/16098?text=${encodeURIComponent(
-                "hey jp, there is an error with the BRND miniapp"
+                'hey jp, there is an error with the BRND miniapp'
               )}`}
               target="_blank"
               rel="noopener noreferrer"
@@ -165,14 +165,14 @@ function LoginPage() {
         >
           <div className={styles.containerTitle}>
             <div className={styles.header}>
-              <img src={Logo} className={styles.logo} alt={"BRND logotype"} />
+              <img src={Logo} className={styles.logo} alt={'BRND logotype'} />
             </div>
 
             <div className={styles.field}>
               <Typography
-                weight={"light"}
+                weight={'light'}
                 className={styles.title}
-                textAlign={"center"}
+                textAlign={'center'}
               >
                 Discover, build, and sync your Farcaster Landscape
               </Typography>
@@ -188,4 +188,4 @@ function LoginPage() {
   );
 }
 
-export default withProtectionRoute(LoginPage, "only-disconnected");
+export default withProtectionRoute(LoginPage, 'only-disconnected');

@@ -1,4 +1,4 @@
 export {
   isAbortLikeError,
   isSupersededOperationError,
-} from "./useStoriesInMotion.errors";
+} from './useStoriesInMotion.errors';

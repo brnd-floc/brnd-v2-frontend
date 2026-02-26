@@ -1,33 +1,33 @@
-import { useCallback, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import Confetti from "react-confetti";
-import useWindowSize from "react-use/lib/useWindowSize";
+import { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import Confetti from 'react-confetti';
+import useWindowSize from 'react-use/lib/useWindowSize';
 
 // Components
-import Typography from "@/components/Typography";
-import Button from "@/components/Button";
-import LoaderIndicator from "@/shared/components/LoaderIndicator";
+import Typography from '@/components/Typography';
+import Button from '@/components/Button';
+import LoaderIndicator from '@/shared/components/LoaderIndicator';
 
 // Hooks
-import { useAuth } from "@/hooks/auth";
-import { useShareVerification } from "@/hooks/user/useShareVerification";
-import { useContextualTransaction } from "@/shared/hooks/user/useContextualTransaction";
+import { useAuth } from '@/hooks/auth';
+import { useShareVerification } from '@/hooks/user/useShareVerification';
+import { useContextualTransaction } from '@/shared/hooks/user/useContextualTransaction';
 
-import CheersIcon from "@/shared/assets/icons/cheers.svg?react";
-import VoteHashIcon from "@/shared/assets/icons/vote-hash.svg?react";
-import ExternalLinkIconShare from "@/shared/assets/icons/external-link-icon-share.svg?react";
+import CheersIcon from '@/shared/assets/icons/cheers.svg?react';
+import VoteHashIcon from '@/shared/assets/icons/vote-hash.svg?react';
+import ExternalLinkIconShare from '@/shared/assets/icons/external-link-icon-share.svg?react';
 
 // Types
-import { VotingViewProps } from "../../types";
+import { VotingViewProps } from '../../types';
 
 // StyleSheet
-import styles from "./CongratsView.module.scss";
+import styles from './CongratsView.module.scss';
 
 // Assets
-import Logo from "@/assets/images/logo.svg";
-import sdk from "@farcaster/miniapp-sdk";
+import Logo from '@/assets/images/logo.svg';
+import sdk from '@farcaster/miniapp-sdk';
 
-type VerificationState = "verifying" | "success" | "error" | "skipped";
+type VerificationState = 'verifying' | 'success' | 'error' | 'skipped';
 
 interface CongratsViewProps extends Partial<VotingViewProps> {}
 
@@ -41,9 +41,9 @@ export default function CongratsView({
   const { transaction, hasTransaction } = useContextualTransaction();
 
   const [verificationState, setVerificationState] =
-    useState<VerificationState>("verifying");
-  const [errorMessage, setErrorMessage] = useState<string>("");
-  const [countdown, setCountdown] = useState<string>("00:00:00");
+    useState<VerificationState>('verifying');
+  const [errorMessage, setErrorMessage] = useState<string>('');
+  const [countdown, setCountdown] = useState<string>('00:00:00');
 
   // Check if user has claimed rewards today
   const hasClaimed = user?.todaysVoteStatus?.hasClaimed ?? false;
@@ -99,17 +99,17 @@ export default function CongratsView({
     const diff = midnightUTC - now.getTime();
 
     if (diff <= 0) {
-      return "00:00:00";
+      return '00:00:00';
     }
 
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(
       2,
-      "0",
-    )}:${String(seconds).padStart(2, "0")}`;
+      '0',
+    )}:${String(seconds).padStart(2, '0')}`;
   }, []);
 
   // Update countdown every second
@@ -128,12 +128,12 @@ export default function CongratsView({
   // Monitor share verification status
   useEffect(() => {
     if (shareVerification.isSuccess) {
-      setVerificationState("success");
+      setVerificationState('success');
     } else if (shareVerification.isError) {
-      setVerificationState("error");
+      setVerificationState('error');
       setErrorMessage(
         shareVerification.error?.message ||
-          "Verification failed. Please try sharing again.",
+          'Verification failed. Please try sharing again.',
       );
     }
   }, [
@@ -145,7 +145,7 @@ export default function CongratsView({
   // If user has claimed, show claimed state immediately
   useEffect(() => {
     if (hasClaimed) {
-      setVerificationState("success");
+      setVerificationState('success');
     }
   }, [hasClaimed]);
 
@@ -154,7 +154,7 @@ export default function CongratsView({
    */
   const handleClickContinue = useCallback(() => {
     sdk.haptics.selectionChanged();
-    navigate("/");
+    navigate('/');
   }, [navigate]);
 
   /**
@@ -170,21 +170,21 @@ export default function CongratsView({
    * Skip verification and mark as complete
    */
   const handleSkipVerification = useCallback(() => {
-    setVerificationState("skipped");
+    setVerificationState('skipped');
   }, []);
 
   const renderContent = () => {
     switch (verificationState) {
-      case "verifying":
+      case 'verifying':
         return (
           <>
             <div className={styles.successContent}>
               <Typography
-                variant={"druk"}
-                weight={"wide"}
+                variant={'druk'}
+                weight={'wide'}
                 size={24}
                 lineHeight={28}
-                textAlign={"center"}
+                textAlign={'center'}
                 className={styles.title}
               >
                 🎉 Podium created!
@@ -192,11 +192,11 @@ export default function CongratsView({
               <div className={styles.verifyingSection}>
                 <LoaderIndicator size={24} />
                 <Typography
-                  variant={"geist"}
-                  weight={"medium"}
+                  variant={'geist'}
+                  weight={'medium'}
                   size={14}
                   lineHeight={20}
-                  textAlign={"center"}
+                  textAlign={'center'}
                   className={styles.verifyingMessage}
                 >
                   Verifying your share to unlock 10x BRND rewards...
@@ -205,7 +205,7 @@ export default function CongratsView({
             </div>
             <div className={styles.action}>
               <Button
-                variant={"underline"}
+                variant={'underline'}
                 caption="Skip verification"
                 onClick={handleSkipVerification}
               />
@@ -213,21 +213,21 @@ export default function CongratsView({
           </>
         );
 
-      case "success":
+      case 'success':
         return (
           <>
             <div className={styles.successContent}>
               <Typography
-                variant={"druk"}
-                weight={"wide"}
+                variant={'druk'}
+                weight={'wide'}
                 size={24}
                 lineHeight={35}
-                textAlign={"center"}
+                textAlign={'center'}
                 className={styles.title}
               >
                 {hasClaimed
-                  ? "All done for today!"
-                  : "Amazing! 10x BRND claimed!"}
+                  ? 'All done for today!'
+                  : 'Amazing! 10x BRND claimed!'}
               </Typography>
 
               {/* Rewards Modal */}
@@ -235,32 +235,32 @@ export default function CongratsView({
                 <div className={styles.rewardsBlur}></div>
                 <div className={styles.rewardsContent}>
                   <Typography
-                    variant={"druk"}
-                    weight={"wide"}
+                    variant={'druk'}
+                    weight={'wide'}
                     size={18}
                     lineHeight={23}
-                    textAlign={"center"}
+                    textAlign={'center'}
                     className={styles.rewardsTitle}
                   >
                     You got
                   </Typography>
                   <div className={styles.rewardsList}>
                     <Typography
-                      variant={"geist"}
-                      weight={"medium"}
+                      variant={'geist'}
+                      weight={'medium'}
                       size={18}
                       lineHeight={23}
-                      textAlign={"center"}
+                      textAlign={'center'}
                       className={styles.rewardItem}
                     >
                       {leaderboardPoints} Leaderboard points
                     </Typography>
                     <Typography
-                      variant={"geist"}
-                      weight={"medium"}
+                      variant={'geist'}
+                      weight={'medium'}
                       size={18}
                       lineHeight={23}
-                      textAlign={"center"}
+                      textAlign={'center'}
                       className={styles.rewardItem}
                     >
                       {rewardAmount} $BRND
@@ -298,29 +298,29 @@ export default function CongratsView({
                 {/* Show claim transaction if available */}
                 {hasTransaction &&
                   transaction &&
-                  transaction.transactionType === "claim" && (
-                    <div className={styles.transactionChip}>
-                      <div className={styles.transactionHeader}>
-                        <span className={styles.transactionIcon}>
-                          <CheersIcon />
-                        </span>
-                        <span className={styles.transactionText}>
+                  transaction.transactionType === 'claim' && (
+                  <div className={styles.transactionChip}>
+                    <div className={styles.transactionHeader}>
+                      <span className={styles.transactionIcon}>
+                        <CheersIcon />
+                      </span>
+                      <span className={styles.transactionText}>
                           Claim Txn: {transaction.transactionHash?.slice(0, 6)}
                           ...
-                          {transaction.transactionHash?.slice(-4)}
-                        </span>
-                        <a
-                          href={`https://basescan.org/tx/${transaction.transactionHash}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={styles.txLink}
-                          title="View on Base Explorer"
-                        >
-                          <ExternalLinkIconShare />
-                        </a>
-                      </div>
+                        {transaction.transactionHash?.slice(-4)}
+                      </span>
+                      <a
+                        href={`https://basescan.org/tx/${transaction.transactionHash}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={styles.txLink}
+                        title="View on Base Explorer"
+                      >
+                        <ExternalLinkIconShare />
+                      </a>
                     </div>
-                  )}
+                  </div>
+                )}
               </div>
 
               {/* Next Vote Timer */}
@@ -329,7 +329,7 @@ export default function CongratsView({
 
             <div className={styles.action}>
               <Button
-                variant={"primary"}
+                variant={'primary'}
                 caption="Continue"
                 onClick={handleClickContinue}
               />
@@ -337,26 +337,26 @@ export default function CongratsView({
           </>
         );
 
-      case "error":
+      case 'error':
         return (
           <>
             <div className={styles.successContent}>
               <Typography
-                variant={"druk"}
-                weight={"wide"}
+                variant={'druk'}
+                weight={'wide'}
                 size={24}
                 lineHeight={28}
-                textAlign={"center"}
+                textAlign={'center'}
                 className={styles.title}
               >
                 Podium created!
               </Typography>
               <Typography
-                variant={"geist"}
-                weight={"regular"}
+                variant={'geist'}
+                weight={'regular'}
                 size={14}
                 lineHeight={20}
-                textAlign={"center"}
+                textAlign={'center'}
                 className={styles.errorMessage}
               >
                 Share verification failed. You can still claim your 10x rewards
@@ -365,12 +365,12 @@ export default function CongratsView({
             </div>
             <div className={styles.actionGroup}>
               <Button
-                variant={"primary"}
+                variant={'primary'}
                 caption="Try sharing again"
                 onClick={handleRetryShare}
               />
               <Button
-                variant={"underline"}
+                variant={'underline'}
                 caption="Continue anyway"
                 onClick={handleClickContinue}
               />
@@ -378,26 +378,26 @@ export default function CongratsView({
           </>
         );
 
-      case "skipped":
+      case 'skipped':
         return (
           <>
             <div className={styles.successContent}>
               <Typography
-                variant={"druk"}
-                weight={"wide"}
+                variant={'druk'}
+                weight={'wide'}
                 size={24}
                 lineHeight={28}
-                textAlign={"center"}
+                textAlign={'center'}
                 className={styles.title}
               >
                 Podium created!
               </Typography>
               <Typography
-                variant={"geist"}
-                weight={"regular"}
+                variant={'geist'}
+                weight={'regular'}
                 size={14}
                 lineHeight={20}
-                textAlign={"center"}
+                textAlign={'center'}
                 className={styles.subtitle}
               >
                 Share verification was skipped. Share your cast to unlock 10x
@@ -406,12 +406,12 @@ export default function CongratsView({
             </div>
             <div className={styles.actionGroup}>
               <Button
-                variant={"primary"}
+                variant={'primary'}
                 caption="Try sharing"
                 onClick={handleRetryShare}
               />
               <Button
-                variant={"underline"}
+                variant={'underline'}
                 caption="Continue"
                 onClick={handleClickContinue}
               />
@@ -427,7 +427,7 @@ export default function CongratsView({
   return (
     <div className={styles.body}>
       {/* Only show confetti on success */}
-      {verificationState === "success" && (
+      {verificationState === 'success' && (
         <div className={styles.effect}>
           <Confetti width={width} height={height} />
         </div>

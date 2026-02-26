@@ -42,9 +42,9 @@ export type Category = {
   updatedAt: Date;
 };
 
-export type ListBrandTypes = "all" | "new" | "top";
+export type ListBrandTypes = 'all' | 'new' | 'top';
 
-export type BrandStateScoreType = "up" | "equal" | "down";
+export type BrandStateScoreType = 'up' | 'equal' | 'down';
 
 export type BrandCast = {
   creator: string;

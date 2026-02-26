@@ -1,11 +1,11 @@
 // Dependencies
-import React from "react";
+import React from 'react';
 
 // StyleSheet
-import styles from "./Ranks.module.scss";
+import styles from './Ranks.module.scss';
 
 // Components
-import Typography from "@/components/Typography";
+import Typography from '@/components/Typography';
 
 const Ranks: React.FC = () => {
   return (

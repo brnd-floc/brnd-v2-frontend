@@ -1,13 +1,13 @@
 // /src/pages/HomePage/partials/NewBrands/index.tsx
 
 // Components
-import BrandsList from "@/components/BrandsList";
+import BrandsList from '@/components/BrandsList';
 
 // Services
-import { BrandTimePeriod } from "@/services/brands";
+import { BrandTimePeriod } from '@/services/brands';
 
 // StyleSheet
-import styles from "./NewBrands.module.scss";
+import styles from './NewBrands.module.scss';
 
 interface NewBrandsProps {
   period: BrandTimePeriod;
@@ -19,7 +19,7 @@ function NewBrands({ period }: NewBrandsProps) {
       <BrandsList
         isFinderEnabled={false}
         config={{
-          order: "new",
+          order: 'new',
           limit: 9,
           period,
         }}

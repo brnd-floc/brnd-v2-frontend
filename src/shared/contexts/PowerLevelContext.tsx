@@ -1,6 +1,6 @@
 // src/shared/contexts/PowerLevelContext.tsx
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { useAuth } from "@/shared/hooks/auth";
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useAuth } from '@/shared/hooks/auth';
 
 interface PowerLevelContextType {
   currentLevel: number;
@@ -63,7 +63,7 @@ export const PowerLevelProvider: React.FC<PowerLevelProviderProps> = ({
 export const usePowerLevel = (): PowerLevelContextType => {
   const context = useContext(PowerLevelContext);
   if (context === undefined) {
-    throw new Error("usePowerLevel must be used within a PowerLevelProvider");
+    throw new Error('usePowerLevel must be used within a PowerLevelProvider');
   }
   return context;
 };

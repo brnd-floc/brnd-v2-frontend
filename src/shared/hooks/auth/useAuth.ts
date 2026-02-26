@@ -1,7 +1,7 @@
 // Dependencies
-import { useContext } from "react";
+import { useContext } from 'react';
 // Context
-import { AuthContext } from "@/shared/providers/AppProvider";
+import { AuthContext } from '@/shared/providers/AppProvider';
 
 /**
  * Custom hook for authentication state management in Farcaster miniapps.

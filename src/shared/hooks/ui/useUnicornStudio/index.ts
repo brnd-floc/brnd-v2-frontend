@@ -1,5 +1,5 @@
 // hooks/useUnicornStudio.ts
-import { useEffect, useRef } from "react";
+import { useEffect, useRef } from 'react';
 
 declare global {
   interface Window {
@@ -18,9 +18,9 @@ export const useUnicornStudio = (projectId: string) => {
     if (isInitialized.current) return;
 
     // Load Unicorn Studio script
-    const script = document.createElement("script");
+    const script = document.createElement('script');
     script.src =
-      "https://cdn.jsdelivr.net/gh/hiunicornstudio/unicornstudio.js@v1.4.34/dist/unicornStudio.umd.js";
+      'https://cdn.jsdelivr.net/gh/hiunicornstudio/unicornstudio.js@v1.4.34/dist/unicornStudio.umd.js';
     script.async = true;
 
     script.onload = () => {

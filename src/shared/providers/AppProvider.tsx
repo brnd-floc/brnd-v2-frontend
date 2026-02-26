@@ -1,41 +1,41 @@
 // Dependencies
-import { Outlet } from "react-router-dom";
+import { Outlet } from 'react-router-dom';
 import {
   useState,
   useEffect,
   createContext,
   useCallback,
   useMemo,
-} from "react";
+} from 'react';
 
 // Providers
-import { BottomSheetProvider } from "./BottomSheetProvider";
-import { ModalProvider } from "./ModalProvider";
-import { PowerLevelProvider } from "../contexts/PowerLevelContext";
-import { BrandRankingsProvider } from "../contexts/BrandRankingsContext";
+import { BottomSheetProvider } from './BottomSheetProvider';
+import { ModalProvider } from './ModalProvider';
+import { PowerLevelProvider } from '../contexts/PowerLevelContext';
+import { BrandRankingsProvider } from '../contexts/BrandRankingsContext';
 
 // Components
-import NotificationPrompt from "@/shared/components/NotificationPrompt";
+import NotificationPrompt from '@/shared/components/NotificationPrompt';
 
 // Farcaster Miniapp Init
-import sdk from "@farcaster/miniapp-sdk";
-import type { Context } from "@farcaster/miniapp-core";
-import { useQueryClient } from "@tanstack/react-query";
+import sdk from '@farcaster/miniapp-sdk';
+import type { Context } from '@farcaster/miniapp-core';
+import { useQueryClient } from '@tanstack/react-query';
 
 // Services
-import { setFarcasterToken } from "../utils/auth";
-import { getMe } from "@/services/auth";
+import { setFarcasterToken } from '../utils/auth';
+import { getMe } from '@/services/auth';
 
 // Utils
-import { markNotificationsEnabled } from "@/shared/utils/notifications";
+import { markNotificationsEnabled } from '@/shared/utils/notifications';
 
 // Types
 import {
   User,
   TodaysVoteStatus,
   ContextualTransaction,
-} from "@/shared/hooks/user";
-import NotInMiniappPage from "@/pages/NotInMiniappPage";
+} from '@/shared/hooks/user';
+import NotInMiniappPage from '@/pages/NotInMiniappPage';
 
 // Global flag to ensure /me is only called once per session (for initial load)
 let hasCalledGetMe = false;
@@ -96,7 +96,7 @@ export function AppProvider(): JSX.Element {
   // Auth data state - replaces React Query in useAuth
   const [authData, setAuthData] = useState<
     (User & { hasVotedToday: boolean; isNewUser: boolean }) | undefined
-  >(undefined);
+      >(undefined);
   const [isLoadingAuth, setIsLoadingAuth] = useState(false);
   const [authError, setAuthError] = useState<Error | null>(null);
 
@@ -115,9 +115,9 @@ export function AppProvider(): JSX.Element {
           // Handle nested objects
           todaysVoteStatus: updates.todaysVoteStatus
             ? ({
-                ...prev.todaysVoteStatus,
-                ...updates.todaysVoteStatus,
-              } as TodaysVoteStatus)
+              ...prev.todaysVoteStatus,
+              ...updates.todaysVoteStatus,
+            } as TodaysVoteStatus)
             : prev.todaysVoteStatus,
           contextualTransaction:
             updates.contextualTransaction !== undefined
@@ -188,7 +188,7 @@ export function AppProvider(): JSX.Element {
             setAuthError(
               error instanceof Error
                 ? error
-                : new Error("Failed to fetch user data"),
+                : new Error('Failed to fetch user data'),
             );
             // Reset flag on error so user can retry
             hasCalledGetMe = false;
@@ -276,7 +276,7 @@ export function AppProvider(): JSX.Element {
           setAuthError(
             error instanceof Error
               ? error
-              : new Error("Failed to refetch user data"),
+              : new Error('Failed to refetch user data'),
           );
         } finally {
           setIsLoadingAuth(false);
@@ -344,17 +344,17 @@ export function AppProvider(): JSX.Element {
               {showAddMiniappPrompt && userFid && (
                 <div
                   style={{
-                    position: "fixed",
+                    position: 'fixed',
                     top: 0,
                     left: 0,
                     right: 0,
                     bottom: 0,
                     zIndex: 9999,
-                    backgroundColor: "rgba(0, 0, 0, 0.5)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    padding: "16px",
+                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '16px',
                   }}
                 >
                   <NotificationPrompt

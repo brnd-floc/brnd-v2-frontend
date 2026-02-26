@@ -1,8 +1,8 @@
 // Dependencies
-import { useQuery } from "@tanstack/react-query";
+import { useQuery } from '@tanstack/react-query';
 
 // Services
-import { checkClaimStatus, AirdropClaimStatusResponse } from "@/services/airdrop";
+import { checkClaimStatus, AirdropClaimStatusResponse } from '@/services/airdrop';
 
 // Types
 export interface UseAirdropClaimStatusOptions {

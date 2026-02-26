@@ -1,27 +1,27 @@
 // Dependencies
-import { useCallback, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 // Components
-import BrandCard from "@/components/cards/BrandCard";
-import { BrandListItem } from "@/components/BrandListItem";
+import BrandCard from '@/components/cards/BrandCard';
+import { BrandListItem } from '@/components/BrandListItem';
 
 // StyleSheet
-import styles from "./TopRankings.module.scss";
+import styles from './TopRankings.module.scss';
 
 // Hook
-import { Brand, useBrandList } from "@/hooks/brands";
+import { Brand, useBrandList } from '@/hooks/brands';
 
 // Utils
-import { getBrandScoreVariation } from "@/utils/brand";
+import { getBrandScoreVariation } from '@/utils/brand';
 
 // Assets
-import BrandOfTheWeek from "@/assets/images/brand-of-the-week.svg?react";
-import BrandOfTheMonth from "@/assets/images/brand-of-the-month.svg?react";
-import AllTimeBrand from "@/assets/images/all-time-brand.svg?react";
-import BrandOfTheDay from "@/assets/images/brand-of-the-day.svg?react";
+import BrandOfTheWeek from '@/assets/images/brand-of-the-week.svg?react';
+import BrandOfTheMonth from '@/assets/images/brand-of-the-month.svg?react';
+import AllTimeBrand from '@/assets/images/all-time-brand.svg?react';
+import BrandOfTheDay from '@/assets/images/brand-of-the-day.svg?react';
 
-import { BrandTimePeriod } from "@/services/brands";
+import { BrandTimePeriod } from '@/services/brands';
 
 interface TopRankingsProps {
   period: BrandTimePeriod;
@@ -29,7 +29,7 @@ interface TopRankingsProps {
 
 function TopRankings({ period }: TopRankingsProps) {
   const navigate = useNavigate();
-  const { data } = useBrandList("top", "", 1, 50, period);
+  const { data } = useBrandList('top', '', 1, 50, period);
 
   // No need to manually refetch - data is already cached by BrandRankingsProvider
 
@@ -41,13 +41,13 @@ function TopRankings({ period }: TopRankingsProps) {
     return [...data.brands].sort((a, b) => {
       const scoreA = (() => {
         switch (period) {
-          case "day":
+          case 'day':
             return a.scoreDay;
-          case "week":
+          case 'week':
             return a.scoreWeek;
-          case "month":
+          case 'month':
             return a.scoreMonth || a.scoreWeek;
-          case "all":
+          case 'all':
           default:
             return a.score;
         }
@@ -55,13 +55,13 @@ function TopRankings({ period }: TopRankingsProps) {
       
       const scoreB = (() => {
         switch (period) {
-          case "day":
+          case 'day':
             return b.scoreDay;
-          case "week":
+          case 'week':
             return b.scoreWeek;
-          case "month":
+          case 'month':
             return b.scoreMonth || b.scoreWeek;
-          case "all":
+          case 'all':
           default:
             return b.score;
         }
@@ -73,13 +73,13 @@ function TopRankings({ period }: TopRankingsProps) {
 
   const getBannerSvg = useCallback((period: BrandTimePeriod) => {
     switch (period) {
-      case "day":
+      case 'day':
         return <BrandOfTheDay />;
-      case "week":
+      case 'week':
         return <BrandOfTheWeek />;
-      case "month":
+      case 'month':
         return <BrandOfTheMonth />;
-      case "all":
+      case 'all':
         return <AllTimeBrand />;
       default:
         return null;
@@ -98,7 +98,7 @@ function TopRankings({ period }: TopRankingsProps) {
    * Handles the click event on a brand card and navigates to the brand's page.
    */
   const handleClickCard = useCallback(
-    (id: Brand["id"]) => {
+    (id: Brand['id']) => {
       navigate(`/brand/${id}`);
     },
     [navigate]
@@ -113,13 +113,13 @@ function TopRankings({ period }: TopRankingsProps) {
   const getScoreForPeriod = useCallback(
     (brand: Brand): number => {
       switch (period) {
-        case "day":
+        case 'day':
           return brand.scoreDay;
-        case "week":
+        case 'week':
           return brand.scoreWeek;
-        case "month":
+        case 'month':
           return brand.scoreMonth || brand.scoreWeek; // Fallback to week if month not available
-        case "all":
+        case 'all':
         default:
           return brand.score;
       }
@@ -136,13 +136,13 @@ function TopRankings({ period }: TopRankingsProps) {
   const getStateScoreForPeriod = useCallback(
     (brand: Brand): number => {
       switch (period) {
-        case "day":
+        case 'day':
           return brand.stateScoreDay;
-        case "week":
+        case 'week':
           return brand.stateScoreWeek;
-        case "month":
+        case 'month':
           return brand.stateScoreMonth || brand.stateScoreWeek; // Fallback to week if month not available
-        case "all":
+        case 'all':
         default:
           return brand.stateScore;
       }
@@ -158,9 +158,9 @@ function TopRankings({ period }: TopRankingsProps) {
             <div className={styles.image}>{getBannerSvg(period)}</div>
             <div className={styles.brand}>
               <BrandCard
-                size={"l"}
+                size={'l'}
                 selected={true}
-                orientation={"center"}
+                orientation={'center'}
                 className={styles.brandCard}
                 name={mainBrand.name}
                 photoUrl={mainBrand.imageUrl}
@@ -184,7 +184,7 @@ function TopRankings({ period }: TopRankingsProps) {
                 name={brand.name}
                 photoUrl={brand.imageUrl}
                 score={getScoreForPeriod(brand)}
-                variation={"hide"}
+                variation={'hide'}
                 onClick={() => handleClickCard(brand.id)}
               />
             </li>

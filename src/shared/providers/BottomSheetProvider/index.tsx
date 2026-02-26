@@ -1,13 +1,13 @@
 // Dependencies
-import React, { useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useClickAway } from "react-use";
+import React, { useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useClickAway } from 'react-use';
 
 // Hooks
-import useBottomSheet from "@/hooks/ui/useBottomSheet";
+import useBottomSheet from '@/hooks/ui/useBottomSheet';
 
 // StyleSheet
-import styles from "./BottomSheetProvider.module.scss";
+import styles from './BottomSheetProvider.module.scss';
 
 interface BottomSheetProviderProps {
   readonly children: React.ReactElement;

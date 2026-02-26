@@ -1,8 +1,8 @@
 // Dependencies
-import { useReadContract } from "wagmi";
+import { useReadContract } from 'wagmi';
 
 // Config
-import { AIRDROP_CONTRACT_CONFIG, AIRDROP_ABI } from "@/config/contracts";
+import { AIRDROP_CONTRACT_CONFIG, AIRDROP_ABI } from '@/config/contracts';
 
 /**
  * Hook to fetch real-time airdrop statistics from the smart contract
@@ -17,7 +17,7 @@ export function useAirdropStats() {
   } = useReadContract({
     address: AIRDROP_CONTRACT_CONFIG.CONTRACT,
     abi: AIRDROP_ABI,
-    functionName: "getStatus",
+    functionName: 'getStatus',
     chainId: AIRDROP_CONTRACT_CONFIG.CHAIN_ID,
   });
 
@@ -30,7 +30,7 @@ export function useAirdropStats() {
   } = useReadContract({
     address: AIRDROP_CONTRACT_CONFIG.CONTRACT,
     abi: AIRDROP_ABI,
-    functionName: "getClaimStats",
+    functionName: 'getClaimStats',
     chainId: AIRDROP_CONTRACT_CONFIG.CHAIN_ID,
   });
 
@@ -43,7 +43,7 @@ export function useAirdropStats() {
   } = useReadContract({
     address: AIRDROP_CONTRACT_CONFIG.CONTRACT,
     abi: AIRDROP_ABI,
-    functionName: "getAirdropTiming",
+    functionName: 'getAirdropTiming',
     chainId: AIRDROP_CONTRACT_CONFIG.CHAIN_ID,
   });
 
@@ -126,7 +126,7 @@ export function useAirdropStats() {
       // Derived values
       claimRate: totalClaimers > 0 ? (Number(totalClaimers) / 1111) * 100 : 0,
       timeRemainingFormatted: formatTimeRemaining(Number(timeRemaining)),
-      airdropStatus: isActive ? "LIVE" : hasStarted ? "ENDED" : "NOT_STARTED",
+      airdropStatus: isActive ? 'LIVE' : hasStarted ? 'ENDED' : 'NOT_STARTED',
     };
   }
 
@@ -150,7 +150,7 @@ export function useCheckEligibility(
   return useReadContract({
     address: AIRDROP_CONTRACT_CONFIG.CONTRACT,
     abi: AIRDROP_ABI,
-    functionName: "checkEligibility",
+    functionName: 'checkEligibility',
     args: [BigInt(fid), BigInt(baseAmount), proof as `0x${string}`[]],
     chainId: AIRDROP_CONTRACT_CONFIG.CHAIN_ID,
     query: {
@@ -163,7 +163,7 @@ export function useCheckEligibility(
  * Utility function to format time remaining
  */
 function formatTimeRemaining(seconds: number): string {
-  if (seconds <= 0) return "0h 0m";
+  if (seconds <= 0) return '0h 0m';
   
   const days = Math.floor(seconds / 86400);
   const hours = Math.floor((seconds % 86400) / 3600);

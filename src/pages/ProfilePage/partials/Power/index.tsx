@@ -1,26 +1,26 @@
 // Dependencies
-import React, { useState, useEffect } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { useConnect } from "wagmi";
+import React, { useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { useConnect } from 'wagmi';
 
 // StyleSheet
-import styles from "./Power.module.scss";
+import styles from './Power.module.scss';
 
 // Hooks
-import { useStoriesInMotion } from "@/shared/hooks/contract/useStoriesInMotion";
-import { usePowerLevel } from "@/shared/contexts/PowerLevelContext";
+import { useStoriesInMotion } from '@/shared/hooks/contract/useStoriesInMotion';
+import { usePowerLevel } from '@/shared/contexts/PowerLevelContext';
 
 // Components
-import Typography from "@/components/Typography";
-import QuestionMarkIcon from "@/shared/assets/icons/question-mark.svg?react";
-import IncompleteTaskIcon from "@/shared/assets/icons/incomplete-task.svg?react";
-import LoaderIndicator from "@/shared/components/LoaderIndicator";
-import sdk from "@farcaster/miniapp-sdk";
+import Typography from '@/components/Typography';
+import QuestionMarkIcon from '@/shared/assets/icons/question-mark.svg?react';
+import IncompleteTaskIcon from '@/shared/assets/icons/incomplete-task.svg?react';
+import LoaderIndicator from '@/shared/components/LoaderIndicator';
+import sdk from '@farcaster/miniapp-sdk';
 
 // Modal
-import { useModal, ModalsIds } from "@/shared/hooks/ui/useModal";
-import { useAuth } from "@/shared/hooks/auth";
-import { useNavigate } from "react-router-dom";
+import { useModal, ModalsIds } from '@/shared/hooks/ui/useModal';
+import { useAuth } from '@/shared/hooks/auth';
+import { useNavigate } from 'react-router-dom';
 
 interface Level {
   id: number;
@@ -32,7 +32,7 @@ interface Level {
   shareReward: number;
   isCompleted: boolean;
   isActive: boolean;
-  actionType: "follow" | "stake" | "streak" | "podiums" | "collectibles";
+  actionType: 'follow' | 'stake' | 'streak' | 'podiums' | 'collectibles';
   actionValue?: string;
   progress?: { current: number; total: number; maxStreak?: number };
   showButton: boolean;
@@ -70,12 +70,12 @@ const Power: React.FC = () => {
     isConfirming,
     error,
   } = useStoriesInMotion(async (txData) => {
-    console.log("Level up successful!", txData);
+    console.log('Level up successful!', txData);
     const targetLevel = pendingLevelUp;
 
     if (targetLevel !== null) {
       // Optimistically update the shared level context immediately
-      console.log("Optimistically updating shared level to:", targetLevel);
+      console.log('Optimistically updating shared level to:', targetLevel);
       setOptimisticLevel(targetLevel);
       setPendingLevelUp(null);
     }
@@ -83,10 +83,10 @@ const Power: React.FC = () => {
     setIsLevelingUp(false);
 
     // Invalidate auth queries to refresh backend data (including brndPowerLevel)
-    queryClient.invalidateQueries({ queryKey: ["auth"] });
+    queryClient.invalidateQueries({ queryKey: ['auth'] });
 
     // Show success feedback immediately
-    sdk.haptics.notificationOccurred("success");
+    sdk.haptics.notificationOccurred('success');
 
     // Reload levels list to update completion status
     if (userFid) {
@@ -107,22 +107,22 @@ const Power: React.FC = () => {
         info.allLevels?.map((level: any) => {
           const progress = level.progress
             ? {
-                current: level.progress.current,
-                total: level.progress.total,
-                // Extract maxStreak from level progress first, then fallback to top-level progress
-                maxStreak:
+              current: level.progress.current,
+              total: level.progress.total,
+              // Extract maxStreak from level progress first, then fallback to top-level progress
+              maxStreak:
                   level.progress.maxStreak ||
                   info.progress?.maxStreak ||
                   info.progress?.maxDailyStreak ||
                   undefined,
-              }
+            }
             : undefined;
 
           // For streak levels, check completion based on maxStreak if available
           // If maxStreak >= total, the user has completed this mission before
           let isCompleted = level.isCompleted;
           if (
-            level.actionType === "streak" &&
+            level.actionType === 'streak' &&
             progress?.maxStreak !== undefined &&
             progress?.total !== undefined
           ) {
@@ -144,7 +144,7 @@ const Power: React.FC = () => {
             requirement: level.requirement,
             progress,
             showButton:
-              level.actionType === "follow" || level.actionType === "stake",
+              level.actionType === 'follow' || level.actionType === 'stake',
             clickFunction: level.clickFunction,
           };
         }) || [];
@@ -152,22 +152,22 @@ const Power: React.FC = () => {
       // Add Level 0 (BASE POWER) at the beginning - always completed
       const level0: Level = {
         id: 0,
-        title: "BASE POWER",
-        description: "Starting level - all users begin here",
+        title: 'BASE POWER',
+        description: 'Starting level - all users begin here',
         multiplier: 1,
         leaderboardPoints: 0,
         podiumPoints: 0,
         shareReward: 0,
         isCompleted: true, // Always completed for all users
         isActive: false,
-        actionType: "follow", // Not used but required by type
+        actionType: 'follow', // Not used but required by type
         showButton: false,
-        requirement: { type: "base", value: 0, unit: "none" },
+        requirement: { type: 'base', value: 0, unit: 'none' },
       };
 
       setLevels([level0, ...convertedLevels]);
     } catch (error) {
-      console.error("Failed to load levels list:", error);
+      console.error('Failed to load levels list:', error);
     } finally {
       setIsLoading(false);
     }
@@ -177,149 +177,149 @@ const Power: React.FC = () => {
   const getDefaultLevels = (): Level[] => [
     {
       id: 0,
-      title: "BASE POWER",
-      description: "Starting level - all users begin here",
+      title: 'BASE POWER',
+      description: 'Starting level - all users begin here',
       multiplier: 1,
       leaderboardPoints: 0,
       podiumPoints: 0,
       shareReward: 0,
       isCompleted: true, // Always completed for all users
       isActive: false,
-      actionType: "follow", // Not used but required by type
+      actionType: 'follow', // Not used but required by type
       showButton: false,
-      requirement: { type: "base", value: 0, unit: "none" },
+      requirement: { type: 'base', value: 0, unit: 'none' },
     },
     {
       id: 1,
-      title: "FOLLOW @BRND",
+      title: 'FOLLOW @BRND',
       description:
-        "x1.5 rewards → 10 puntos al usuario en Leaderboard / 150 podium points $BRND / Claim por Share podium → 1500 $BRND",
+        'x1.5 rewards → 10 puntos al usuario en Leaderboard / 150 podium points $BRND / Claim por Share podium → 1500 $BRND',
       multiplier: 1.5,
       leaderboardPoints: 10,
       podiumPoints: 150,
       shareReward: 1500,
       isCompleted: false, // Can't check follow status without FID
       isActive: true, // Always active for level 0 users
-      actionType: "follow",
-      actionValue: "@BRND",
+      actionType: 'follow',
+      actionValue: '@BRND',
       clickFunction: () => {
-        console.log("IN HEREEEE");
+        console.log('IN HEREEEE');
         sdk.actions.viewProfile({ fid: 1108951 });
       },
       showButton: true,
-      requirement: { type: "follow", value: 1, unit: "user" },
+      requirement: { type: 'follow', value: 1, unit: 'user' },
     },
     {
       id: 2,
-      title: "STAKE 2M $BRND",
+      title: 'STAKE 2M $BRND',
       description:
-        "x2 rewards → 12 puntos al usuario en Leaderboard / 200 podium points $BRND / Claim por Share podium → 2000 $BRND",
+        'x2 rewards → 12 puntos al usuario en Leaderboard / 200 podium points $BRND / Claim por Share podium → 2000 $BRND',
       multiplier: 2,
       leaderboardPoints: 12,
       podiumPoints: 200,
       shareReward: 2000,
       isCompleted: false,
       isActive: false, // Only level 1 is active for level 0 users
-      actionType: "stake",
-      actionValue: "2000000",
+      actionType: 'stake',
+      actionValue: '2000000',
       showButton: false,
-      requirement: { type: "stake", value: 2000000, unit: "BRND" },
+      requirement: { type: 'stake', value: 2000000, unit: 'BRND' },
     },
     {
       id: 3,
-      title: "Podium streak: 5 days",
+      title: 'Podium streak: 5 days',
       description:
-        "x3 rewards → 18 puntos al usuario en Leaderboard / 300 podium points $BRND / Claim por Share podium → 3000 $BRND",
+        'x3 rewards → 18 puntos al usuario en Leaderboard / 300 podium points $BRND / Claim por Share podium → 3000 $BRND',
       multiplier: 3,
       leaderboardPoints: 18,
       podiumPoints: 300,
       shareReward: 3000,
       isCompleted: false,
       isActive: false,
-      actionType: "streak",
-      actionValue: "5",
+      actionType: 'streak',
+      actionValue: '5',
       showButton: false,
-      requirement: { type: "streak", value: 5, unit: "days" },
+      requirement: { type: 'streak', value: 5, unit: 'days' },
     },
     {
       id: 4,
-      title: "STAKE 4M $BRND",
+      title: 'STAKE 4M $BRND',
       description:
-        "x4 rewards → 24 puntos al usuario en Leaderboard / 400 podium points $BRND / Claim por Share podium → 4000 $BRND",
+        'x4 rewards → 24 puntos al usuario en Leaderboard / 400 podium points $BRND / Claim por Share podium → 4000 $BRND',
       multiplier: 4,
       leaderboardPoints: 24,
       podiumPoints: 400,
       shareReward: 4000,
       isCompleted: false,
       isActive: false,
-      actionType: "stake",
-      actionValue: "4000000",
+      actionType: 'stake',
+      actionValue: '4000000',
       showButton: false,
-      requirement: { type: "stake", value: 4000000, unit: "BRND" },
+      requirement: { type: 'stake', value: 4000000, unit: 'BRND' },
     },
     {
       id: 5,
-      title: "100 podiums completed",
+      title: '100 podiums completed',
       description:
-        "x5 rewards → 30 puntos al usuario en Leaderboard / 500 podium points $BRND / Claim por Share podium → 5000 $BRND",
+        'x5 rewards → 30 puntos al usuario en Leaderboard / 500 podium points $BRND / Claim por Share podium → 5000 $BRND',
       multiplier: 5,
       leaderboardPoints: 30,
       podiumPoints: 500,
       shareReward: 5000,
       isCompleted: false,
       isActive: false,
-      actionType: "podiums",
-      actionValue: "100",
+      actionType: 'podiums',
+      actionValue: '100',
       showButton: false,
-      requirement: { type: "podiums", value: 100, unit: "completed" },
+      requirement: { type: 'podiums', value: 100, unit: 'completed' },
     },
     {
       id: 6,
-      title: "STAKE 6M $BRND",
+      title: 'STAKE 6M $BRND',
       description:
-        "x6 rewards → 36 puntos al usuario en Leaderboard / 600 podium points $BRND / Claim por Share podium → 6000 $BRND",
+        'x6 rewards → 36 puntos al usuario en Leaderboard / 600 podium points $BRND / Claim por Share podium → 6000 $BRND',
       multiplier: 6,
       leaderboardPoints: 36,
       podiumPoints: 600,
       shareReward: 6000,
       isCompleted: false,
       isActive: false,
-      actionType: "stake",
-      actionValue: "6000000",
+      actionType: 'stake',
+      actionValue: '6000000',
       showButton: false,
-      requirement: { type: "stake", value: 6000000, unit: "BRND" },
+      requirement: { type: 'stake', value: 6000000, unit: 'BRND' },
     },
     {
       id: 7,
-      title: "Collect 7 BRND Collectible Casts",
+      title: 'Collect 7 BRND Collectible Casts',
       description:
-        "x7 rewards → 42 puntos al usuario en Leaderboard / 700 podium points $BRND / Claim por Share podium → 7000 $BRND",
+        'x7 rewards → 42 puntos al usuario en Leaderboard / 700 podium points $BRND / Claim por Share podium → 7000 $BRND',
       multiplier: 7,
       leaderboardPoints: 42,
       podiumPoints: 700,
       shareReward: 7000,
       isCompleted: false,
       isActive: false,
-      actionType: "collectibles",
-      actionValue: "7",
+      actionType: 'collectibles',
+      actionValue: '7',
       showButton: false,
-      requirement: { type: "collectibles", value: 7, unit: "casts" },
+      requirement: { type: 'collectibles', value: 7, unit: 'casts' },
     },
     {
       id: 8,
-      title: "STAKE 8M $BRND",
+      title: 'STAKE 8M $BRND',
       description:
-        "x8 rewards → 48 puntos al usuario en Leaderboard / 800 podium points $BRND / Claim por Share podium → 8000 $BRND",
+        'x8 rewards → 48 puntos al usuario en Leaderboard / 800 podium points $BRND / Claim por Share podium → 8000 $BRND',
       multiplier: 8,
       leaderboardPoints: 48,
       podiumPoints: 800,
       shareReward: 8000,
       isCompleted: false,
       isActive: false,
-      actionType: "stake",
-      actionValue: "8000000",
+      actionType: 'stake',
+      actionValue: '8000000',
       showButton: false,
-      requirement: { type: "stake", value: 8000000, unit: "BRND" },
+      requirement: { type: 'stake', value: 8000000, unit: 'BRND' },
     },
   ];
 
@@ -336,7 +336,7 @@ const Power: React.FC = () => {
 
   const handleLevelAction = async (level: Level) => {
     if (!isConnected) {
-      console.log("Wallet not connected");
+      console.log('Wallet not connected');
       return;
     }
     // Use shared context level (includes optimistic updates)
@@ -351,37 +351,37 @@ const Power: React.FC = () => {
     if (
       userCurrentLevel === 0 &&
       level.id === 1 &&
-      level.actionType === "follow"
+      level.actionType === 'follow'
     ) {
       console.log(
-        "the current level is 0 and the level is 1 and the action type is follow"
+        'the current level is 0 and the level is 1 and the action type is follow'
       );
       sdk.actions.viewProfile({ fid: 1108951 });
       if (!userFid) {
         // Need to authorize wallet first to check follow status
-        console.log("Need to authorize wallet to check follow status");
+        console.log('Need to authorize wallet to check follow status');
         return;
       }
     }
 
     if (level.isCompleted) {
-      console.log("the level is completed");
+      console.log('the level is completed');
       // Requirements met, can level up - directly trigger level up
       await handleLevelUp(level.id);
     } else {
       // Requirements not met, perform action
-      if (level.actionType === "follow") {
+      if (level.actionType === 'follow') {
         // Handle follow action - opens profile in miniapp
         if (level.clickFunction) {
-          console.log("the click function is: ", level.clickFunction);
+          console.log('the click function is: ', level.clickFunction);
           level.clickFunction();
         }
-      } else if (level.actionType === "stake") {
+      } else if (level.actionType === 'stake') {
         // Navigate to stake page
-        console.log("Navigate to stake page");
+        console.log('Navigate to stake page');
         // This could open a modal or navigate to /stake
         sdk.haptics.selectionChanged();
-        navigate("/stake");
+        navigate('/stake');
       }
     }
   };
@@ -397,7 +397,7 @@ const Power: React.FC = () => {
       await levelUpBrndPower(targetLevel);
       // Success is handled by the onLevelUpSuccess callback
     } catch (error: any) {
-      console.error("Level up failed:", error);
+      console.error('Level up failed:', error);
       // Error is handled by useStoriesInMotion hook
       setPendingLevelUp(null);
       setIsLevelingUp(false);
@@ -436,8 +436,8 @@ const Power: React.FC = () => {
 
     // Only show action buttons for follow/stake actions when requirements aren't met
     // Don't show "Complete" button for streak/podiums/collectibles - they need to be completed first
-    if (level.actionType === "follow" || level.actionType === "stake") {
-      const buttonText = level.actionType === "follow" ? "Follow" : "Stake";
+    if (level.actionType === 'follow' || level.actionType === 'stake') {
+      const buttonText = level.actionType === 'follow' ? 'Follow' : 'Stake';
 
       return (
         <button
@@ -470,7 +470,7 @@ const Power: React.FC = () => {
             <div
               key={index}
               className={`${styles.streakBar} ${
-                index < filledBars ? styles.streakBarFilled : ""
+                index < filledBars ? styles.streakBarFilled : ''
               }`}
             />
           ))}
@@ -585,7 +585,7 @@ const Power: React.FC = () => {
     if (userFid) {
       // Reload levels list and invalidate auth to refresh brndPowerLevel
       await loadLevelsList();
-      queryClient.invalidateQueries({ queryKey: ["auth"] });
+      queryClient.invalidateQueries({ queryKey: ['auth'] });
     }
   };
 
@@ -638,7 +638,7 @@ const Power: React.FC = () => {
       <div className={styles.header}>
         <div
           className={`${styles.refreshButton} ${
-            isLoading ? styles.refreshing : ""
+            isLoading ? styles.refreshing : ''
           }`}
           onClick={() => {
             if (!isLoading && userFid) handleRefresh();
@@ -777,10 +777,10 @@ const Power: React.FC = () => {
                               </div>
 
                               {level.progress &&
-                                level.actionType === "streak" &&
+                                level.actionType === 'streak' &&
                                 renderStreakBars(level.progress)}
                               {level.progress &&
-                                level.actionType === "podiums" &&
+                                level.actionType === 'podiums' &&
                                 renderPodiumsBars(level.progress)}
                             </div>
 
@@ -813,14 +813,14 @@ const Power: React.FC = () => {
                       {completedLevels.map((level) => {
                         // Determine status text based on level type
                         const getStatusText = () => {
-                          if (level.id === 0) return "Done";
-                          if (level.actionType === "follow") return "Verified";
-                          if (level.actionType === "stake") return "Staked";
-                          if (level.actionType === "streak") return "Completed";
-                          if (level.actionType === "podiums") return "Completed";
-                          if (level.actionType === "collectibles")
-                            return "Collected";
-                          return "Done";
+                          if (level.id === 0) return 'Done';
+                          if (level.actionType === 'follow') return 'Verified';
+                          if (level.actionType === 'stake') return 'Staked';
+                          if (level.actionType === 'streak') return 'Completed';
+                          if (level.actionType === 'podiums') return 'Completed';
+                          if (level.actionType === 'collectibles')
+                            return 'Collected';
+                          return 'Done';
                         };
 
                         return (

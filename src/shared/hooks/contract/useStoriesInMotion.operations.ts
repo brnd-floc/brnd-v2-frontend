@@ -1,23 +1,23 @@
-import { formatUnits } from "viem";
+import { formatUnits } from 'viem';
 import {
   BRND_SEASON_2_CONFIG,
   BRND_SEASON_2_CONFIG_ABI,
   ERC20_ABI,
-} from "@/config/contracts";
-import type { StoriesOperationToken } from "./useStoriesInMotion.async";
-import { getStoriesErrorCause, getStoriesErrorMeta } from "./useStoriesInMotion.errors";
+} from '@/config/contracts';
+import type { StoriesOperationToken } from './useStoriesInMotion.async';
+import { getStoriesErrorCause, getStoriesErrorMeta } from './useStoriesInMotion.errors';
 import {
   asHexAddress,
   ensureVoteAuthData,
   isVoteAuthResponse,
-} from "./useStoriesInMotion.signatures";
-import { validateBrandMutationInput, validateVoteInput } from "./useStoriesInMotion.validation";
+} from './useStoriesInMotion.signatures';
+import { validateBrandMutationInput, validateVoteInput } from './useStoriesInMotion.validation';
 import type {
   BrandMutationInput,
   OnchainOperationFailure,
   StoriesOperation,
   StoriesWriteRunContext,
-} from "./useStoriesInMotion.types";
+} from './useStoriesInMotion.types';
 
 type WriteContractRequest = {
   address: `0x${string}`;
@@ -77,13 +77,13 @@ type RunVoteOperationParams = {
 };
 
 type BrandMutationOperationParams = {
-  operation: "createBrand" | "updateBrand";
+  operation: 'createBrand' | 'updateBrand';
   input: BrandMutationInput;
   setPendingData: () => void;
   clearPendingData: () => void;
   writeRequest: () => Promise<unknown> | void;
   fallbackErrorMessage: string;
-  featureAction: "CreateBrand" | "UpdateBrand";
+  featureAction: 'CreateBrand' | 'UpdateBrand';
   setError: (message: string | null) => void;
   switchToBase: () => Promise<void>;
   ensureConnectedWalletForBrandMutation: () => void;
@@ -115,41 +115,41 @@ export const createOnchainWriteRunner =
     setOperationLast,
     handleOnchainOperationFailure,
   }: CreateOnchainWriteRunnerParams) =>
-  async ({
-    operation,
-    action,
-    fallbackMessage,
-    includeErrorMeta = false,
-    requireAuthorizedUserFid = false,
-    rethrowOnError = false,
-    run,
-  }: OnchainWriteRunParams): Promise<number | null> => {
-    const operationToken = startOperationToken();
-    await prepareOnchainOperation();
+    async ({
+      operation,
+      action,
+      fallbackMessage,
+      includeErrorMeta = false,
+      requireAuthorizedUserFid = false,
+      rethrowOnError = false,
+      run,
+    }: OnchainWriteRunParams): Promise<number | null> => {
+      const operationToken = startOperationToken();
+      await prepareOnchainOperation();
 
-    const currentUserFid = requireAuthorizedUserFid ? getAuthorizedUserFid() : null;
-    if (requireAuthorizedUserFid && currentUserFid === null) {
-      return null;
-    }
-
-    try {
-      setOperationLast(operation);
-      await run({ currentUserFid });
-      return currentUserFid;
-    } catch (error: unknown) {
-      handleOnchainOperationFailure({
-        operationToken,
-        errorValue: error,
-        fallbackMessage,
-        action,
-        includeErrorMeta,
-      });
-      if (rethrowOnError) {
-        throw error;
+      const currentUserFid = requireAuthorizedUserFid ? getAuthorizedUserFid() : null;
+      if (requireAuthorizedUserFid && currentUserFid === null) {
+        return null;
       }
-      return null;
-    }
-  };
+
+      try {
+        setOperationLast(operation);
+        await run({ currentUserFid });
+        return currentUserFid;
+      } catch (error: unknown) {
+        handleOnchainOperationFailure({
+          operationToken,
+          errorValue: error,
+          fallbackMessage,
+          action,
+          includeErrorMeta,
+        });
+        if (rethrowOnError) {
+          throw error;
+        }
+        return null;
+      }
+    };
 
 export const runVoteOperation = async ({
   brandIds,
@@ -176,7 +176,7 @@ export const runVoteOperation = async ({
   const normalizedUserAddress = asHexAddress(userAddress);
   const voteInputError = validateVoteInput({ userAddress: normalizedUserAddress });
   if (voteInputError) {
-    logStoriesError("❌ [Vote] Wallet not connected");
+    logStoriesError('❌ [Vote] Wallet not connected');
     setError(voteInputError);
     return;
   }
@@ -189,15 +189,15 @@ export const runVoteOperation = async ({
         voteCost,
         18
       )} BRND, have ${formatUnits(balance, 18)} BRND`;
-      logStoriesError("❌ [Vote]", errorMessage);
+      logStoriesError('❌ [Vote]', errorMessage);
       throw new Error(errorMessage);
     }
 
-    let authData = "0x";
+    let authData = '0x';
     if (!isWalletAuthorized) {
       if (!userFid) {
-        logStoriesError("❌ [Vote] User not authenticated");
-        throw new Error("User not authenticated");
+        logStoriesError('❌ [Vote] User not authenticated');
+        throw new Error('User not authenticated');
       }
 
       const deadline = Math.floor(Date.now() / 1000) + 3600;
@@ -205,21 +205,21 @@ export const runVoteOperation = async ({
       try {
         const voteAuth = await getVoteAuthorizationSignature(brandIds, deadline);
         if (!isVoteAuthResponse(voteAuth)) {
-          throw new Error("Invalid vote authorization response");
+          throw new Error('Invalid vote authorization response');
         }
         authData = ensureVoteAuthData(voteAuth);
       } catch (authError: unknown) {
         const authErrorMessage =
-          authError instanceof Error ? authError.message : "Unknown authorization error";
-        logStoriesError("❌ [Vote] Authorization request failed:", authError);
-        logStoriesError("❌ [Vote] Auth error details:", {
+          authError instanceof Error ? authError.message : 'Unknown authorization error';
+        logStoriesError('❌ [Vote] Authorization request failed:', authError);
+        logStoriesError('❌ [Vote] Auth error details:', {
           message: authErrorMessage,
           response:
-            typeof authError === "object" && authError !== null && "response" in authError
+            typeof authError === 'object' && authError !== null && 'response' in authError
               ? (authError as { response?: unknown }).response
               : undefined,
           status:
-            typeof authError === "object" && authError !== null && "status" in authError
+            typeof authError === 'object' && authError !== null && 'status' in authError
               ? (authError as { status?: unknown }).status
               : undefined,
         });
@@ -239,7 +239,7 @@ export const runVoteOperation = async ({
       operationToken,
       errorValue: error,
       fallbackMessage: voteFallbackMessage,
-      action: "Vote",
+      action: 'Vote',
       includeErrorMeta: true,
     });
   }
@@ -269,7 +269,7 @@ export const runBrandMutationOperation = async ({
     metadataHash: input.metadataHash,
     fid: input.fid,
     walletAddress: input.walletAddress,
-    requireBrandId: operation === "updateBrand",
+    requireBrandId: operation === 'updateBrand',
   });
   if (brandValidationError) {
     setError(brandValidationError);
@@ -303,8 +303,8 @@ export const runClaimExecutionOperation = async ({
   claimFallbackMessage,
 }: RunClaimExecutionOperationParams): Promise<void> => {
   await runOnchainWriteOperation({
-    operation: "claimReward",
-    action: "ClaimReward",
+    operation: 'claimReward',
+    action: 'ClaimReward',
     fallbackMessage: claimFallbackMessage,
     requireAuthorizedUserFid: true,
     rethrowOnError: true,
@@ -322,7 +322,7 @@ export const runClaimExecutionOperation = async ({
       await writeContract({
         address: BRND_SEASON_2_CONFIG.CONTRACT,
         abi: BRND_SEASON_2_CONFIG_ABI,
-        functionName: "claimReward",
+        functionName: 'claimReward',
         args,
         chainId: BRND_SEASON_2_CONFIG.CHAIN_ID,
       });
@@ -345,11 +345,11 @@ export const buildVoteWriters = ({
     brandIds: [number, number, number],
     authData: string
   ): Promise<void> => {
-    setOperationLast("vote");
+    setOperationLast('vote');
     await writeContract({
       address: BRND_SEASON_2_CONFIG.CONTRACT,
       abi: BRND_SEASON_2_CONFIG_ABI,
-      functionName: "vote",
+      functionName: 'vote',
       args: [brandIds, authData],
       chainId: BRND_SEASON_2_CONFIG.CHAIN_ID,
     });
@@ -361,11 +361,11 @@ export const buildVoteWriters = ({
   ): Promise<void> => {
     setPendingVoteBrandIds(brandIds);
     setPendingVoteAuthData(authData);
-    setOperationLast("approve");
+    setOperationLast('approve');
     await writeContract({
       address: BRND_SEASON_2_CONFIG.BRND_TOKEN,
       abi: ERC20_ABI,
-      functionName: "approve",
+      functionName: 'approve',
       args: [BRND_SEASON_2_CONFIG.CONTRACT, 11111000000000000000000n],
     });
   };

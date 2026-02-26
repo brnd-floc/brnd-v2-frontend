@@ -1,13 +1,13 @@
 // /src/pages/HomePage/partials/AllBrands/index.tsx
 
 // Components
-import BrandsList from "@/components/BrandsList";
+import BrandsList from '@/components/BrandsList';
 
 // Services
-import { BrandTimePeriod } from "@/services/brands";
+import { BrandTimePeriod } from '@/services/brands';
 
 // StyleSheet
-import styles from "./AllBrands.module.scss";
+import styles from './AllBrands.module.scss';
 
 interface AllBrandsProps {
   period: BrandTimePeriod;
@@ -19,7 +19,7 @@ function AllBrands({ period }: AllBrandsProps) {
       <BrandsList
         isFinderEnabled={true}
         config={{
-          order: "all",
+          order: 'all',
           limit: 27,
           period,
         }}

@@ -1,15 +1,15 @@
-import React, { Suspense, lazy, useCallback, useEffect, useMemo, useState } from "react";
+import React, { Suspense, lazy, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Navigate,
   useLocation,
   useParams,
   useNavigate,
-} from "react-router-dom";
+} from 'react-router-dom';
 
-import LoaderIndicator from "../../shared/components/LoaderIndicator";
+import LoaderIndicator from '../../shared/components/LoaderIndicator';
 
 // Types
-import { VotingViewEnum } from "./types";
+import { VotingViewEnum } from './types';
 import {
   buildVoteViewProps,
   buildVotingState,
@@ -21,21 +21,21 @@ import {
   shouldRedirectToVoteHome,
   shouldRefreshAfterClaim,
   shouldRefreshVoteData,
-} from "./viewModel";
+} from './viewModel';
 
 // Hooks
-import { Brand } from "@/hooks/brands";
-import { useAuth } from "@/hooks/auth";
-import { useUserVotes } from "@/hooks/user/useUserVotes";
-import { useQueryClient } from "@tanstack/react-query";
+import { Brand } from '@/hooks/brands';
+import { useAuth } from '@/hooks/auth';
+import { useUserVotes } from '@/hooks/user/useUserVotes';
+import { useQueryClient } from '@tanstack/react-query';
 
 // Hocs
-import withProtectionRoute from "@/hocs/withProtectionRoute";
+import withProtectionRoute from '@/hocs/withProtectionRoute';
 
-const PodiumView = lazy(() => import("./partials/PodiumView"));
-const ShareView = lazy(() => import("./partials/ShareView"));
-const CongratsView = lazy(() => import("./partials/CongratsView"));
-const AlreadySharedView = lazy(() => import("./partials/AlreadySharedView"));
+const PodiumView = lazy(() => import('./partials/PodiumView'));
+const ShareView = lazy(() => import('./partials/ShareView'));
+const CongratsView = lazy(() => import('./partials/CongratsView'));
+const AlreadySharedView = lazy(() => import('./partials/AlreadySharedView'));
 
 function VotePage(): React.ReactNode {
   const { unixDate } = useParams<{ unixDate?: string }>();
@@ -93,7 +93,7 @@ function VotePage(): React.ReactNode {
    * This is used to handle post-vote navigation.
    */
   const hasSuccessParam = useMemo<boolean>(
-    () => new URLSearchParams(search).get("success") === "",
+    () => new URLSearchParams(search).get('success') === '',
     [search]
   );
 
@@ -130,7 +130,7 @@ function VotePage(): React.ReactNode {
       // Invalidate auth query to trigger state refresh
       // The state machine will automatically determine the correct view
       // The castHash will be available from todaysVoteStatus.castHash after backend processes it
-      queryClient.invalidateQueries({ queryKey: ["auth"] });
+      queryClient.invalidateQueries({ queryKey: ['auth'] });
 
       // If we're on a specific date route, ensure we stay on it
       if (unixDate) {
@@ -159,15 +159,15 @@ function VotePage(): React.ReactNode {
 
   const renderedView = useMemo((): React.ReactNode => {
     switch (votingState.type) {
-      case "loading":
+      case 'loading':
         return suspenseFallback;
-      case "not_voted":
+      case 'not_voted':
         return <PodiumView {...viewProps} />;
-      case "voted_not_shared":
+      case 'voted_not_shared':
         return <ShareView {...viewProps} />;
-      case "shared_not_claimed":
+      case 'shared_not_claimed':
         return <AlreadySharedView {...viewProps} />;
-      case "claimed":
+      case 'claimed':
         return <CongratsView {...viewProps} />;
       default:
         return <PodiumView {...viewProps} />;
@@ -200,10 +200,10 @@ function VotePage(): React.ReactNode {
    * This removes the ?success parameter once we've transitioned to the share view
    */
   useEffect(() => {
-    if (hasSuccessParam && votingState.type === "voted_not_shared") {
+    if (hasSuccessParam && votingState.type === 'voted_not_shared') {
       // Clean up URL by removing success parameter
       const newUrl = window.location.pathname;
-      window.history.replaceState({}, "", newUrl);
+      window.history.replaceState({}, '', newUrl);
     }
   }, [hasSuccessParam, votingState.type]);
 
@@ -213,7 +213,7 @@ function VotePage(): React.ReactNode {
    */
   useEffect(() => {
     // If we transition from loading to a real state, mark transition as complete
-    if (votingState.type !== "loading" && isTransitioning) {
+    if (votingState.type !== 'loading' && isTransitioning) {
       setIsTransitioning(false);
     }
 
@@ -271,4 +271,4 @@ function VotePage(): React.ReactNode {
   return <Suspense fallback={suspenseFallback}>{renderedView}</Suspense>;
 }
 
-export default withProtectionRoute(VotePage, "only-connected");
+export default withProtectionRoute(VotePage, 'only-connected');

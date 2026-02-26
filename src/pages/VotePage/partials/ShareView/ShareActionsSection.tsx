@@ -1,6 +1,6 @@
-import Button from "@/components/Button";
+import Button from '@/components/Button';
 
-import styles from "./ShareView.module.scss";
+import styles from './ShareView.module.scss';
 
 interface ShareActionsSectionProps {
   isLoading: boolean;
@@ -11,7 +11,7 @@ export function ShareActionsSection({ isLoading, onSkip }: ShareActionsSectionPr
   return (
     <div className={styles.action}>
       <Button
-        variant={"underline"}
+        variant={'underline'}
         caption="Skip"
         onClick={onSkip}
         disabled={isLoading}

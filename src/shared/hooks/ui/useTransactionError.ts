@@ -1,6 +1,6 @@
-import { useCallback } from "react";
-import { useLocation } from "react-router-dom";
-import { useModal, ModalsIds } from "@/shared/hooks/ui/useModal";
+import { useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
+import { useModal, ModalsIds } from '@/shared/hooks/ui/useModal';
 
 interface ShowTransactionErrorOptions {
   error: Error | string | unknown;
@@ -24,9 +24,9 @@ export const useTransactionError = () => {
         errorMessage = error.message;
         // Include stack trace if available
         if (error.stack) {
-          errorMessage += `\n\nStack: ${error.stack.split("\n").slice(0, 3).join("\n")}`;
+          errorMessage += `\n\nStack: ${error.stack.split('\n').slice(0, 3).join('\n')}`;
         }
-      } else if (typeof error === "string") {
+      } else if (typeof error === 'string') {
         errorMessage = error;
       } else {
         try {

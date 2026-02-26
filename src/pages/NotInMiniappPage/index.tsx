@@ -1,6 +1,6 @@
-import React from "react";
-import BrndLandingPage from "../BrndLandingPage";
-import { I18nProvider } from "@/i18n/I18nProvider";
+import React from 'react';
+import BrndLandingPage from '../BrndLandingPage';
+import { I18nProvider } from '@/i18n/I18nProvider';
 
 /**
  * NotInMiniappPage - Shows BRND landing page when accessed from browser

@@ -1,8 +1,8 @@
 // src/shared/hooks/brands/useOnChainBrand.ts
-import { useState, useCallback, useEffect } from "react";
-import { useBlockchain } from "@/shared/contexts/BlockchainContext";
-import { OnChainBrand } from "./types";
-import { formatUnits } from "viem";
+import { useState, useCallback, useEffect } from 'react';
+import { useBlockchain } from '@/shared/contexts/BlockchainContext';
+import { OnChainBrand } from './types';
+import { formatUnits } from 'viem';
 
 export const useOnChainBrand = (brandId: number) => {
   const [brandData, setBrandData] = useState<OnChainBrand | null>(null);
@@ -23,7 +23,7 @@ export const useOnChainBrand = (brandId: number) => {
       const rawBrandData = await getBrand(brandId);
       
       if (!rawBrandData) {
-        throw new Error("Brand not found");
+        throw new Error('Brand not found');
       }
 
       // Parse the contract response to OnChainBrand format
@@ -39,8 +39,8 @@ export const useOnChainBrand = (brandId: number) => {
 
       setBrandData(parsedBrand);
     } catch (err: any) {
-      console.error("Failed to fetch on-chain brand data:", err);
-      setError(err.message || "Failed to fetch brand data");
+      console.error('Failed to fetch on-chain brand data:', err);
+      setError(err.message || 'Failed to fetch brand data');
     } finally {
       setIsLoading(false);
     }

@@ -1,26 +1,26 @@
 // src/shared/components/BrandHeader/index.tsx
 
-import React, { useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import classNames from "clsx";
+import React, { useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import classNames from 'clsx';
 
 // StyleSheet
-import styles from "./BrandHeader.module.scss";
+import styles from './BrandHeader.module.scss';
 
 // Components
-import Typography from "@/components/Typography";
-import IconButton from "@/components/IconButton";
-import BrandsList from "@/components/BrandsList";
+import Typography from '@/components/Typography';
+import IconButton from '@/components/IconButton';
+import BrandsList from '@/components/BrandsList';
 
 // Assets
-import Logo from "@/assets/images/logo.svg";
-import BPointIcon from "@/assets/icons/point-b.svg?react";
-import GoBackIcon from "@/assets/icons/go-back-icon.svg?react";
+import Logo from '@/assets/images/logo.svg';
+import BPointIcon from '@/assets/icons/point-b.svg?react';
+import GoBackIcon from '@/assets/icons/go-back-icon.svg?react';
 
 // Hooks
-import { useAuth } from "@/hooks/auth";
-import useBottomSheet from "@/hooks/ui/useBottomSheet";
-import sdk from "@farcaster/miniapp-sdk";
+import { useAuth } from '@/hooks/auth';
+import useBottomSheet from '@/hooks/ui/useBottomSheet';
+import sdk from '@farcaster/miniapp-sdk';
 
 interface BrandHeaderProps {
   className?: string;
@@ -34,7 +34,7 @@ interface BrandHeaderProps {
 const BrandHeader: React.FC<BrandHeaderProps> = ({
   className,
   showBackButton = true,
-  backButtonPath = "/",
+  backButtonPath = '/',
   showUserProfile = true,
   showUserPoints = true,
   onBackClick,
@@ -45,7 +45,7 @@ const BrandHeader: React.FC<BrandHeaderProps> = ({
 
   const handleClickProfile = useCallback(() => {
     sdk.haptics.selectionChanged();
-    navigate("/profile");
+    navigate('/profile');
   }, [navigate]);
 
   const handleBackClick = useCallback(() => {
@@ -66,7 +66,7 @@ const BrandHeader: React.FC<BrandHeaderProps> = ({
           isFinderEnabled={true}
           config={{
             limit: 50,
-            order: "all",
+            order: 'all',
           }}
           onSelect={(brand) => {
             sdk.haptics.selectionChanged();

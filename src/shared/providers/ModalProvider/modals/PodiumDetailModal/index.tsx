@@ -1,25 +1,25 @@
-import React, { useState, useEffect, useRef } from "react";
-import classNames from "clsx";
-import { motion } from "framer-motion";
-import sdk from "@farcaster/miniapp-sdk";
-import { BaseModalProps } from "../../types";
-import Typography from "@/shared/components/Typography";
-import Podium1Icon from "@/shared/assets/icons/podium-1.svg?react";
-import Podium2Icon from "@/shared/assets/icons/podium-2.svg?react";
-import Podium3Icon from "@/shared/assets/icons/podium-3.svg?react";
-import BRNDPodiumIcon from "@/shared/assets/icons/brnd-podium.svg?react";
-import { usePodiumCollectibles } from "@/shared/hooks/contract/usePodiumCollectibles";
+import React, { useState, useEffect, useRef } from 'react';
+import classNames from 'clsx';
+import { motion } from 'framer-motion';
+import sdk from '@farcaster/miniapp-sdk';
+import { BaseModalProps } from '../../types';
+import Typography from '@/shared/components/Typography';
+import Podium1Icon from '@/shared/assets/icons/podium-1.svg?react';
+import Podium2Icon from '@/shared/assets/icons/podium-2.svg?react';
+import Podium3Icon from '@/shared/assets/icons/podium-3.svg?react';
+import BRNDPodiumIcon from '@/shared/assets/icons/brnd-podium.svg?react';
+import { usePodiumCollectibles } from '@/shared/hooks/contract/usePodiumCollectibles';
 import {
   ActivityEvent,
   PodiumDetailModalData,
-} from "@/shared/types/collectibles";
-import { request } from "@/services/api";
-import { BLOCKCHAIN_SERVICE } from "@/config/api";
-import styles from "./PodiumDetailModal.module.scss";
-import { useAuth } from "@/shared/hooks/auth";
+} from '@/shared/types/collectibles';
+import { request } from '@/services/api';
+import { BLOCKCHAIN_SERVICE } from '@/config/api';
+import styles from './PodiumDetailModal.module.scss';
+import { useAuth } from '@/shared/hooks/auth';
 
 const formatPrice = (priceStr: string | null): string => {
-  if (!priceStr) return "1M";
+  if (!priceStr) return '1M';
   const priceInBrnd = Number(priceStr) / 1e18;
   if (priceInBrnd >= 1000000) {
     const millions = priceInBrnd / 1000000;
@@ -41,7 +41,7 @@ export const PodiumDetailModal: React.FC<
   collectibleData,
   isLastVoteForCombination = false,
 }) => {
-  const [activeTab, setActiveTab] = useState<"traits" | "activity">("traits");
+  const [activeTab, setActiveTab] = useState<'traits' | 'activity'>('traits');
   const [indicatorWidth, setIndicatorWidth] = useState<number>(0);
   const [indicatorOffset, setIndicatorOffset] = useState<number>(0);
   const [activityHistory, setActivityHistory] = useState<ActivityEvent[]>([]);
@@ -62,20 +62,20 @@ export const PodiumDetailModal: React.FC<
     error: txError,
   } = usePodiumCollectibles(
     (txData) => {
-      console.log("🎉 Podium claimed!", txData);
-      sdk.haptics.notificationOccurred("success");
+      console.log('🎉 Podium claimed!', txData);
+      sdk.haptics.notificationOccurred('success');
       handleClose?.();
     },
     (txData) => {
-      console.log("🎉 Podium bought!", txData);
-      sdk.haptics.notificationOccurred("success");
+      console.log('🎉 Podium bought!', txData);
+      sdk.haptics.notificationOccurred('success');
       handleClose?.();
     }
   );
 
   const isMinted = collectibleData.isCollectible;
   const tokenId = collectibleData.tokenId;
-  const currentPrice = collectibleData.price || "1000000000000000000000000";
+  const currentPrice = collectibleData.price || '1000000000000000000000000';
   const creator = collectibleData.genesisCreatorUsername;
   const owner = collectibleData.ownerUsername;
   const ownerFid = collectibleData.ownerFid;
@@ -98,7 +98,7 @@ export const PodiumDetailModal: React.FC<
   // Fetch activity when tab changes to activity
   useEffect(() => {
     if (
-      activeTab === "activity" &&
+      activeTab === 'activity' &&
       isMinted &&
       tokenId &&
       activityHistory.length === 0
@@ -107,14 +107,14 @@ export const PodiumDetailModal: React.FC<
       request<{ activities: ActivityEvent[]; podiumInfo: unknown }>(
         `${BLOCKCHAIN_SERVICE}/collectible-activity/${tokenId}`,
         {
-          method: "GET",
+          method: 'GET',
         }
       )
         .then((data) => {
           setActivityHistory(data?.activities || []);
         })
         .catch((err) => {
-          console.error("Failed to fetch activity:", err);
+          console.error('Failed to fetch activity:', err);
         })
         .finally(() => {
           setLoadingActivity(false);
@@ -125,25 +125,25 @@ export const PodiumDetailModal: React.FC<
   useEffect(() => {
     const updateIndicator = () => {
       const activeTabRef =
-        activeTab === "traits" ? traitsTabRef : activityTabRef;
+        activeTab === 'traits' ? traitsTabRef : activityTabRef;
       if (activeTabRef.current) {
         setIndicatorWidth(activeTabRef.current.clientWidth);
         setIndicatorOffset(activeTabRef.current.offsetLeft);
       }
     };
     updateIndicator();
-    window.addEventListener("resize", updateIndicator);
-    return () => window.removeEventListener("resize", updateIndicator);
+    window.addEventListener('resize', updateIndicator);
+    return () => window.removeEventListener('resize', updateIndicator);
   }, [activeTab]);
 
-  const handleTabClick = (tab: "traits" | "activity") => {
+  const handleTabClick = (tab: 'traits' | 'activity') => {
     sdk.haptics.selectionChanged();
     setActiveTab(tab);
   };
 
   const handleBuyOrMint = async () => {
     if (isOwned || isNotMintable) return;
-    sdk.haptics.impactOccurred("medium");
+    sdk.haptics.impactOccurred('medium');
     if (canBuy && tokenId) {
       await buyPodium(tokenId);
     } else if (canMint) {
@@ -161,18 +161,18 @@ export const PodiumDetailModal: React.FC<
   const isButtonDisabled = isPending || isOwned || isNotMintable;
 
   const getButtonText = (): string => {
-    if (canMint) return "Mint Now";
-    if (isOwned) return "Owned";
-    if (isNotMintable) return "Not Mintable";
-    if (canBuy) return "Buy Now";
-    return "Mint Now";
+    if (canMint) return 'Mint Now';
+    if (isOwned) return 'Owned';
+    if (isNotMintable) return 'Not Mintable';
+    if (canBuy) return 'Buy Now';
+    return 'Mint Now';
   };
 
   const getLoadingText = (): string => {
-    if (isApproving) return "Approving...";
-    if (isConfirming) return "Confirming...";
-    if (isClaimingPodium) return "Minting...";
-    if (isBuyingPodium) return "Buying...";
+    if (isApproving) return 'Approving...';
+    if (isConfirming) return 'Confirming...';
+    if (isClaimingPodium) return 'Minting...';
+    if (isBuyingPodium) return 'Buying...';
     return getButtonText();
   };
 
@@ -204,16 +204,16 @@ export const PodiumDetailModal: React.FC<
 
   const formatEventType = (type: string): string => {
     const labels: Record<string, string> = {
-      mint: "Mint",
-      sale: "Sale",
-      transfer: "Transfer",
+      mint: 'Mint',
+      sale: 'Sale',
+      transfer: 'Transfer',
     };
     return labels[type] || type;
   };
 
   const getFromDisplay = (event: ActivityEvent): string => {
-    if (event.eventType === "mint") {
-      return "NullAddress";
+    if (event.eventType === 'mint') {
+      return 'NullAddress';
     }
     if (event.fromUser?.username) {
       return `@${event.fromUser.username}`;
@@ -222,7 +222,7 @@ export const PodiumDetailModal: React.FC<
   };
 
   const truncateAddress = (address: string): string => {
-    if (!address || address.length < 10) return address || "—";
+    if (!address || address.length < 10) return address || '—';
     return `${address.slice(0, 4)}..${address.slice(-4)}`;
   };
 
@@ -273,7 +273,7 @@ export const PodiumDetailModal: React.FC<
               size={14}
               className={styles.podiumLabel}
             >
-              {brand2?.name ?? "—"}
+              {brand2?.name ?? '—'}
             </Typography>
           </div>
           <div className={classNames(styles.podiumItem, styles.firstPlace)}>
@@ -295,7 +295,7 @@ export const PodiumDetailModal: React.FC<
               size={14}
               className={styles.podiumLabel}
             >
-              {brand1?.name ?? "—"}
+              {brand1?.name ?? '—'}
             </Typography>
           </div>
           <div className={classNames(styles.podiumItem, styles.thirdPlace)}>
@@ -317,7 +317,7 @@ export const PodiumDetailModal: React.FC<
               size={14}
               className={styles.podiumLabel}
             >
-              {brand3?.name ?? "—"}
+              {brand3?.name ?? '—'}
             </Typography>
           </div>
         </div>
@@ -384,7 +384,7 @@ export const PodiumDetailModal: React.FC<
               lineHeight={15}
               className={styles.metaValue}
             >
-              {isMinted && owner ? `@${owner}` : "—"}
+              {isMinted && owner ? `@${owner}` : '—'}
             </Typography>
           </div>
           <div className={styles.metaColumnTwo}>
@@ -404,7 +404,7 @@ export const PodiumDetailModal: React.FC<
               lineHeight={15}
               className={styles.metaValueTwo}
             >
-              {isMinted && tokenId ? `#${tokenId}` : "Not Minted"}
+              {isMinted && tokenId ? `#${tokenId}` : 'Not Minted'}
             </Typography>
           </div>
         </div>
@@ -426,9 +426,9 @@ export const PodiumDetailModal: React.FC<
               ref={traitsTabRef}
               className={classNames(
                 styles.tab,
-                activeTab === "traits" && styles.active
+                activeTab === 'traits' && styles.active
               )}
-              onClick={() => handleTabClick("traits")}
+              onClick={() => handleTabClick('traits')}
             >
               <Typography
                 variant="druk"
@@ -443,9 +443,9 @@ export const PodiumDetailModal: React.FC<
               ref={activityTabRef}
               className={classNames(
                 styles.tab,
-                activeTab === "activity" && styles.active
+                activeTab === 'activity' && styles.active
               )}
-              onClick={() => handleTabClick("activity")}
+              onClick={() => handleTabClick('activity')}
             >
               <Typography
                 variant="druk"
@@ -460,13 +460,13 @@ export const PodiumDetailModal: React.FC<
               className={styles.tabIndicator}
               initial={{ x: indicatorOffset, width: indicatorWidth }}
               animate={{ x: indicatorOffset, width: indicatorWidth }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
             />
           </div>
 
           {/* Tab Content */}
           <div className={styles.tabContent}>
-            {activeTab === "traits" ? (
+            {activeTab === 'traits' ? (
               <div className={styles.traitsContent}>
                 <div className={styles.traitsHeader}>
                   <div className={styles.inputField}>
@@ -486,7 +486,7 @@ export const PodiumDetailModal: React.FC<
                         size={12}
                         lineHeight={15}
                       >
-                        {isMinted && creator ? `@${creator}` : "—"}
+                        {isMinted && creator ? `@${creator}` : '—'}
                       </Typography>
                     </div>
                   </div>
@@ -531,7 +531,7 @@ export const PodiumDetailModal: React.FC<
                         size={12}
                         lineHeight={15}
                       >
-                        {brand1?.name ?? "—"}
+                        {brand1?.name ?? '—'}
                       </Typography>
                     </div>
                   </div>
@@ -552,7 +552,7 @@ export const PodiumDetailModal: React.FC<
                         size={12}
                         lineHeight={15}
                       >
-                        {brand2?.name ?? "—"}
+                        {brand2?.name ?? '—'}
                       </Typography>
                     </div>
                   </div>
@@ -573,7 +573,7 @@ export const PodiumDetailModal: React.FC<
                         size={12}
                         lineHeight={15}
                       >
-                        {brand3?.name ?? "—"}
+                        {brand3?.name ?? '—'}
                       </Typography>
                     </div>
                   </div>
@@ -639,7 +639,7 @@ export const PodiumDetailModal: React.FC<
                                 size={14}
                                 lineHeight={18}
                               >
-                                {event.price ? formatPrice(event.price) : "—"}
+                                {event.price ? formatPrice(event.price) : '—'}
                               </Typography>
                               {event.price && (
                                 <Typography
@@ -692,7 +692,7 @@ export const PodiumDetailModal: React.FC<
                             lineHeight={18}
                             className={styles.fromCell}
                           >
-                            {creator ? `@${creator}` : "NullAddress"}
+                            {creator ? `@${creator}` : 'NullAddress'}
                           </Typography>
                         </div>
                       ) : (
@@ -740,7 +740,7 @@ export const PodiumDetailModal: React.FC<
                 lineHeight={16}
                 className={styles.buyLabel}
               >
-                {canBuy ? "BUY FOR" : "MINT FOR"}
+                {canBuy ? 'BUY FOR' : 'MINT FOR'}
               </Typography>
               <Typography
                 variant="druk"

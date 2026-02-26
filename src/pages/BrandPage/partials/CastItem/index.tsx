@@ -1,20 +1,20 @@
 // Dependencies
-import React, { useCallback, useMemo } from "react";
-import classNames from "clsx";
+import React, { useCallback, useMemo } from 'react';
+import classNames from 'clsx';
 
 // StyleSheet
-import styles from "./CastItem.module.scss";
+import styles from './CastItem.module.scss';
 
 // Components
-import Typography from "@/components/Typography";
+import Typography from '@/components/Typography';
 
 // Assets
-import CastImage from "@/assets/images/cast-image.png";
-import ExternalLinkIcon from "@/assets/icons/external-link-icon.svg?react";
+import CastImage from '@/assets/images/cast-image.png';
+import ExternalLinkIcon from '@/assets/icons/external-link-icon.svg?react';
 
 // Utils
-import IconButton from "../../../../shared/components/IconButton";
-import sdk from "@farcaster/miniapp-sdk";
+import IconButton from '../../../../shared/components/IconButton';
+import sdk from '@farcaster/miniapp-sdk';
 
 interface CastItemProps {
   user: {
@@ -24,7 +24,7 @@ interface CastItemProps {
   url: string;
   message: string;
   attach?: {
-    type: "image" | "video";
+    type: 'image' | 'video';
     src: string;
   };
   className?: string;
@@ -43,8 +43,8 @@ const CastItem: React.FC<CastItemProps> = ({
     if (!attach) return null;
 
     switch (attach.type) {
-      case "video":
-      case "image":
+      case 'video':
+      case 'image':
       default:
         return (
           <img
@@ -78,18 +78,18 @@ const CastItem: React.FC<CastItemProps> = ({
           className={styles.avatar}
         />
         <Typography
-          as={"h2"}
-          variant={"geist"}
-          weight={"bold"}
+          as={'h2'}
+          variant={'geist'}
+          weight={'bold'}
           size={14}
           lineHeight={18}
           className={styles.title}
         >
           <span>{user.username}</span>
-          <img src={CastImage} alt={"brand verified"} width={12} height={12} />
+          <img src={CastImage} alt={'brand verified'} width={12} height={12} />
         </Typography>
         <IconButton
-          variant={"solid"}
+          variant={'solid'}
           className={styles.external}
           icon={<ExternalLinkIcon />}
           onClick={handleClickOpenCast}
@@ -97,9 +97,9 @@ const CastItem: React.FC<CastItemProps> = ({
       </div>
       <div className={styles.body}>
         <Typography
-          as={"p"}
-          variant={"geist"}
-          weight={"regular"}
+          as={'p'}
+          variant={'geist'}
+          weight={'regular'}
           size={14}
           lineHeight={18}
         >

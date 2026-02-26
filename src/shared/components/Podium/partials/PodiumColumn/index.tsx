@@ -1,23 +1,23 @@
 // Dependencies
-import classNames from "clsx";
+import classNames from 'clsx';
 
 // StyleSheet
-import styles from "./PodiumColumn.module.scss";
+import styles from './PodiumColumn.module.scss';
 
 // Components
-import Typography from "@/components/Typography";
+import Typography from '@/components/Typography';
 
 // Assets
-import Podium1Icon from "@/shared/assets/icons/podium-1.svg?react";
-import Podium2Icon from "@/shared/assets/icons/podium-2.svg?react";
-import Podium3Icon from "@/shared/assets/icons/podium-3.svg?react";
-import BRNDIcon from "@/shared/assets/icons/brnd-podium-icon.svg?react";
+import Podium1Icon from '@/shared/assets/icons/podium-1.svg?react';
+import Podium2Icon from '@/shared/assets/icons/podium-2.svg?react';
+import Podium3Icon from '@/shared/assets/icons/podium-3.svg?react';
+import BRNDIcon from '@/shared/assets/icons/brnd-podium-icon.svg?react';
 
 // Hooks
-import { Brand } from "@/hooks/brands";
+import { Brand } from '@/hooks/brands';
 
 interface PodiumColumnProps {
-  variant: "primary" | "secondary";
+  variant: 'primary' | 'secondary';
   position: number;
   selected?: Brand;
   onClick?: () => void;
@@ -53,11 +53,11 @@ export default function PodiumColumn({
               <img src={selected.imageUrl} alt={selected.name} />
             </div>
             <Typography
-              variant={"geist"}
-              textAlign={"center"}
+              variant={'geist'}
+              textAlign={'center'}
               className={styles.name}
               size={14}
-              weight={"bold"}
+              weight={'bold'}
             >
               {selected.name}
             </Typography>
@@ -68,11 +68,11 @@ export default function PodiumColumn({
               <img src={selected.imageUrl} alt={selected.name} />
             </div>
             <Typography
-              variant={"geist"}
-              textAlign={"center"}
+              variant={'geist'}
+              textAlign={'center'}
               className={styles.name}
               size={14}
-              weight={"bold"}
+              weight={'bold'}
             >
               {selected.name}
             </Typography>

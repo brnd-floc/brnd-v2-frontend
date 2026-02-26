@@ -1,11 +1,11 @@
 // Dependencies
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 
 // Services
-import { getUserLeaderboard, LeaderboardApiResponse } from "@/services/user";
+import { getUserLeaderboard, LeaderboardApiResponse } from '@/services/user';
 
 // Types
-export type LeaderboardSeason = "all" | "s1" | "s2";
+export type LeaderboardSeason = 'all' | 's1' | 's2';
 
 /**
  * Hook for fetching user leaderboard with pagination and current user position.
@@ -18,10 +18,10 @@ export type LeaderboardSeason = "all" | "s1" | "s2";
 export const useUserLeaderboard = (
   page: number = 1,
   limit: number = 50,
-  season: LeaderboardSeason = "all"
+  season: LeaderboardSeason = 'all'
 ) => {
   return useQuery({
-    queryKey: ["leaderboard", page, limit, season],
+    queryKey: ['leaderboard', page, limit, season],
     queryFn: () => getUserLeaderboard(page, limit, season),
     staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes (backend caches for 15)
     placeholderData: keepPreviousData, // Keep previous data while loading new page

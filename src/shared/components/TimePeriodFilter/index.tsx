@@ -1,10 +1,10 @@
 // /src/components/TimePeriodFilter/index.tsx
 
-import React from "react";
-import classNames from "clsx";
-import styles from "./TimePeriodFilter.module.scss";
+import React from 'react';
+import classNames from 'clsx';
+import styles from './TimePeriodFilter.module.scss';
 
-export type BrandTimePeriod = "day" | "week" | "month" | "all";
+export type BrandTimePeriod = 'day' | 'week' | 'month' | 'all';
 
 interface TimePeriodFilterProps {
   selectedPeriod: BrandTimePeriod;
@@ -13,10 +13,10 @@ interface TimePeriodFilterProps {
 }
 
 const periodLabels: Record<BrandTimePeriod, string> = {
-  day: "today",
-  week: "this week",
-  month: "this month",
-  all: "all time",
+  day: 'today',
+  week: 'this week',
+  month: 'this month',
+  all: 'all time',
 };
 
 function TimePeriodFilter({
@@ -24,7 +24,7 @@ function TimePeriodFilter({
   onPeriodChange,
   className,
 }: TimePeriodFilterProps): React.ReactNode {
-  const periods: BrandTimePeriod[] = ["day", "week", "month", "all"];
+  const periods: BrandTimePeriod[] = ['day', 'week', 'month', 'all'];
 
   return (
     <div className={classNames(styles.container, className)}>

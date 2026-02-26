@@ -1,24 +1,24 @@
-import { Brand } from "@/hooks/brands";
-import { VotingViewEnum } from "./types";
+import { Brand } from '@/hooks/brands';
+import { VotingViewEnum } from './types';
 
 export type VotingState =
-  | { type: "loading" }
-  | { type: "not_voted" }
+  | { type: 'loading' }
+  | { type: 'not_voted' }
   | {
-      type: "voted_not_shared";
+      type: 'voted_not_shared';
       voteId: string;
       voteTransactionHash: string | null;
       brands: Brand[];
     }
   | {
-      type: "shared_not_claimed";
+      type: 'shared_not_claimed';
       voteId: string;
       voteTransactionHash: string | null;
       castHash: string | null;
       brands: Brand[];
     }
   | {
-      type: "claimed";
+      type: 'claimed';
       voteId: string;
       voteTransactionHash: string | null;
       castHash: string | null;
@@ -94,7 +94,7 @@ export const shouldRefreshVoteData = ({
   hasVoteStatus,
   hasBrandData,
 }: {
-  votingStateType: VotingState["type"];
+  votingStateType: VotingState['type'];
   isTransitioning: boolean;
   hasVoteStatus: boolean;
   hasBrandData: boolean;
@@ -103,7 +103,7 @@ export const shouldRefreshVoteData = ({
     return false;
   }
 
-  if (votingStateType === "loading" || votingStateType === "not_voted") {
+  if (votingStateType === 'loading' || votingStateType === 'not_voted') {
     return false;
   }
 
@@ -115,11 +115,11 @@ export const shouldRefreshAfterClaim = ({
   hasClaimed,
   isTransitioning,
 }: {
-  votingStateType: VotingState["type"];
+  votingStateType: VotingState['type'];
   hasClaimed: boolean;
   isTransitioning: boolean;
 }) =>
-  votingStateType === "shared_not_claimed" && hasClaimed && !isTransitioning;
+  votingStateType === 'shared_not_claimed' && hasClaimed && !isTransitioning;
 
 export const shouldRedirectToVoteHome = ({
   isLoading,
@@ -183,7 +183,7 @@ export const buildVotingState = ({
   fallbackLoading,
 }: BuildVotingStateParams): VotingState => {
   if (!user) {
-    return { type: "loading" };
+    return { type: 'loading' };
   }
 
   const status = user.todaysVoteStatus;
@@ -193,15 +193,15 @@ export const buildVotingState = ({
   if (status?.hasVoted && hasBrandData) {
     // Continue to state resolution.
   } else if (authLoading && !hasBrandData && !status?.hasVoted) {
-    return { type: "loading" };
+    return { type: 'loading' };
   } else if (status?.hasVoted && !hasBrandData && needsFallbackData && fallbackLoading) {
-    return { type: "loading" };
+    return { type: 'loading' };
   }
 
   const voteTransactionHash = status?.transactionHash ?? null;
   const castHash = status?.castHash ?? null;
   const claimTransactionHash =
-    user?.contextualTransaction?.transactionType === "claim"
+    user?.contextualTransaction?.transactionType === 'claim'
       ? (user.contextualTransaction.transactionHash ?? null)
       : null;
 
@@ -209,7 +209,7 @@ export const buildVotingState = ({
     status?.hasClaimed || (claimTransactionHash && status?.hasShared)
   );
   const resolvedVoteId =
-    status?.voteId || status?.transactionHash || user.todaysVote?.id || votes?.id || "";
+    status?.voteId || status?.transactionHash || user.todaysVote?.id || votes?.id || '';
   const orderedBrands =
     hasBrandData && brandData?.brand1 && brandData?.brand2 && brandData?.brand3
       ? ([brandData.brand2, brandData.brand1, brandData.brand3] as Brand[])
@@ -217,7 +217,7 @@ export const buildVotingState = ({
 
   if (hasClaimed && orderedBrands) {
     return {
-      type: "claimed",
+      type: 'claimed',
       voteId: resolvedVoteId,
       voteTransactionHash,
       castHash,
@@ -228,7 +228,7 @@ export const buildVotingState = ({
 
   if (status?.hasShared && status?.hasVoted && orderedBrands) {
     return {
-      type: "shared_not_claimed",
+      type: 'shared_not_claimed',
       voteId: resolvedVoteId,
       voteTransactionHash,
       castHash,
@@ -238,14 +238,14 @@ export const buildVotingState = ({
 
   if (status?.hasVoted && orderedBrands) {
     return {
-      type: "voted_not_shared",
+      type: 'voted_not_shared',
       voteId: resolvedVoteId,
       voteTransactionHash,
       brands: orderedBrands,
     };
   }
 
-  return { type: "not_voted" };
+  return { type: 'not_voted' };
 };
 
 export const buildVoteViewProps = ({
@@ -261,12 +261,12 @@ export const buildVoteViewProps = ({
     castHash?: string
   ) => void;
 }) => {
-  if (votingState.type === "loading" || votingState.type === "not_voted") {
+  if (votingState.type === 'loading' || votingState.type === 'not_voted') {
     return {
       navigateToView,
       currentView: VotingViewEnum.PODIUM,
       currentBrands: [] as Brand[],
-      currentVoteId: "",
+      currentVoteId: '',
       voteTransactionHash: undefined as string | undefined,
       claimTransactionHash: undefined as string | undefined,
       castHash: undefined as string | undefined,
@@ -277,7 +277,7 @@ export const buildVoteViewProps = ({
   const baseProps = {
     navigateToView,
     currentView:
-      votingState.type === "voted_not_shared" || votingState.type === "shared_not_claimed"
+      votingState.type === 'voted_not_shared' || votingState.type === 'shared_not_claimed'
         ? VotingViewEnum.SHARE
         : VotingViewEnum.CONGRATS,
     currentBrands: votingState.brands,
@@ -286,7 +286,7 @@ export const buildVoteViewProps = ({
     transactionHash: votingState.voteTransactionHash || undefined,
   };
 
-  if (votingState.type === "claimed") {
+  if (votingState.type === 'claimed') {
     return {
       ...baseProps,
       castHash: votingState.castHash || undefined,
@@ -294,7 +294,7 @@ export const buildVoteViewProps = ({
     };
   }
 
-  if (votingState.type === "shared_not_claimed") {
+  if (votingState.type === 'shared_not_claimed') {
     return {
       ...baseProps,
       castHash: votingState.castHash || undefined,

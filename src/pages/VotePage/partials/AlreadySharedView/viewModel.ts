@@ -1,4 +1,4 @@
-import { formatUnits } from "viem";
+import { formatUnits } from 'viem';
 
 export const getAlreadySharedButtonState = ({
   isLoadingClaimData,
@@ -13,15 +13,15 @@ export const getAlreadySharedButtonState = ({
   isClaiming: boolean;
   claimAmountWei?: string;
 }) => {
-  if (isLoadingClaimData) return "Authorizing...";
-  if (isClaimPending) return "Confirm in wallet...";
-  if (isClaimConfirming) return "Processing...";
-  if (isClaiming) return "Claiming...";
+  if (isLoadingClaimData) return 'Authorizing...';
+  if (isClaimPending) return 'Confirm in wallet...';
+  if (isClaimConfirming) return 'Processing...';
+  if (isClaiming) return 'Claiming...';
   if (claimAmountWei) {
     const claimAmount = parseFloat(formatUnits(BigInt(claimAmountWei), 18));
     return `Claim ${claimAmount.toFixed(0)} $BRND`;
   }
-  return "Claim Rewards";
+  return 'Claim Rewards';
 };
 
 export const shouldRenderAlreadySharedLoadingState = ({
@@ -45,7 +45,7 @@ export const getAlreadySharedHasClaimed = ({
 }) =>
   Boolean(
     hasClaimedToday ||
-      (contextualTransactionType === "claim" &&
+      (contextualTransactionType === 'claim' &&
         contextualTransactionHash &&
         hasSharedToday)
   );

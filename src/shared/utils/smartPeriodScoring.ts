@@ -1,7 +1,7 @@
 // Create: /src/utils/smartPeriodScoring.ts
 // This calculates realistic period scores based on vote timestamps
 
-import { Brand } from "@/hooks/brands";
+import { Brand } from '@/hooks/brands';
 
 /**
  * Calculate realistic scores for different time periods
@@ -18,7 +18,7 @@ export interface SmartScores {
  */
 export const getDeploymentDate = (): Date => {
   // Friday June 20th, 2025 at 3pm Chile time (6pm UTC)
-  return new Date("2025-06-20T18:00:00.000Z");
+  return new Date('2025-06-20T18:00:00.000Z');
 };
 
 /**
@@ -29,7 +29,7 @@ export const getCurrentWeekStart = (): Date => {
   const deploymentDate = getDeploymentDate();
 
   // Find the most recent Friday 18:00 UTC (3pm Chile)
-  let weekStart = new Date(now);
+  const weekStart = new Date(now);
 
   // Go back to most recent Friday 18:00
   while (weekStart.getUTCDay() !== 5 || weekStart.getUTCHours() < 18) {
@@ -90,7 +90,7 @@ export const getCurrentDayStart = (): Date => {
  */
 export const calculateSmartPeriodScores = (
   brand: Brand,
-  period: "week" | "month" | "all" | "daily"
+  period: 'week' | 'month' | 'all' | 'daily'
 ): SmartScores => {
   const now = new Date();
   const deploymentDate = getDeploymentDate();
@@ -102,14 +102,14 @@ export const calculateSmartPeriodScores = (
   );
 
   switch (period) {
-    case "all":
+    case 'all':
       return {
         score: brand.score,
         stateScore: brand.stateScore,
-        ranking: parseInt(brand.ranking || "0"),
+        ranking: parseInt(brand.ranking || '0'),
       };
 
-    case "week": {
+    case 'week': {
       const weekStart = getCurrentWeekStart();
       const daysSinceWeekStart = Math.max(
         1,
@@ -134,7 +134,7 @@ export const calculateSmartPeriodScores = (
       };
     }
 
-    case "month": {
+    case 'month': {
       const monthStart = getCurrentMonthStart();
       const daysSinceMonthStart = Math.max(
         1,
@@ -162,7 +162,7 @@ export const calculateSmartPeriodScores = (
       };
     }
 
-    case "daily": {
+    case 'daily': {
       const dayStart = getCurrentDayStart();
       const hoursSinceDayStart = Math.max(
         1,
@@ -186,7 +186,7 @@ export const calculateSmartPeriodScores = (
         stateScore: Math.round(
           brand.stateScore * dailyFraction * recentActivityMultiplier
         ),
-        ranking: parseInt(brand.ranking || "0"),
+        ranking: parseInt(brand.ranking || '0'),
       };
     }
 
@@ -194,7 +194,7 @@ export const calculateSmartPeriodScores = (
       return {
         score: brand.score,
         stateScore: brand.stateScore,
-        ranking: parseInt(brand.ranking || "0"),
+        ranking: parseInt(brand.ranking || '0'),
       };
   }
 };
@@ -205,7 +205,7 @@ export const calculateSmartPeriodScores = (
  */
 export const processBrandsWithSmartScoring = (
   brands: Brand[],
-  period: "week" | "month" | "all" | "daily"
+  period: 'week' | 'month' | 'all' | 'daily'
 ): Brand[] => {
   // Calculate smart scores for each brand
   const brandsWithSmartScores = brands.map((brand) => {

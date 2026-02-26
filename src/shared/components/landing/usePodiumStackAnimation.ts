@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, type RefObject } from "react";
-import gsap from "gsap";
+import { useCallback, useEffect, useRef, type RefObject } from 'react';
+import gsap from 'gsap';
 
 const DEFAULT_CAROUSEL_INTERVAL = 6000;
 const INITIALIZE_DELAY_MS = 100;
@@ -29,14 +29,14 @@ export function usePodiumStackAnimation({
   const initializeCards = useCallback(() => {
     if (!sliderRef.current) return;
 
-    const cards = Array.from(sliderRef.current.querySelectorAll(".podium-card"));
+    const cards = Array.from(sliderRef.current.querySelectorAll('.podium-card'));
 
     gsap.to(cards, {
       y: (index: number) => `${-15 + 15 * index}%`,
       z: (index: number) => 15 * index,
       opacity: 1,
       duration: 1,
-      ease: "power3.inOut",
+      ease: 'power3.inOut',
       stagger: -0.1,
     });
   }, [sliderRef]);
@@ -46,7 +46,7 @@ export function usePodiumStackAnimation({
 
     isAnimatingRef.current = true;
     const slider = sliderRef.current;
-    const cards = Array.from(slider.querySelectorAll(".podium-card"));
+    const cards = Array.from(slider.querySelectorAll('.podium-card'));
 
     if (cards.length < 2) {
       isAnimatingRef.current = false;
@@ -56,15 +56,15 @@ export function usePodiumStackAnimation({
     const lastCard = cards[cards.length - 1] as HTMLElement;
 
     gsap.to(lastCard, {
-      y: "+=150%",
+      y: '+=150%',
       opacity: 0,
       duration: 1,
-      ease: "power3.inOut",
+      ease: 'power3.inOut',
       onComplete: () => {
-        gsap.set(lastCard, { visibility: "hidden", opacity: 0 });
+        gsap.set(lastCard, { visibility: 'hidden', opacity: 0 });
         slider.prepend(lastCard);
         initializeCards();
-        gsap.set(lastCard, { visibility: "visible" });
+        gsap.set(lastCard, { visibility: 'visible' });
 
         unlockTimeoutRef.current = setTimeout(() => {
           isAnimatingRef.current = false;

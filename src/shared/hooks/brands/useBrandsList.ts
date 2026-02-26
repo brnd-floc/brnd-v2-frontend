@@ -1,27 +1,27 @@
 // /src/hooks/brands.ts - Update your useBrandList hook:
 
 // Dependencies
-import { useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
 // Services
-import { getBrandList, BrandTimePeriod } from "@/services/brands";
+import { getBrandList, BrandTimePeriod } from '@/services/brands';
 
 // Types
-import { Brand, ListBrandTypes } from "./types";
+import { Brand, ListBrandTypes } from './types';
 
 export const useBrandList = (
   order: ListBrandTypes,
-  searchQuery: string = "",
+  searchQuery: string = '',
   pageId: number = 1,
   limit: number = 27,
-  period: BrandTimePeriod = "all"
+  period: BrandTimePeriod = 'all'
 ) => {
   const brandsRef = useRef<Brand[]>([]);
   const countRef = useRef<number>(0);
 
   const result = useQuery({
-    queryKey: ["brands", searchQuery, pageId, limit, order, period], // NEW: Include period in query key
+    queryKey: ['brands', searchQuery, pageId, limit, order, period], // NEW: Include period in query key
     queryFn: () =>
       getBrandList(searchQuery, String(pageId), String(limit), order, period), // NEW: Pass period
     retry: false,
@@ -34,7 +34,7 @@ export const useBrandList = (
   if (!result.isError && !result.isLoading) {
     const brands = result.data?.brands || [];
 
-    if (searchQuery !== "" && pageId === 1) {
+    if (searchQuery !== '' && pageId === 1) {
       brandsRef.current = brands;
     } else {
       const existingBrandIds = new Set(

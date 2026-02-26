@@ -1,17 +1,17 @@
 // Dependencies
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect } from 'react';
 import {
   useWriteContract,
   useWaitForTransactionReceipt,
   useAccount,
-} from "wagmi";
-import { Hex } from "viem"; // Import Hex type for explicit casting
+} from 'wagmi';
+import { Hex } from 'viem'; // Import Hex type for explicit casting
 
 // Services
-import { getClaimSignature } from "@/services/airdrop";
+import { getClaimSignature } from '@/services/airdrop';
 
 // Config
-import { AIRDROP_CONTRACT_CONFIG, AIRDROP_ABI } from "@/config/contracts";
+import { AIRDROP_CONTRACT_CONFIG, AIRDROP_ABI } from '@/config/contracts';
 
 // Types
 export interface AirdropClaimParams {
@@ -43,7 +43,7 @@ export const useAirdropClaim = () => {
    */
   const claimAirdrop = useCallback(
     async (params: AirdropClaimParams) => {
-      console.log("🚀 [claimAirdrop] Starting airdrop claim process...", {
+      console.log('🚀 [claimAirdrop] Starting airdrop claim process...', {
         fid: params.fid,
         walletAddress: params.walletAddress,
         snapshotId: params.snapshotId,
@@ -51,17 +51,17 @@ export const useAirdropClaim = () => {
       });
 
       if (!address) {
-        console.error("❌ [claimAirdrop] Wallet not connected");
-        throw new Error("Wallet not connected");
+        console.error('❌ [claimAirdrop] Wallet not connected');
+        throw new Error('Wallet not connected');
       }
 
       if (address.toLowerCase() !== params.walletAddress.toLowerCase()) {
-        console.error("❌ [claimAirdrop] Address mismatch", {
+        console.error('❌ [claimAirdrop] Address mismatch', {
           connected: address,
           provided: params.walletAddress,
         });
         throw new Error(
-          "Connected wallet address does not match provided address"
+          'Connected wallet address does not match provided address'
         );
       }
 
@@ -70,7 +70,7 @@ export const useAirdropClaim = () => {
 
       try {
         console.log(
-          "📡 [claimAirdrop] Requesting claim signature from backend..."
+          '📡 [claimAirdrop] Requesting claim signature from backend...'
         );
         // Get signature and proof from backend
         const claimData = await getClaimSignature(
@@ -78,7 +78,7 @@ export const useAirdropClaim = () => {
           params.snapshotId
         );
 
-        console.log("✅ [claimAirdrop] Claim signature received:", {
+        console.log('✅ [claimAirdrop] Claim signature received:', {
           hasData: !!claimData.data,
           fid: claimData.data?.fid,
           amount: claimData.data?.amount,
@@ -92,55 +92,55 @@ export const useAirdropClaim = () => {
         // Validate required fields
         if (!claimData.data) {
           console.error(
-            "❌ [claimAirdrop] Claim data is missing 'data' property:",
+            '❌ [claimAirdrop] Claim data is missing \'data\' property:',
             claimData
           );
-          throw new Error("Invalid claim data: missing 'data' property");
+          throw new Error('Invalid claim data: missing \'data\' property');
         }
 
         const { fid, amount, proof, deadline, signature } = claimData.data;
 
         if (!fid) {
           console.error(
-            "❌ [claimAirdrop] Missing fid in claim data:",
+            '❌ [claimAirdrop] Missing fid in claim data:',
             claimData.data
           );
-          throw new Error("Invalid claim data: missing 'fid'");
+          throw new Error('Invalid claim data: missing \'fid\'');
         }
 
         if (!amount) {
           console.error(
-            "❌ [claimAirdrop] Missing amount in claim data:",
+            '❌ [claimAirdrop] Missing amount in claim data:',
             claimData.data
           );
-          throw new Error("Invalid claim data: missing 'amount'");
+          throw new Error('Invalid claim data: missing \'amount\'');
         }
 
         if (!proof || !Array.isArray(proof) || proof.length === 0) {
           console.error(
-            "❌ [claimAirdrop] Missing or invalid proof in claim data:",
+            '❌ [claimAirdrop] Missing or invalid proof in claim data:',
             claimData.data
           );
-          throw new Error("Invalid claim data: missing or invalid 'proof'");
+          throw new Error('Invalid claim data: missing or invalid \'proof\'');
         }
 
         if (!deadline) {
           console.error(
-            "❌ [claimAirdrop] Missing deadline in claim data:",
+            '❌ [claimAirdrop] Missing deadline in claim data:',
             claimData.data
           );
-          throw new Error("Invalid claim data: missing 'deadline'");
+          throw new Error('Invalid claim data: missing \'deadline\'');
         }
 
         if (!signature) {
           console.error(
-            "❌ [claimAirdrop] Missing signature in claim data:",
+            '❌ [claimAirdrop] Missing signature in claim data:',
             claimData.data
           );
-          throw new Error("Invalid claim data: missing 'signature'");
+          throw new Error('Invalid claim data: missing \'signature\'');
         }
 
-        console.log("📝 [claimAirdrop] Preparing contract call...", {
+        console.log('📝 [claimAirdrop] Preparing contract call...', {
           contract: AIRDROP_CONTRACT_CONFIG.CONTRACT,
           fid: String(fid),
           baseAmount: String(amount),
@@ -158,101 +158,101 @@ export const useAirdropClaim = () => {
         // Cast signature to `0x${string}` (Hex string)
         const argSignature: Hex = signature as Hex;
 
-        console.log("📝 [claimAirdrop] AirdropClaimV3 PAYLOAD:");
-        console.log("   - ARG 1 (FID):", argFid.toString(), "(Type: BigInt)");
+        console.log('📝 [claimAirdrop] AirdropClaimV3 PAYLOAD:');
+        console.log('   - ARG 1 (FID):', argFid.toString(), '(Type: BigInt)');
         console.log(
-          "   - ARG 2 (Base Amount):",
+          '   - ARG 2 (Base Amount):',
           argBaseAmount.toString(),
-          "(Type: BigInt)"
+          '(Type: BigInt)'
         );
         console.log(
-          "   - ARG 3 (Proof):",
+          '   - ARG 3 (Proof):',
           argProof[0],
           `... (${argProof.length} hashes)`,
-          "(Type: bytes32[])"
+          '(Type: bytes32[])'
         );
         console.log(
-          "   - ARG 4 (Deadline):",
+          '   - ARG 4 (Deadline):',
           argDeadline.toString(),
-          "(Type: BigInt)"
+          '(Type: BigInt)'
         );
         console.log(
-          "   - ARG 5 (Signature):",
-          argSignature.slice(0, 10) + "...",
+          '   - ARG 5 (Signature):',
+          argSignature.slice(0, 10) + '...',
           `(Length: ${argSignature.length})`,
-          "(Type: bytes)"
+          '(Type: bytes)'
         );
 
         // Call AirdropClaimV3 contract with the claimAirdrop function (5 parameters)
-        console.log("📤 [claimAirdrop] Calling AirdropClaimV3.claimAirdrop...");
+        console.log('📤 [claimAirdrop] Calling AirdropClaimV3.claimAirdrop...');
 
         // Add this comprehensive debugging block:
         console.log(
-          "🔥 [TRANSACTION DEBUG] =========================================="
+          '🔥 [TRANSACTION DEBUG] =========================================='
         );
         console.log(
-          "🔥 [TRANSACTION DEBUG] EXACT DATA BEING SENT TO CONTRACT:"
+          '🔥 [TRANSACTION DEBUG] EXACT DATA BEING SENT TO CONTRACT:'
         );
         console.log(
-          "🔥 [TRANSACTION DEBUG] =========================================="
+          '🔥 [TRANSACTION DEBUG] =========================================='
         );
 
         // Contract details
         console.log(
-          "🔥 [TRANSACTION DEBUG] Contract Address:",
+          '🔥 [TRANSACTION DEBUG] Contract Address:',
           AIRDROP_CONTRACT_CONFIG.CONTRACT
         );
-        console.log("🔥 [TRANSACTION DEBUG] Function Name: claimAirdrop");
+        console.log('🔥 [TRANSACTION DEBUG] Function Name: claimAirdrop');
 
         // Raw arguments (before conversion)
-        console.log("🔥 [TRANSACTION DEBUG] RAW ARGUMENTS FROM BACKEND:");
+        console.log('🔥 [TRANSACTION DEBUG] RAW ARGUMENTS FROM BACKEND:');
         console.log(
-          "🔥 [TRANSACTION DEBUG] - Raw FID:",
+          '🔥 [TRANSACTION DEBUG] - Raw FID:',
           fid,
-          "(type:",
+          '(type:',
           typeof fid,
-          ")"
+          ')'
         );
         console.log(
-          "🔥 [TRANSACTION DEBUG] - Raw Amount:",
+          '🔥 [TRANSACTION DEBUG] - Raw Amount:',
           amount,
-          "(type:",
+          '(type:',
           typeof amount,
-          ")"
+          ')'
         );
-        console.log("🔥 [TRANSACTION DEBUG] - Raw Proof Length:", proof.length);
+        console.log('🔥 [TRANSACTION DEBUG] - Raw Proof Length:', proof.length);
         console.log(
-          "🔥 [TRANSACTION DEBUG] - Raw Deadline:",
+          '🔥 [TRANSACTION DEBUG] - Raw Deadline:',
           deadline,
-          "(type:",
+          '(type:',
           typeof deadline,
-          ")"
+          ')'
         );
         console.log(
-          "🔥 [TRANSACTION DEBUG] - Raw Signature Length:",
+          '🔥 [TRANSACTION DEBUG] - Raw Signature Length:',
           signature.length
         );
 
         // Converted arguments (what will be sent)
-        console.log("🔥 [TRANSACTION DEBUG] CONVERTED ARGUMENTS FOR CONTRACT:");
+        console.log('🔥 [TRANSACTION DEBUG] CONVERTED ARGUMENTS FOR CONTRACT:');
         console.log(
-          "🔥 [TRANSACTION DEBUG] - ARG[0] FID (BigInt):",
+          '🔥 [TRANSACTION DEBUG] - ARG[0] FID (BigInt):',
           argFid.toString()
         );
         console.log(
-          "🔥 [TRANSACTION DEBUG] - ARG[1] BaseAmount (BigInt):",
+          '🔥 [TRANSACTION DEBUG] - ARG[1] BaseAmount (BigInt):',
           argBaseAmount.toString()
         );
-        console.log("🔥 [TRANSACTION DEBUG] - ARG[2] Proof Array:");
+        console.log('🔥 [TRANSACTION DEBUG] - ARG[2] Proof Array:');
         argProof.forEach((proof, index) => {
           console.log(`🔥 [TRANSACTION DEBUG]   - Proof[${index}]: ${proof}`);
         });
         console.log(
-          "🔥 [TRANSACTION DEBUG] - ARG[3] Deadline (BigInt):",
+          '🔥 [TRANSACTION DEBUG] - ARG[3] Deadline (BigInt):',
           argDeadline.toString()
         );
         console.log(
-          "🔥 [TRANSACTION DEBUG] - ARG[4] Signature (Hex):",
+          '🔥 [TRANSACTION DEBUG] - ARG[4] Signature (Hex):',
           argSignature
         );
 
@@ -265,8 +265,8 @@ export const useAirdropClaim = () => {
           argSignature as `0x${string}`,
         ];
 
-        console.log("🔥 [TRANSACTION DEBUG] FINAL ARGS ARRAY:");
-        console.log("🔥 [TRANSACTION DEBUG] - args.length:", exactArgs.length);
+        console.log('🔥 [TRANSACTION DEBUG] FINAL ARGS ARRAY:');
+        console.log('🔥 [TRANSACTION DEBUG] - args.length:', exactArgs.length);
         exactArgs.forEach((arg, index) => {
           if (Array.isArray(arg)) {
             console.log(
@@ -282,36 +282,36 @@ export const useAirdropClaim = () => {
         });
 
         // Data validation
-        console.log("🔥 [TRANSACTION DEBUG] DATA VALIDATION:");
+        console.log('🔥 [TRANSACTION DEBUG] DATA VALIDATION:');
         console.log(
-          "🔥 [TRANSACTION DEBUG] - All proof elements are valid hex:",
-          argProof.every((p) => p.startsWith("0x") && p.length === 66)
+          '🔥 [TRANSACTION DEBUG] - All proof elements are valid hex:',
+          argProof.every((p) => p.startsWith('0x') && p.length === 66)
         );
         console.log(
-          "🔥 [TRANSACTION DEBUG] - Signature is valid hex:",
-          argSignature.startsWith("0x") && argSignature.length === 132
+          '🔥 [TRANSACTION DEBUG] - Signature is valid hex:',
+          argSignature.startsWith('0x') && argSignature.length === 132
         );
         console.log(
-          "🔥 [TRANSACTION DEBUG] - FID is positive integer:",
+          '🔥 [TRANSACTION DEBUG] - FID is positive integer:',
           argFid > 0n
         );
         console.log(
-          "🔥 [TRANSACTION DEBUG] - BaseAmount is positive integer:",
+          '🔥 [TRANSACTION DEBUG] - BaseAmount is positive integer:',
           argBaseAmount > 0n
         );
         console.log(
-          "🔥 [TRANSACTION DEBUG] - Deadline is future timestamp:",
+          '🔥 [TRANSACTION DEBUG] - Deadline is future timestamp:',
           argDeadline > BigInt(Math.floor(Date.now() / 1000))
         );
 
         console.log(
-          "🔥 [TRANSACTION DEBUG] =========================================="
+          '🔥 [TRANSACTION DEBUG] =========================================='
         );
 
         // Serialize the complete object for backend analysis
         const transactionData = {
           contractAddress: AIRDROP_CONTRACT_CONFIG.CONTRACT,
-          functionName: "claimAirdrop",
+          functionName: 'claimAirdrop',
           args: {
             fid: argFid.toString(),
             baseAmount: argBaseAmount.toString(),
@@ -324,16 +324,16 @@ export const useAirdropClaim = () => {
           ),
         };
 
-        console.log("🔥 [TRANSACTION DEBUG] SERIALIZED TRANSACTION DATA:");
+        console.log('🔥 [TRANSACTION DEBUG] SERIALIZED TRANSACTION DATA:');
         console.log(JSON.stringify(transactionData, null, 2));
         console.log(
-          "🔥 [TRANSACTION DEBUG] =========================================="
+          '🔥 [TRANSACTION DEBUG] =========================================='
         );
 
         await writeContract({
           address: AIRDROP_CONTRACT_CONFIG.CONTRACT,
           abi: AIRDROP_ABI,
-          functionName: "claimAirdrop",
+          functionName: 'claimAirdrop',
           args: [
             argFid,
             argBaseAmount,
@@ -344,10 +344,10 @@ export const useAirdropClaim = () => {
           gas: 1000000n,
         });
 
-        console.log("✅ [claimAirdrop] Contract write initiated successfully");
+        console.log('✅ [claimAirdrop] Contract write initiated successfully');
       } catch (error: any) {
-        console.error("❌ [claimAirdrop] Airdrop claim failed:", error);
-        console.error("❌ [claimAirdrop] Error details:", {
+        console.error('❌ [claimAirdrop] Airdrop claim failed:', error);
+        console.error('❌ [claimAirdrop] Error details:', {
           message: error?.message,
           stack: error?.stack,
           name: error?.name,
@@ -355,7 +355,7 @@ export const useAirdropClaim = () => {
         });
 
         // Extract error message for UI display
-        let errorMessage = error?.message || "Transaction failed";
+        let errorMessage = error?.message || 'Transaction failed';
 
         // Try to extract revert reason from error
         if (error?.message) {
@@ -363,10 +363,10 @@ export const useAirdropClaim = () => {
           const revertMatch = error.message.match(/revert(?:ed)?:\s*(.+)/i);
           if (revertMatch) {
             errorMessage = `Reverted: ${revertMatch[1]}`;
-          } else if (error.message.includes("User rejected")) {
-            errorMessage = "Transaction was rejected";
-          } else if (error.message.includes("insufficient funds")) {
-            errorMessage = "Insufficient funds for transaction";
+          } else if (error.message.includes('User rejected')) {
+            errorMessage = 'Transaction was rejected';
+          } else if (error.message.includes('insufficient funds')) {
+            errorMessage = 'Insufficient funds for transaction';
           }
         }
 
@@ -375,7 +375,7 @@ export const useAirdropClaim = () => {
       } finally {
         setIsClaiming(false);
         console.log(
-          "🏁 [claimAirdrop] Claim process finished (isClaiming set to false)"
+          '🏁 [claimAirdrop] Claim process finished (isClaiming set to false)'
         );
       }
     },
@@ -386,10 +386,10 @@ export const useAirdropClaim = () => {
   useEffect(() => {
     if (receiptError) {
       console.error(
-        "❌ [useAirdropClaim] Transaction receipt error:",
+        '❌ [useAirdropClaim] Transaction receipt error:',
         receiptError
       );
-      console.error("❌ [useAirdropClaim] Error object structure:", {
+      console.error('❌ [useAirdropClaim] Error object structure:', {
         message: receiptError.message,
         shortMessage: (receiptError as any).shortMessage,
         reason: (receiptError as any).reason,
@@ -402,7 +402,7 @@ export const useAirdropClaim = () => {
       let errorMessage =
         receiptError.message ||
         (receiptError as any).shortMessage ||
-        "Transaction failed";
+        'Transaction failed';
 
       // Try multiple patterns to extract revert reason
       const revertPatterns = [
@@ -429,7 +429,7 @@ export const useAirdropClaim = () => {
       // Check for data field which might contain revert reason
       if ((receiptError as any).data) {
         const data = (receiptError as any).data;
-        if (typeof data === "string") {
+        if (typeof data === 'string') {
           errorMessage = `Reverted: ${data}`;
         } else if (data.message) {
           errorMessage = `Reverted: ${data.message}`;
@@ -450,7 +450,7 @@ export const useAirdropClaim = () => {
       }
 
       console.error(
-        "❌ [useAirdropClaim] Extracted error message:",
+        '❌ [useAirdropClaim] Extracted error message:',
         errorMessage
       );
       setTransactionError(errorMessage);
@@ -460,8 +460,8 @@ export const useAirdropClaim = () => {
   // Monitor write errors (pre-transaction errors)
   useEffect(() => {
     if (writeError) {
-      console.error("❌ [useAirdropClaim] Write contract error:", writeError);
-      console.error("❌ [useAirdropClaim] Write error object structure:", {
+      console.error('❌ [useAirdropClaim] Write contract error:', writeError);
+      console.error('❌ [useAirdropClaim] Write error object structure:', {
         message: writeError.message,
         shortMessage: (writeError as any).shortMessage,
         reason: (writeError as any).reason,
@@ -474,7 +474,7 @@ export const useAirdropClaim = () => {
       let errorMessage =
         writeError.message ||
         (writeError as any).shortMessage ||
-        "Transaction failed";
+        'Transaction failed';
 
       // Try multiple patterns to extract revert reason
       const revertPatterns = [
@@ -495,16 +495,16 @@ export const useAirdropClaim = () => {
 
       // Handle user rejection separately
       if (
-        errorMessage.includes("User rejected") ||
-        errorMessage.includes("user rejected")
+        errorMessage.includes('User rejected') ||
+        errorMessage.includes('user rejected')
       ) {
-        errorMessage = "Transaction was rejected";
+        errorMessage = 'Transaction was rejected';
       }
 
       // Check for data field which might contain revert reason
       if ((writeError as any).data) {
         const data = (writeError as any).data;
-        if (typeof data === "string") {
+        if (typeof data === 'string') {
           errorMessage = `Reverted: ${data}`;
         } else if (data.message) {
           errorMessage = `Reverted: ${data.message}`;
@@ -525,7 +525,7 @@ export const useAirdropClaim = () => {
       }
 
       console.error(
-        "❌ [useAirdropClaim] Extracted write error message:",
+        '❌ [useAirdropClaim] Extracted write error message:',
         errorMessage
       );
       setTransactionError(errorMessage);

@@ -1,18 +1,18 @@
 // Dependecies
-import React from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import React from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 
 // Types
-import { BaseModalProps, ModalData, ModalsIds } from "./types";
+import { BaseModalProps, ModalData, ModalsIds } from './types';
 
 // Hooks
-import { useModal } from "@/hooks/ui/useModal";
+import { useModal } from '@/hooks/ui/useModal';
 
 // Modals
-import { modals } from "./modals";
+import { modals } from './modals';
 
 // StyleSheet
-import styles from "./ModalProvider.module.scss";
+import styles from './ModalProvider.module.scss';
 
 // * * * * * * * * * * * * *
 
@@ -49,7 +49,7 @@ export const ModalProvider: React.FC<ModalLayoutProps> = ({ children }) => {
           ModalsIds,
           React.FC<BaseModalProps<ModalData[ModalsIds]>>
         >
-      )[id]
+    )[id]
     : null;
 
   return (

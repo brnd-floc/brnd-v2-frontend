@@ -1,5 +1,5 @@
-import Typography from "@/components/Typography";
-import styles from "./ShareView.module.scss";
+import Typography from '@/components/Typography';
+import styles from './ShareView.module.scss';
 
 interface ShareFeedbackProps {
   isFarcasterClient: boolean | null;
@@ -32,26 +32,26 @@ export function ShareFeedback({
     <>
       <div className={styles.shareMessage}>
         <Typography
-          variant={"geist"}
-          weight={"medium"}
+          variant={'geist'}
+          weight={'medium'}
           size={12}
           lineHeight={16}
-          textAlign={"center"}
+          textAlign={'center'}
         >
           {isFarcasterClient === false && !hasSharedManually
-            ? "Share your podium, then click below to verify"
-            : "Share your podium to unlock 10x BRND rewards"}
+            ? 'Share your podium, then click below to verify'
+            : 'Share your podium to unlock 10x BRND rewards'}
         </Typography>
       </div>
 
       {isVerifying && manualVerificationMessageDisplay && (
         <div className={styles.verificationMessage}>
           <Typography
-            variant={"geist"}
-            weight={"medium"}
+            variant={'geist'}
+            weight={'medium'}
             size={14}
             lineHeight={18}
-            textAlign={"center"}
+            textAlign={'center'}
           >
             🔄 Verifying your share...
           </Typography>
@@ -63,33 +63,33 @@ export function ShareFeedback({
         !isClaiming &&
         !isClaimPending &&
         !isClaimConfirming && (
-          <div className={styles.verificationMessage}>
-            <Typography
-              variant={"geist"}
-              weight={"medium"}
-              size={14}
-              lineHeight={18}
-              textAlign={"center"}
-            >
+        <div className={styles.verificationMessage}>
+          <Typography
+            variant={'geist'}
+            weight={'medium'}
+            size={14}
+            lineHeight={18}
+            textAlign={'center'}
+          >
               ✅ Share verified! Ready to claim {claimAmountLabel} $BRND
-            </Typography>
-          </div>
-        )}
+          </Typography>
+        </div>
+      )}
 
       {(isClaiming || isClaimPending || isClaimConfirming) && (
         <div className={styles.verificationMessage}>
           <Typography
-            variant={"geist"}
-            weight={"medium"}
+            variant={'geist'}
+            weight={'medium'}
             size={14}
             lineHeight={18}
-            textAlign={"center"}
+            textAlign={'center'}
           >
             {isClaimPending
-              ? "⏳ Confirm reward claim in wallet..."
+              ? '⏳ Confirm reward claim in wallet...'
               : isClaimConfirming
-              ? "🔄 Processing reward claim..."
-              : "💰 Claiming your reward..."}
+                ? '🔄 Processing reward claim...'
+                : '💰 Claiming your reward...'}
           </Typography>
         </div>
       )}
@@ -97,11 +97,11 @@ export function ShareFeedback({
       {(claimError || shareError) && (
         <div className={styles.errorMessage}>
           <Typography
-            variant={"geist"}
-            weight={"medium"}
+            variant={'geist'}
+            weight={'medium'}
             size={14}
             lineHeight={18}
-            textAlign={"center"}
+            textAlign={'center'}
           >
             {claimError || shareError}
           </Typography>

@@ -1,32 +1,32 @@
-import React, { useMemo } from "react";
-import classNames from "clsx";
-import styles from "./FeedIndividualPodium.module.scss";
-import Typography from "@/shared/components/Typography";
-import Podium1Icon from "@/shared/assets/icons/podium-1.svg?react";
-import Podium2Icon from "@/shared/assets/icons/podium-2.svg?react";
-import Podium3Icon from "@/shared/assets/icons/podium-3.svg?react";
-import { useModal } from "@/shared/hooks/ui/useModal";
-import { ModalsIds } from "@/shared/providers/ModalProvider/types";
-import { useAuth } from "@/shared/hooks/auth";
-import { useAccount, useConnect } from "wagmi";
-import sdk from "@farcaster/miniapp-sdk";
+import React, { useMemo } from 'react';
+import classNames from 'clsx';
+import styles from './FeedIndividualPodium.module.scss';
+import Typography from '@/shared/components/Typography';
+import Podium1Icon from '@/shared/assets/icons/podium-1.svg?react';
+import Podium2Icon from '@/shared/assets/icons/podium-2.svg?react';
+import Podium3Icon from '@/shared/assets/icons/podium-3.svg?react';
+import { useModal } from '@/shared/hooks/ui/useModal';
+import { ModalsIds } from '@/shared/providers/ModalProvider/types';
+import { useAuth } from '@/shared/hooks/auth';
+import { useAccount, useConnect } from 'wagmi';
+import sdk from '@farcaster/miniapp-sdk';
 
-import { IndividualPodiumProps, MintingStep } from "../IndividualPodium";
-import { useNavigate } from "react-router-dom";
+import { IndividualPodiumProps, MintingStep } from '../IndividualPodium';
+import { useNavigate } from 'react-router-dom';
 
 // Contextual messages for each minting step
 const MINTING_STEP_MESSAGES: Record<Exclude<MintingStep, null>, string> = {
-  fetching_signature: "Preparing...",
-  approving: "Approve $BRND",
-  confirming_approval: "Approving...",
-  minting: "Confirm mint",
-  buying: "Confirm purchase",
-  confirming: "Confirming...",
+  fetching_signature: 'Preparing...',
+  approving: 'Approve $BRND',
+  confirming_approval: 'Approving...',
+  minting: 'Confirm mint',
+  buying: 'Confirm purchase',
+  confirming: 'Confirming...',
 };
 
 // Format large numbers (1000000 -> "1M", 1200000 -> "1.2M")
 const formatPrice = (priceStr: string | null): string => {
-  if (!priceStr) return "1M";
+  if (!priceStr) return '1M';
   // Price comes in wei (18 decimals), convert to BRND
   const priceInBrnd = Number(priceStr) / 1e18;
   if (priceInBrnd >= 1000000) {
@@ -41,14 +41,14 @@ const formatPrice = (priceStr: string | null): string => {
 
 // Format time ago display (UTC-based)
 const getTimeAgo = (dateStr: string | undefined): string => {
-  if (!dateStr) return "";
+  if (!dateStr) return '';
 
   const nowUtc = Date.now();
 
   // Normalize date format
-  let normalizedDate = dateStr.replace(" ", "T");
-  if (!normalizedDate.endsWith("Z")) {
-    normalizedDate += "Z";
+  let normalizedDate = dateStr.replace(' ', 'T');
+  if (!normalizedDate.endsWith('Z')) {
+    normalizedDate += 'Z';
   }
 
   const createdUtc = new Date(normalizedDate).getTime();
@@ -58,7 +58,7 @@ const getTimeAgo = (dateStr: string | undefined): string => {
   const CLOCK_SKEW_THRESHOLD = 10 * 60 * 1000;
   if (diffInMs < 0) {
     if (Math.abs(diffInMs) <= CLOCK_SKEW_THRESHOLD) {
-      return "Just now";
+      return 'Just now';
     }
     diffInMs = 0;
   }
@@ -67,20 +67,20 @@ const getTimeAgo = (dateStr: string | undefined): string => {
   const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
   const diffInDays = Math.floor(diffInHours / 24);
 
-  if (diffInMinutes < 1) return "Just now";
+  if (diffInMinutes < 1) return 'Just now';
   if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
   if (diffInHours < 24) {
     return `${diffInHours}h ago`;
   }
-  if (diffInDays === 1) return "Yesterday";
+  if (diffInDays === 1) return 'Yesterday';
   if (diffInDays < 7) return `${diffInDays}d ago`;
 
   const createdDate = new Date(createdUtc);
   return createdDate.toLocaleDateString(undefined, {
-    timeZone: "UTC",
-    year: "numeric",
-    month: "short",
-    day: "numeric",
+    timeZone: 'UTC',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
   });
 };
 
@@ -114,7 +114,7 @@ const FeedIndividualPodium: React.FC<IndividualPodiumProps> = ({
     if (mintingStep && MINTING_STEP_MESSAGES[mintingStep]) {
       return MINTING_STEP_MESSAGES[mintingStep];
     }
-    return "Processing...";
+    return 'Processing...';
   };
 
   // Apply optimistic update if transaction succeeded
@@ -127,7 +127,7 @@ const FeedIndividualPodium: React.FC<IndividualPodiumProps> = ({
   // Price calculations per contract:
   // - Mint price: BASE_PRICE (1M BRND)
   // - Buy price: lastSalePrice * 1.2 (20% increase each sale)
-  const lastSalePrice = collectibleData.price || "1000000000000000000000000"; // 1M BRND default
+  const lastSalePrice = collectibleData.price || '1000000000000000000000000'; // 1M BRND default
   const buyPrice = String(Math.floor(Number(lastSalePrice) * 1.2));
 
   const mintPrice = formatPrice(lastSalePrice);
@@ -188,13 +188,13 @@ const FeedIndividualPodium: React.FC<IndividualPodiumProps> = ({
   const getButtonText = () => {
     // Show success state first if transaction just succeeded
     if (hasSucceeded) {
-      return successType === "buy" ? "Bought!" : "Minted!";
+      return successType === 'buy' ? 'Bought!' : 'Minted!';
     }
     if (canMint) return `Mint · ${mintPrice} $BRND`;
-    if (isOwned) return "Owned";
-    if (isNotMintable) return "Not mintable";
+    if (isOwned) return 'Owned';
+    if (isNotMintable) return 'Not mintable';
     if (canBuy) return `Buy · ${displayBuyPrice} $BRND`;
-    return "Not mintable";
+    return 'Not mintable';
   };
 
   const getButtonStyle = () => {
@@ -211,9 +211,9 @@ const FeedIndividualPodium: React.FC<IndividualPodiumProps> = ({
     isPending || isOwned || isNotMintable || hasSucceeded;
 
   const podiumBrands = [
-    { brand: brand2, icon: Podium2Icon, place: "second" as const },
-    { brand: brand1, icon: Podium1Icon, place: "first" as const },
-    { brand: brand3, icon: Podium3Icon, place: "third" as const },
+    { brand: brand2, icon: Podium2Icon, place: 'second' as const },
+    { brand: brand1, icon: Podium1Icon, place: 'first' as const },
+    { brand: brand3, icon: Podium3Icon, place: 'third' as const },
   ];
 
   return (
@@ -343,27 +343,27 @@ const FeedIndividualPodium: React.FC<IndividualPodiumProps> = ({
         {/* Paid/Claimed info - only show if we have data */}
         {podium?.brndPaidWhenCreatingPodium &&
           Number(podium.brndPaidWhenCreatingPodium) > 0 && (
-            <div className={styles.paymentInfo}>
+          <div className={styles.paymentInfo}>
+            <Typography
+              variant="geist"
+              weight="bold"
+              size={10}
+              className={styles.paidAmount}
+            >
+                Paid {podium.brndPaidWhenCreatingPodium} $BRND
+            </Typography>
+            {podium?.claimed && (
               <Typography
                 variant="geist"
                 weight="bold"
                 size={10}
-                className={styles.paidAmount}
+                className={styles.claimedAmount}
               >
-                Paid {podium.brndPaidWhenCreatingPodium} $BRND
-              </Typography>
-              {podium?.claimed && (
-                <Typography
-                  variant="geist"
-                  weight="bold"
-                  size={10}
-                  className={styles.claimedAmount}
-                >
                   Claimed {podium.brndPaidWhenCreatingPodium * 10} $BRND
-                </Typography>
-              )}
-            </div>
-          )}
+              </Typography>
+            )}
+          </div>
+        )}
 
         {/* Action button */}
         <button

@@ -1,25 +1,25 @@
 // Dependencies
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from 'react';
 
 // Components
 
 // StyleSheet
-import styles from "./PeriodBasedBrandsList.module.scss";
+import styles from './PeriodBasedBrandsList.module.scss';
 
 // Hook
-import { useBrandRankings } from "@/shared/contexts/BrandRankingsContext";
-import { Brand } from "@/shared/hooks/brands/types";
+import { useBrandRankings } from '@/shared/contexts/BrandRankingsContext';
+import { Brand } from '@/shared/hooks/brands/types';
 
 // Utils
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from 'react-router-dom';
 
 // Assets
-import BrandOfTheWeek from "@/assets/images/brand-of-the-week-white.svg?react";
-import BrandOfTheMonth from "@/assets/images/brand-of-the-month-white.svg?react";
-import AllTimeBrand from "@/assets/images/all-time-brand-white.svg?react";
+import BrandOfTheWeek from '@/assets/images/brand-of-the-week-white.svg?react';
+import BrandOfTheMonth from '@/assets/images/brand-of-the-month-white.svg?react';
+import AllTimeBrand from '@/assets/images/all-time-brand-white.svg?react';
 
-import { BrandTimePeriod } from "@/shared/components/TimePeriodFilter";
-import Typography from "@/shared/components/Typography";
+import { BrandTimePeriod } from '@/shared/components/TimePeriodFilter';
+import Typography from '@/shared/components/Typography';
 
 interface PeriodBasedBrandsListProps {
   period: BrandTimePeriod;
@@ -33,7 +33,7 @@ const PERIOD_SVGS: Record<BrandTimePeriod, React.ComponentType> = {
   all: AllTimeBrand,
 };
 
-const PERIODS: BrandTimePeriod[] = ["week", "month", "all"];
+const PERIODS: BrandTimePeriod[] = ['week', 'month', 'all'];
 
 function PeriodBasedBrandsList({
   period,
@@ -130,39 +130,39 @@ function PeriodBasedBrandsList({
           <ul className={styles.brandsList}>
             {isLoading || !processedBrands || processedBrands.length === 0
               ? // Show skeleton loading state
-                Array.from({ length: 3 }).map((_, index) => (
-                  <li key={`skeleton-${index}`} className={styles.brandItem}>
-                    <div className={styles.brandInfo}>
-                      <div className={styles.skeletonImage} />
-                      <div className={styles.skeletonName} />
-                    </div>
-                  </li>
-                ))
+              Array.from({ length: 3 }).map((_, index) => (
+                <li key={`skeleton-${index}`} className={styles.brandItem}>
+                  <div className={styles.brandInfo}>
+                    <div className={styles.skeletonImage} />
+                    <div className={styles.skeletonName} />
+                  </div>
+                </li>
+              ))
               : // Show actual brand data
-                processedBrands.map((brand: Brand, index: number) => (
-                  <li
-                    onClick={(e) => handleClickBrand(e, brand.id.toString())}
-                    key={`brand-item-${index}`}
-                    className={styles.brandItem}
-                  >
-                    <div className={styles.brandInfo}>
-                      <img
-                        src={brand.imageUrl}
-                        alt={brand.name}
-                        className={styles.brandImage}
-                      />
-                      <Typography
-                        size={14}
-                        lineHeight={14}
-                        weight="medium"
-                        variant="geist"
-                        className={styles.brandName}
-                      >
-                        {truncateName(brand.name)}
-                      </Typography>
-                    </div>
-                  </li>
-                ))}
+              processedBrands.map((brand: Brand, index: number) => (
+                <li
+                  onClick={(e) => handleClickBrand(e, brand.id.toString())}
+                  key={`brand-item-${index}`}
+                  className={styles.brandItem}
+                >
+                  <div className={styles.brandInfo}>
+                    <img
+                      src={brand.imageUrl}
+                      alt={brand.name}
+                      className={styles.brandImage}
+                    />
+                    <Typography
+                      size={14}
+                      lineHeight={14}
+                      weight="medium"
+                      variant="geist"
+                      className={styles.brandName}
+                    >
+                      {truncateName(brand.name)}
+                    </Typography>
+                  </div>
+                </li>
+              ))}
           </ul>
         </div>
       </div>
@@ -172,7 +172,7 @@ function PeriodBasedBrandsList({
           <div
             key={index}
             className={`${styles.dot} ${
-              index === currentPeriodIndex ? styles.activeDot : ""
+              index === currentPeriodIndex ? styles.activeDot : ''
             }`}
           />
         ))}

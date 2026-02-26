@@ -1,8 +1,8 @@
 // Dependencies
-import { useQuery } from "@tanstack/react-query";
+import { useQuery } from '@tanstack/react-query';
 
 // Services
-import { getUserProfile, UserProfileData } from "@/services/user";
+import { getUserProfile, UserProfileData } from '@/services/user';
 
 /**
  * Hook for fetching the current user's profile data including stats and metrics.
@@ -10,7 +10,7 @@ import { getUserProfile, UserProfileData } from "@/services/user";
  */
 export const useUserProfile = () => {
   return useQuery({
-    queryKey: ["userProfile"],
+    queryKey: ['userProfile'],
     queryFn: getUserProfile,
     staleTime: 2 * 60 * 1000, // Consider data fresh for 2 minutes
   });

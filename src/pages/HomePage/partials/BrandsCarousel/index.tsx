@@ -1,25 +1,25 @@
 // Dependencies
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 
 // Components
-import TrendBrands from "../TrendBrands";
-import NewBrands from "../NewBrands";
-import AllBrands from "../AllBrands";
+import TrendBrands from '../TrendBrands';
+import NewBrands from '../NewBrands';
+import AllBrands from '../AllBrands';
 
 // StyleSheet
-import styles from "./BrandsCarousel.module.scss";
+import styles from './BrandsCarousel.module.scss';
 
 // Types
-import { BrandTimePeriod } from "@/shared/components/TimePeriodFilter";
+import { BrandTimePeriod } from '@/shared/components/TimePeriodFilter';
 
 interface BrandsCarouselProps {
   period: BrandTimePeriod;
 }
 
 const carouselItems = [
-  { component: TrendBrands, label: "Top" },
-  { component: NewBrands, label: "New" },
-  { component: AllBrands, label: "All" },
+  { component: TrendBrands, label: 'Top' },
+  { component: NewBrands, label: 'New' },
+  { component: AllBrands, label: 'All' },
 ];
 
 function BrandsCarousel({ period }: BrandsCarouselProps): React.ReactNode {
@@ -46,7 +46,7 @@ function BrandsCarousel({ period }: BrandsCarouselProps): React.ReactNode {
           <div
             key={index}
             className={`${styles.indicator} ${
-              index === currentIndex ? styles.active : ""
+              index === currentIndex ? styles.active : ''
             }`}
           />
         ))}

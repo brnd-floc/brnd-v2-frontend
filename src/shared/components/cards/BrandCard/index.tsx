@@ -1,24 +1,24 @@
 // Dependencies
-import classNames from "clsx";
-import { AnimatePresence, motion } from "framer-motion";
+import classNames from 'clsx';
+import { AnimatePresence, motion } from 'framer-motion';
 
 // StyleSheet
-import styles from "./BrandCard.module.scss";
+import styles from './BrandCard.module.scss';
 
 // Components
-import Typography from "../../Typography";
+import Typography from '../../Typography';
 
 // Hooks
-import { BrandStateScoreType } from "@/hooks/brands";
+import { BrandStateScoreType } from '@/hooks/brands';
 
 // Utils
-import { shortenNumber } from "@/utils/number";
+import { shortenNumber } from '@/utils/number';
 
 interface BrandCardProps {
   readonly name: string;
   readonly photoUrl: string;
-  readonly size?: "s" | "m" | "l";
-  readonly orientation?: "left" | "center" | "right";
+  readonly size?: 's' | 'm' | 'l';
+  readonly orientation?: 'left' | 'center' | 'right';
   readonly selected?: boolean;
   readonly onClick: () => void;
   readonly score: number;
@@ -26,7 +26,7 @@ interface BrandCardProps {
   readonly className?: string;
   readonly disabled?: boolean;
   readonly podiumPosition?: number | null;
-  readonly context?: "podium" | "leaderboard" | "ranking" | null;
+  readonly context?: 'podium' | 'leaderboard' | 'ranking' | null;
 }
 
 export default function BrandCard({
@@ -35,11 +35,11 @@ export default function BrandCard({
   name,
   photoUrl,
   score,
-  size = "m",
-  orientation = "left",
+  size = 'm',
+  orientation = 'left',
   selected,
   onClick,
-  className = "",
+  className = '',
   disabled = false,
 }: BrandCardProps) {
   /**
@@ -91,12 +91,12 @@ export default function BrandCard({
    */
   const getInitialPosition = (orientation: string) => {
     switch (orientation) {
-      case "left":
-        return { x: "-100%", y: "-100%" };
-      case "center":
-        return { y: "-100%" };
+      case 'left':
+        return { x: '-100%', y: '-100%' };
+      case 'center':
+        return { y: '-100%' };
       default:
-        return { x: "100%", y: "-100%" };
+        return { x: '100%', y: '-100%' };
     }
   };
 
@@ -107,12 +107,12 @@ export default function BrandCard({
    */
   const getExitPosition = (orientation: string) => {
     switch (orientation) {
-      case "left":
-        return { x: "100%", y: "100%" };
-      case "center":
-        return { y: "100%" };
+      case 'left':
+        return { x: '100%', y: '100%' };
+      case 'center':
+        return { y: '100%' };
       default:
-        return { x: "-100%", y: "100%" };
+        return { x: '-100%', y: '100%' };
     }
   };
 
@@ -134,7 +134,7 @@ export default function BrandCard({
             initial={getInitialPosition(orientation)}
             animate={{ x: 0, y: 0 }}
             exit={getExitPosition(orientation)}
-            transition={{ duration: 0.25, ease: "easeInOut" }}
+            transition={{ duration: 0.25, ease: 'easeInOut' }}
           />
         )}
       </AnimatePresence>
@@ -148,29 +148,29 @@ export default function BrandCard({
           />
 
           <div className={styles.score}>
-            {context === "podium" ? (
+            {context === 'podium' ? (
               <Typography
-                weight={"regular"}
-                variant={"geist"}
+                weight={'regular'}
+                variant={'geist'}
                 size={33}
                 lineHeight={33}
-                textAlign={"center"}
+                textAlign={'center'}
               >
                 {podiumPosition === 1
-                  ? "🥇"
+                  ? '🥇'
                   : podiumPosition === 2
-                  ? "🥈"
-                  : podiumPosition === 3
-                  ? "🥉"
-                  : podiumPosition}
+                    ? '🥈'
+                    : podiumPosition === 3
+                      ? '🥉'
+                      : podiumPosition}
               </Typography>
             ) : (
               <Typography
-                weight={"regular"}
-                variant={"geist"}
+                weight={'regular'}
+                variant={'geist'}
                 size={sizes[size].score.size}
                 lineHeight={sizes[size].score.lineHeight}
-                textAlign={"center"}
+                textAlign={'center'}
               >
                 {shortenNumber(score)}
               </Typography>
@@ -178,10 +178,10 @@ export default function BrandCard({
           </div>
         </div>
         <Typography
-          as={"p"}
+          as={'p'}
           size={sizes[size].title.size}
           lineHeight={sizes[size].title.lineHeight}
-          weight={"semiBold"}
+          weight={'semiBold'}
         >
           {name}
         </Typography>

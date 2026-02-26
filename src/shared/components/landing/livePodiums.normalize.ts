@@ -4,18 +4,18 @@ import type {
   ApiPodiumRaw,
   LivePodium,
   LivePodiumBrand,
-} from "./livePodiums.types";
+} from './livePodiums.types';
 
 export function sanitizeBrand(
   rawBrand: ApiBrandRaw | null | undefined
 ): LivePodiumBrand | null {
-  if (!rawBrand || typeof rawBrand !== "object") {
+  if (!rawBrand || typeof rawBrand !== 'object') {
     return null;
   }
 
   const parsedId = Number(rawBrand.id);
-  const safeName = (rawBrand.name || "").trim() || "Brand";
-  const safeImageUrl = (rawBrand.imageUrl || rawBrand.logo || "").trim() || null;
+  const safeName = (rawBrand.name || '').trim() || 'Brand';
+  const safeImageUrl = (rawBrand.imageUrl || rawBrand.logo || '').trim() || null;
 
   return {
     id: Number.isFinite(parsedId) ? parsedId : -1,
@@ -32,8 +32,8 @@ export function sanitizePodium(rawPodium: ApiPodiumRaw, index: number): LivePodi
     rawPodium.handle ||
     rawPodium.user?.username ||
     rawPodium.user?.handle ||
-    ""
-  ).trim() || "user";
+    ''
+  ).trim() || 'user';
   const safeUserPhoto = (
     rawPodium.userPhoto ||
     rawPodium.userAvatar ||
@@ -41,7 +41,7 @@ export function sanitizePodium(rawPodium: ApiPodiumRaw, index: number): LivePodi
     rawPodium.avatar ||
     rawPodium.user?.photoUrl ||
     rawPodium.user?.avatar ||
-    ""
+    ''
   ).trim() || null;
 
   return {
@@ -58,11 +58,11 @@ export function sanitizePodium(rawPodium: ApiPodiumRaw, index: number): LivePodi
 export function normalizePodiumsResponse(input: unknown): LivePodium[] {
   if (Array.isArray(input)) {
     return input
-      .filter((item): item is ApiPodiumRaw => Boolean(item && typeof item === "object"))
+      .filter((item): item is ApiPodiumRaw => Boolean(item && typeof item === 'object'))
       .map((item, index) => sanitizePodium(item, index));
   }
 
-  if (!input || typeof input !== "object") {
+  if (!input || typeof input !== 'object') {
     return [];
   }
 
@@ -71,7 +71,7 @@ export function normalizePodiumsResponse(input: unknown): LivePodium[] {
 
   if (Array.isArray(payload.data)) {
     podiumsCandidate = payload.data;
-  } else if (payload.data && typeof payload.data === "object") {
+  } else if (payload.data && typeof payload.data === 'object') {
     const nestedPayload = payload.data as { data?: unknown };
     if (Array.isArray(nestedPayload.data)) {
       podiumsCandidate = nestedPayload.data;
@@ -83,6 +83,6 @@ export function normalizePodiumsResponse(input: unknown): LivePodium[] {
   }
 
   return podiumsCandidate
-    .filter((item): item is ApiPodiumRaw => Boolean(item && typeof item === "object"))
+    .filter((item): item is ApiPodiumRaw => Boolean(item && typeof item === 'object'))
     .map((item, index) => sanitizePodium(item, index));
 }

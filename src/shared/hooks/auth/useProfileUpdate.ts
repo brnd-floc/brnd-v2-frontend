@@ -1,11 +1,11 @@
 // Dependencies
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 // Services
-import { updateProfile } from "@/services/auth";
+import { updateProfile } from '@/services/auth';
 
 // Hooks
-import { ModalsIds, useModal } from "../ui/useModal";
+import { ModalsIds, useModal } from '../ui/useModal';
 
 /**
  * Custom hook for updating user profile information.
@@ -26,16 +26,16 @@ export const useProfileUpdate = () => {
 
     onSuccess: (data) => {
       // Update the cached auth data with the new profile information
-      queryClient.setQueryData(["auth"], data);
+      queryClient.setQueryData(['auth'], data);
 
       // Optionally show success message
     },
 
     onError: (error) => {
-      console.error("Profile update error:", error);
+      console.error('Profile update error:', error);
       openModal(ModalsIds.ERROR, {
-        title: "Unable to update profile",
-        message: "Failed to save your profile changes. Please try again.",
+        title: 'Unable to update profile',
+        message: 'Failed to save your profile changes. Please try again.',
       });
     },
   });

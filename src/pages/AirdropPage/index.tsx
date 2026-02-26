@@ -5,36 +5,36 @@ import React, {
   useCallback,
   useMemo,
   useRef,
-} from "react";
-import { useNavigate, useLocation, useParams } from "react-router-dom";
+} from 'react';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 
 // StyleSheet
-import styles from "./AirdropPage.module.scss";
+import styles from './AirdropPage.module.scss';
 
 // Components
-import Typography from "@/shared/components/Typography";
-import LoaderIndicator from "@/shared/components/LoaderIndicator";
-import Button from "@/shared/components/Button";
+import Typography from '@/shared/components/Typography';
+import LoaderIndicator from '@/shared/components/LoaderIndicator';
+import Button from '@/shared/components/Button';
 
 // Hooks
-import { useAirdropCheck } from "@/shared/hooks/user/useAirdropCheck";
-import { useAirdropLeaderboard } from "@/shared/hooks/user/useAirdropLeaderboard";
+import { useAirdropCheck } from '@/shared/hooks/user/useAirdropCheck';
+import { useAirdropLeaderboard } from '@/shared/hooks/user/useAirdropLeaderboard';
 // import { useAirdropClaimStatus } from "@/shared/hooks/user/useAirdropClaimStatus";
 // import { useAirdropStats } from "@/shared/hooks/contract/useAirdropStats";
 
 // Hocs
-import withProtectionRoute from "@/hocs/withProtectionRoute";
-import sdk from "@farcaster/miniapp-sdk";
-import CheckLabelIcon from "@/assets/icons/check-label-icon.svg?react";
-import { useAuth } from "@/shared/hooks/auth/useAuth";
-import AirdropSvg from "@/shared/assets/images/airdrop.svg?react";
-import IncompleteTaskIcon from "@/shared/assets/icons/incomplete-task.svg?react";
-import QuestionMarkIcon from "@/shared/assets/icons/question-mark.svg?react";
-import SnapshotIcon from "@/shared/assets/icons/snapshot.svg?react";
-import Logo from "@/assets/images/logo.svg";
+import withProtectionRoute from '@/hocs/withProtectionRoute';
+import sdk from '@farcaster/miniapp-sdk';
+import CheckLabelIcon from '@/assets/icons/check-label-icon.svg?react';
+import { useAuth } from '@/shared/hooks/auth/useAuth';
+import AirdropSvg from '@/shared/assets/images/airdrop.svg?react';
+import IncompleteTaskIcon from '@/shared/assets/icons/incomplete-task.svg?react';
+import QuestionMarkIcon from '@/shared/assets/icons/question-mark.svg?react';
+import SnapshotIcon from '@/shared/assets/icons/snapshot.svg?react';
+import Logo from '@/assets/images/logo.svg';
 
 // Assets
-import airdropBackgroundImage from "@/shared/assets/images/airdrop-background.png";
+import airdropBackgroundImage from '@/shared/assets/images/airdrop-background.png';
 
 // Partials
 // import ClaimAirdrop from "./partials/ClaimAirdrop";
@@ -42,14 +42,14 @@ import airdropBackgroundImage from "@/shared/assets/images/airdrop-background.pn
 // Admin FIDs
 const ADMIN_FIDS = [6431, 6099, 8109, 222144, 16098];
 
-type PageView = "main" | "leaderboard" | "multipliers" | "claim" | "admin";
+type PageView = 'main' | 'leaderboard' | 'multipliers' | 'claim' | 'admin';
 
 function AirdropPage(): React.ReactNode {
   const navigate = useNavigate();
   const location = useLocation();
   const { fid: routeFid } = useParams();
   const [expandedQuest, setExpandedQuest] = useState<number | null>(null);
-  const [currentView, setCurrentView] = useState<PageView>("main");
+  const [currentView, setCurrentView] = useState<PageView>('main');
   // const [adminInput, setAdminInput] = useState<string>("");
   const [shouldFetchQuests, setShouldFetchQuests] = useState(false);
   const hasFetchedQuestsRef = useRef(false);
@@ -84,20 +84,20 @@ function AirdropPage(): React.ReactNode {
     refetch: refetchQuests,
   } = useAirdropCheck({ enabled: shouldFetchQuests });
 
-  console.log("WENA CTM");
+  console.log('WENA CTM');
 
   // Auto-fetch quests data when on main view (only once)
   useEffect(() => {
-    if (currentView === "main" && !hasFetchedQuestsRef.current) {
+    if (currentView === 'main' && !hasFetchedQuestsRef.current) {
       setShouldFetchQuests(true);
       hasFetchedQuestsRef.current = true;
     }
   }, [currentView]);
 
   // Countdown to midnight UTC
-  const [countdown, setCountdown] = useState<string>("00:00:00");
+  const [countdown, setCountdown] = useState<string>('00:00:00');
   const [airdropStartCountdown, setAirdropStartCountdown] =
-    useState<string>("");
+    useState<string>('');
 
   // Calculate time until midnight UTC
   const getTimeUntilMidnightUTC = useCallback(() => {
@@ -108,16 +108,16 @@ function AirdropPage(): React.ReactNode {
     const midnightUTC = Date.UTC(utcYear, utcMonth, utcDate + 1, 0, 0, 0);
     const diff = midnightUTC - now.getTime();
 
-    if (diff <= 0) return "00:00:00";
+    if (diff <= 0) return '00:00:00';
 
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(
       2,
-      "0"
-    )}:${String(seconds).padStart(2, "0")}`;
+      '0'
+    )}:${String(seconds).padStart(2, '0')}`;
   }, []);
 
   // Calculate time until airdrop start: December 19th, 2025 at 13:13 PM UTC
@@ -125,7 +125,7 @@ function AirdropPage(): React.ReactNode {
     const now = new Date();
     const diff = airdropStartDate.getTime() - now.getTime();
 
-    if (diff <= 0) return "00:00:00";
+    if (diff <= 0) return '00:00:00';
 
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -133,15 +133,15 @@ function AirdropPage(): React.ReactNode {
     const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
     if (days > 0) {
-      return `${days}d ${String(hours).padStart(2, "0")}h ${String(
+      return `${days}d ${String(hours).padStart(2, '0')}h ${String(
         minutes
-      ).padStart(2, "0")}m ${String(seconds).padStart(2, "0")}s`;
+      ).padStart(2, '0')}m ${String(seconds).padStart(2, '0')}s`;
     }
 
-    return `${String(hours).padStart(2, "0")}h ${String(minutes).padStart(
+    return `${String(hours).padStart(2, '0')}h ${String(minutes).padStart(
       2,
-      "0"
-    )}m ${String(seconds).padStart(2, "0")}s`;
+      '0'
+    )}m ${String(seconds).padStart(2, '0')}s`;
   }, []);
 
   // Update countdowns every second
@@ -183,12 +183,12 @@ function AirdropPage(): React.ReactNode {
 
   // Handle route changes
   useEffect(() => {
-    if (location.pathname === "/claim-airdrop") {
-      setCurrentView("claim");
-    } else if (isAdmin && location.pathname === "/airdrop" && !routeFid) {
-      setCurrentView("admin");
+    if (location.pathname === '/claim-airdrop') {
+      setCurrentView('claim');
+    } else if (isAdmin && location.pathname === '/airdrop' && !routeFid) {
+      setCurrentView('admin');
     } else {
-      setCurrentView("main");
+      setCurrentView('main');
     }
   }, [location.pathname, isAdmin, routeFid]);
 
@@ -201,19 +201,19 @@ function AirdropPage(): React.ReactNode {
     sdk.haptics.selectionChanged();
     e.preventDefault();
     e.stopPropagation();
-    setCurrentView("multipliers");
+    setCurrentView('multipliers');
   };
 
   const handleLeaderboardClick = (e: React.MouseEvent) => {
     sdk.haptics.selectionChanged();
     e.preventDefault();
     e.stopPropagation();
-    setCurrentView("leaderboard");
+    setCurrentView('leaderboard');
   };
 
   const handleClaimAirdrop = () => {
     sdk.haptics.selectionChanged();
-    setCurrentView("claim");
+    setCurrentView('claim');
   };
 
   // const handleAdminImpersonate = () => {
@@ -226,7 +226,7 @@ function AirdropPage(): React.ReactNode {
 
   const handleBackToMain = () => {
     sdk.haptics.selectionChanged();
-    navigate("/");
+    navigate('/');
   };
 
   const toggleQuest = (questId: number) => {
@@ -242,16 +242,16 @@ function AirdropPage(): React.ReactNode {
 
   // Individual quest rendering functions for granular control
   const renderFollowAccountsQuest = () => {
-    const challenge = getChallengeData("Follow Accounts");
+    const challenge = getChallengeData('Follow Accounts');
     if (!challenge) return null;
 
     const accounts = challenge.details?.accounts || [];
-    const brndAccount = accounts.find((acc: any) => acc.name === "@brnd");
-    const flocAccount = accounts.find((acc: any) => acc.name === "@floc");
+    const brndAccount = accounts.find((acc: any) => acc.name === '@brnd');
+    const flocAccount = accounts.find((acc: any) => acc.name === '@floc');
 
     return {
       id: 1,
-      title: "FOLLOW @BRND + @FLOC",
+      title: 'FOLLOW @BRND + @FLOC',
       progress: `${challenge.progress.current}/${challenge.progress.required}`,
       isCompleted: challenge.completed,
       currentMultiplier: challenge.currentMultiplier,
@@ -265,14 +265,14 @@ function AirdropPage(): React.ReactNode {
       customDetails: {
         accounts: [
           {
-            name: "@brnd",
+            name: '@brnd',
             followed: brndAccount?.followed || false,
-            status: brndAccount?.followed ? "✅ Following" : "❌ Not Following",
+            status: brndAccount?.followed ? '✅ Following' : '❌ Not Following',
           },
           {
-            name: "@floc",
+            name: '@floc',
             followed: flocAccount?.followed || false,
-            status: flocAccount?.followed ? "✅ Following" : "❌ Not Following",
+            status: flocAccount?.followed ? '✅ Following' : '❌ Not Following',
           },
         ],
       },
@@ -286,7 +286,7 @@ function AirdropPage(): React.ReactNode {
   };
 
   const renderChannelInteractionQuest = () => {
-    const challenge = getChallengeData("Channel Interaction /brnd");
+    const challenge = getChallengeData('Channel Interaction /brnd');
     if (!challenge) return null;
 
     const channelFollow = challenge.details?.channelFollow;
@@ -294,7 +294,7 @@ function AirdropPage(): React.ReactNode {
 
     return {
       id: 2,
-      title: "INTERACT WITH /BRND CHANNEL",
+      title: 'INTERACT WITH /BRND CHANNEL',
       progress: `${challenge.progress.current}/${challenge.progress.required}`,
       isCompleted: challenge.completed,
       currentMultiplier: challenge.currentMultiplier,
@@ -307,8 +307,8 @@ function AirdropPage(): React.ReactNode {
       nextTier: challenge.tiers.find((tier: any) => !tier.achieved),
       customDetails: {
         channelStatus: channelFollow?.followed
-          ? "✅ Following /brnd"
-          : "❌ Not Following /brnd",
+          ? '✅ Following /brnd'
+          : '❌ Not Following /brnd',
         podiumsPublished: `📤 ${podiumCasts?.count || 0} podiums published`,
         requirement: `Need ${
           podiumCasts?.required || 1
@@ -317,8 +317,8 @@ function AirdropPage(): React.ReactNode {
       tasks: challenge.tiers.map((tier: any) => ({
         name:
           tier.requirement === 1
-            ? "Follow channel"
-            : "Follow + Publish podiums",
+            ? 'Follow channel'
+            : 'Follow + Publish podiums',
         multiplier: `${tier.multiplier}X`,
         completed: tier.achieved,
         requirement: tier.requirement,
@@ -327,16 +327,16 @@ function AirdropPage(): React.ReactNode {
   };
 
   const renderHoldingBrndQuest = () => {
-    const challenge = getChallengeData("Holding $BRND");
+    const challenge = getChallengeData('Holding $BRND');
     if (!challenge) return null;
 
     const details = challenge.details;
-    const walletBalance = details?.formattedWalletBalance || "0";
-    const stakedBalance = details?.formattedStakedBalance || "0";
+    const walletBalance = details?.formattedWalletBalance || '0';
+    const stakedBalance = details?.formattedStakedBalance || '0';
 
     return {
       id: 3,
-      title: "HOLDING $BRND",
+      title: 'HOLDING $BRND',
       progress: `${
         Math.round(challenge.progress.current)?.toLocaleString() ?? 0
       }/${challenge.progress.required?.toLocaleString() ?? 0}`,
@@ -352,12 +352,12 @@ function AirdropPage(): React.ReactNode {
       customDetails: {
         walletBalance: `💰 Wallet: ${walletBalance} $BRND`,
         stakedBalance: `🥩 Staked: ${stakedBalance} $BRND`,
-        totalBalance: `📊 Total: ${details?.formattedBalance || "0"} $BRND`,
+        totalBalance: `📊 Total: ${details?.formattedBalance || '0'} $BRND`,
         nextTierInfo: details?.nextTier
           ? `Next: ${
-              details.nextTier?.requirement?.toLocaleString() ?? 0
-            } $BRND (${details.nextTier?.multiplier?.toLocaleString() ?? 0}X)`
-          : "Max tier reached!",
+            details.nextTier?.requirement?.toLocaleString() ?? 0
+          } $BRND (${details.nextTier?.multiplier?.toLocaleString() ?? 0}X)`
+          : 'Max tier reached!',
       },
       tasks: challenge.tiers.map((tier: any) => ({
         name: `${tier.requirement?.toLocaleString() ?? 0} $BRND`,
@@ -369,12 +369,12 @@ function AirdropPage(): React.ReactNode {
   };
 
   const renderCollectiblesQuest = () => {
-    const challenge = getChallengeData("Collect @brndbot casts");
+    const challenge = getChallengeData('Collect @brndbot casts');
     if (!challenge) return null;
 
     return {
       id: 4,
-      title: "COLLECT CAST COLLECTIBLES",
+      title: 'COLLECT CAST COLLECTIBLES',
       progress: `${challenge.progress.current}/${challenge.progress.required}`,
       isCompleted: challenge.completed,
       currentMultiplier: challenge.currentMultiplier,
@@ -390,7 +390,7 @@ function AirdropPage(): React.ReactNode {
         needed: `Need ${
           challenge.progress.required - challenge.progress.current
         } more`,
-        source: "From @brndy or @brnd casts",
+        source: 'From @brndy or @brnd casts',
       },
       tasks: challenge.tiers.map((tier: any) => ({
         name: `${tier.requirement} collectibles`,
@@ -402,12 +402,12 @@ function AirdropPage(): React.ReactNode {
   };
 
   const renderVotingQuest = () => {
-    const challenge = getChallengeData("# of different brands voted");
+    const challenge = getChallengeData('# of different brands voted');
     if (!challenge) return null;
 
     return {
       id: 5,
-      title: "VOTING FOR DIFFERENT BRANDS",
+      title: 'VOTING FOR DIFFERENT BRANDS',
       progress: `${challenge.progress.current}/${challenge.progress.required}`,
       isCompleted: challenge.completed,
       currentMultiplier: challenge.currentMultiplier,
@@ -424,8 +424,8 @@ function AirdropPage(): React.ReactNode {
         } unique brands voted`,
         nextTarget: challenge.details?.nextTier
           ? `Next: ${challenge.details.nextTier.requirement} brands (${challenge.details.nextTier.multiplier}X)`
-          : "Max tier reached!",
-        tip: "Vote for more variety to increase multiplier",
+          : 'Max tier reached!',
+        tip: 'Vote for more variety to increase multiplier',
       },
       tasks: challenge.tiers.map((tier: any) => ({
         name: `${tier.requirement} brands`,
@@ -437,12 +437,12 @@ function AirdropPage(): React.ReactNode {
   };
 
   const renderSharingQuest = () => {
-    const challenge = getChallengeData("Podiums Shared");
+    const challenge = getChallengeData('Podiums Shared');
     if (!challenge) return null;
 
     return {
       id: 6,
-      title: "SHARING PODIUMS",
+      title: 'SHARING PODIUMS',
       progress: `${challenge.progress.current}/${challenge.progress.required}`,
       isCompleted: challenge.completed,
       currentMultiplier: challenge.currentMultiplier,
@@ -459,8 +459,8 @@ function AirdropPage(): React.ReactNode {
         } podiums shared`,
         nextTarget: challenge.details?.nextTier
           ? `Next: ${challenge.details.nextTier.requirement} shares (${challenge.details.nextTier.multiplier}X)`
-          : "Max tier reached!",
-        tip: "Share your voting results to increase multiplier",
+          : 'Max tier reached!',
+        tip: 'Share your voting results to increase multiplier',
       },
       tasks: challenge.tiers.map((tier: any) => ({
         name: `${tier.requirement} podiums`,
@@ -472,12 +472,12 @@ function AirdropPage(): React.ReactNode {
   };
 
   const renderNeynarQuest = () => {
-    const challenge = getChallengeData("Neynar Score");
+    const challenge = getChallengeData('Neynar Score');
     if (!challenge) return null;
 
     return {
       id: 7,
-      title: "NEYNAR SCORE",
+      title: 'NEYNAR SCORE',
       progress: `${challenge.progress.current}/${challenge.progress.required}`,
       isCompleted: challenge.completed,
       currentMultiplier: challenge.currentMultiplier,
@@ -494,8 +494,8 @@ function AirdropPage(): React.ReactNode {
         }`,
         nextTarget: challenge.details?.nextTier
           ? `Next: ${challenge.details.nextTier.requirement} score (${challenge.details.nextTier.multiplier}X)`
-          : "Max tier reached!",
-        tip: "Maintain high reputation score on Neynar",
+          : 'Max tier reached!',
+        tip: 'Maintain high reputation score on Neynar',
       },
       tasks: challenge.tiers.map((tier: any) => ({
         name: `${tier.requirement}`,
@@ -507,12 +507,12 @@ function AirdropPage(): React.ReactNode {
   };
 
   const renderProUserQuest = () => {
-    const challenge = getChallengeData("Pro User");
+    const challenge = getChallengeData('Pro User');
     if (!challenge) return null;
 
     return {
       id: 8,
-      title: "FARCASTER PRO",
+      title: 'FARCASTER PRO',
       progress: `${challenge.progress.current}/${challenge.progress.required}`,
       isCompleted: challenge.completed,
       currentMultiplier: challenge.currentMultiplier,
@@ -523,13 +523,13 @@ function AirdropPage(): React.ReactNode {
       nextTier: challenge.details?.nextTier,
       customDetails: {
         status: challenge.details?.isProUser
-          ? "✅ Farcaster Pro Active"
-          : "❌ Not Farcaster Pro",
-        benefit: "Subscribe to Farcaster Pro for multiplier boost",
+          ? '✅ Farcaster Pro Active'
+          : '❌ Not Farcaster Pro',
+        benefit: 'Subscribe to Farcaster Pro for multiplier boost',
       },
       tasks: challenge.tiers.map((tier: any) => ({
-        name: "Pro subscription",
-        multiplier: `1.2X`,
+        name: 'Pro subscription',
+        multiplier: '1.2X',
         completed: tier.achieved,
         requirement: tier.requirement,
       })),
@@ -740,7 +740,7 @@ function AirdropPage(): React.ReactNode {
   // OR if current view is explicitly set to claim
 
   // Admin Dashboard View
-  if (currentView === "admin" && isAdmin) {
+  if (currentView === 'admin' && isAdmin) {
     return (
       <div className={styles.container}>
         <div className={styles.airdropTitle}>
@@ -944,7 +944,7 @@ function AirdropPage(): React.ReactNode {
           </svg>
         </button>
 
-        {currentView === "multipliers" ? (
+        {currentView === 'multipliers' ? (
           <div className={`${styles.leaderboardCard} ${styles.nonClickable}`}>
             <div className={styles.leaderboardContent}>
               <div className={styles.leaderboardLabelContainer}>
@@ -963,10 +963,10 @@ function AirdropPage(): React.ReactNode {
         ) : (
           <div
             className={`${styles.leaderboardCard} ${
-              currentView === "main" ? "" : styles.nonClickable
+              currentView === 'main' ? '' : styles.nonClickable
             }`}
             onClick={
-              currentView === "main" ? handleLeaderboardClick : undefined
+              currentView === 'main' ? handleLeaderboardClick : undefined
             }
           >
             <div className={styles.pfpBox}>
@@ -980,7 +980,7 @@ function AirdropPage(): React.ReactNode {
             </div>
 
             <div className={styles.leaderboardContent}>
-              {currentView === "main" && (
+              {currentView === 'main' && (
                 <div className={styles.leaderboardLabelContainer}>
                   <Typography
                     variant="druk"
@@ -991,7 +991,7 @@ function AirdropPage(): React.ReactNode {
                   >
                     {isViewingOtherUser
                       ? `VIEWING FID ${routeFid}`
-                      : "LEADERBOARD"}
+                      : 'LEADERBOARD'}
                   </Typography>
                   {isAdmin && !isViewingOtherUser && (
                     <Typography
@@ -1015,7 +1015,7 @@ function AirdropPage(): React.ReactNode {
                   lineHeight={32}
                   className={styles.pointsNumber}
                 >
-                  {airdropData?.airdropScore?.toLocaleString() || "—"}
+                  {airdropData?.airdropScore?.toLocaleString() || '—'}
                 </Typography>
                 <Typography
                   variant="druk"
@@ -1034,7 +1034,7 @@ function AirdropPage(): React.ReactNode {
                 lineHeight={32}
                 className={styles.rankNumber}
               >
-                #{airdropData?.leaderboardPosition || "—"}
+                #{airdropData?.leaderboardPosition || '—'}
               </Typography>
             </div>
           </div>
@@ -1042,7 +1042,7 @@ function AirdropPage(): React.ReactNode {
       </div>
 
       {/* Main View - Multipliers Section */}
-      {currentView === "main" && airdropData && (
+      {currentView === 'main' && airdropData && (
         <div className={styles.multipliersSection}>
           <div className={styles.multipliersTextButton}>
             <Typography
@@ -1069,7 +1069,7 @@ function AirdropPage(): React.ReactNode {
       )}
 
       {/* Leaderboard View - Share Button */}
-      {currentView === "leaderboard" && airdropData && (
+      {currentView === 'leaderboard' && airdropData && (
         <div className={styles.shareButton}>
           <Button
             caption="Share"
@@ -1077,11 +1077,11 @@ function AirdropPage(): React.ReactNode {
               sdk.haptics.selectionChanged();
               sdk.actions.composeCast({
                 text: `Check out your points for the $BRND airdrop!\n\nMy stats:\n\nLeaderboard Position: #${
-                  airdropData?.leaderboardPosition || "—"
+                  airdropData?.leaderboardPosition || '—'
                 }\nPoints: ${
-                  airdropData?.airdropScore?.toLocaleString() || "—"
+                  airdropData?.airdropScore?.toLocaleString() || '—'
                 }`,
-                embeds: ["https://brnd.land"],
+                embeds: ['https://brnd.land'],
               });
             }}
             variant="primary"
@@ -1090,7 +1090,7 @@ function AirdropPage(): React.ReactNode {
       )}
 
       {/* Main View - Quests List */}
-      {currentView === "main" && (
+      {currentView === 'main' && (
         <>
           {isQuestsLoading ? (
             <div className={styles.emptyState}>
@@ -1113,7 +1113,7 @@ function AirdropPage(): React.ReactNode {
                 <div key={quest.id} className={styles.questItem}>
                   <div
                     className={`${styles.questHeader} ${
-                      quest.isCompleted ? styles.completed : ""
+                      quest.isCompleted ? styles.completed : ''
                     }`}
                     onClick={() => toggleQuest(quest.id)}
                   >
@@ -1144,19 +1144,19 @@ function AirdropPage(): React.ReactNode {
                           lineHeight={14}
                           className={styles.questProgress}
                         >
-                          {quest.progressData.unit === "$BRND"
+                          {quest.progressData.unit === '$BRND'
                             ? `${
-                                Math.round(
-                                  quest.progressData.current
-                                )?.toLocaleString() ?? 0
-                              } / ${
-                                Math.round(
-                                  quest.progressData.required
-                                )?.toLocaleString() ?? 0
-                              } ${quest.progressData.unit}`
+                              Math.round(
+                                quest.progressData.current
+                              )?.toLocaleString() ?? 0
+                            } / ${
+                              Math.round(
+                                quest.progressData.required
+                              )?.toLocaleString() ?? 0
+                            } ${quest.progressData.unit}`
                             : `${quest.progressData.current.toLocaleString()} / ${quest.progressData.required.toLocaleString()} ${
-                                quest.progressData.unit
-                              }`}
+                              quest.progressData.unit
+                            }`}
                         </Typography>
                         <div className={styles.progressBar}>
                           <div
@@ -1173,8 +1173,8 @@ function AirdropPage(): React.ReactNode {
                           lineHeight={12}
                           className={styles.nextTierInfo}
                         >
-                          Next:{" "}
-                          {quest.nextTier?.requirement?.toLocaleString() ?? 0}{" "}
+                          Next:{' '}
+                          {quest.nextTier?.requirement?.toLocaleString() ?? 0}{' '}
                           {quest.progressData.unit} (
                           {quest.nextTier?.multiplier?.toLocaleString() ?? 0}
                           X)
@@ -1235,12 +1235,12 @@ function AirdropPage(): React.ReactNode {
                                     {firstFollowedAccount
                                       ? `${firstFollowedAccount.name}`
                                       : `1 account (Follow ${
-                                          quest.customDetails.accounts[0]
-                                            ?.name || "@brnd"
-                                        } or ${
-                                          quest.customDetails.accounts[1]
-                                            ?.name || "@floc"
-                                        })`}
+                                        quest.customDetails.accounts[0]
+                                          ?.name || '@brnd'
+                                      } or ${
+                                        quest.customDetails.accounts[1]
+                                          ?.name || '@floc'
+                                      })`}
                                   </Typography>
                                   <Typography
                                     variant="druk"
@@ -1253,7 +1253,7 @@ function AirdropPage(): React.ReactNode {
                                   </Typography>
                                   <div
                                     className={`${styles.taskStatus} ${
-                                      tier1Completed ? styles.taskCompleted : ""
+                                      tier1Completed ? styles.taskCompleted : ''
                                     }`}
                                     aria-hidden
                                   >
@@ -1313,8 +1313,8 @@ function AirdropPage(): React.ReactNode {
                                     className={styles.taskName}
                                   >
                                     {tier2Completed
-                                      ? `@brnd + @floc`
-                                      : `2 accounts (Follow both @brnd + @floc)`}
+                                      ? '@brnd + @floc'
+                                      : '2 accounts (Follow both @brnd + @floc)'}
                                   </Typography>
                                   <Typography
                                     variant="druk"
@@ -1327,7 +1327,7 @@ function AirdropPage(): React.ReactNode {
                                   </Typography>
                                   <div
                                     className={`${styles.taskStatus} ${
-                                      tier2Completed ? styles.taskCompleted : ""
+                                      tier2Completed ? styles.taskCompleted : ''
                                     }`}
                                     aria-hidden
                                   >
@@ -1389,7 +1389,7 @@ function AirdropPage(): React.ReactNode {
                               </Typography>
                               <div
                                 className={`${styles.taskStatus} ${
-                                  task.completed ? styles.taskCompleted : ""
+                                  task.completed ? styles.taskCompleted : ''
                                 }`}
                                 aria-hidden
                               >
@@ -1437,7 +1437,7 @@ function AirdropPage(): React.ReactNode {
               onClick={() => {
                 sdk.haptics.selectionChanged();
                 sdk.actions.viewCast({
-                  hash: "0x10871d1e136be4e37625dd1126be97e873947ea3",
+                  hash: '0x10871d1e136be4e37625dd1126be97e873947ea3',
                 });
               }}
               className={styles.emptyState}
@@ -1456,7 +1456,7 @@ function AirdropPage(): React.ReactNode {
       )}
 
       {/* Leaderboard View - Leaderboard List */}
-      {currentView === "leaderboard" && (
+      {currentView === 'leaderboard' && (
         <div className={styles.leaderboardList}>
           {leaderboardLoading ? (
             <div className={styles.leaderboardLoading}>
@@ -1469,7 +1469,7 @@ function AirdropPage(): React.ReactNode {
                 <div
                   key={entry.fid}
                   className={`${styles.leaderboardItem} ${
-                    isCurrentUser ? styles.highlighted : ""
+                    isCurrentUser ? styles.highlighted : ''
                   }`}
                   onClick={() => {
                     sdk.actions.viewProfile({ fid: entry.fid });
@@ -1481,7 +1481,7 @@ function AirdropPage(): React.ReactNode {
                     size={14}
                     lineHeight={18}
                   >
-                    {String(entry.rank).padStart(2, "0")}
+                    {String(entry.rank).padStart(2, '0')}
                   </Typography>
 
                   <div className={styles.leaderboardUser}>
@@ -1517,7 +1517,7 @@ function AirdropPage(): React.ReactNode {
       )}
 
       {/* Multipliers View - Multipliers Info */}
-      {currentView === "multipliers" && (
+      {currentView === 'multipliers' && (
         <div className={styles.multipliersContent}>
           <Typography
             variant="geist"
@@ -1625,7 +1625,7 @@ function AirdropPage(): React.ReactNode {
       )}
 
       {/* Main View - Claim/Check Button */}
-      {currentView === "main" && (
+      {currentView === 'main' && (
         <div className={styles.claimSection}>
           {(() => {
             // Show loading while checking claim status
@@ -1711,13 +1711,13 @@ function AirdropPage(): React.ReactNode {
       )}
 
       {/* Admin Dashboard Button */}
-      {isAdmin && currentView === "main" && (
+      {isAdmin && currentView === 'main' && (
         <div className={styles.adminDashboardSection}>
           <Button
-            caption={isViewingOtherUser ? "Admin Dashboard" : "Admin Dashboard"}
+            caption={isViewingOtherUser ? 'Admin Dashboard' : 'Admin Dashboard'}
             onClick={() => {
               sdk.haptics.selectionChanged();
-              navigate("/airdrop");
+              navigate('/airdrop');
             }}
             variant="secondary"
           />
@@ -1727,4 +1727,4 @@ function AirdropPage(): React.ReactNode {
   );
 }
 
-export default withProtectionRoute(React.memo(AirdropPage), "only-connected");
+export default withProtectionRoute(React.memo(AirdropPage), 'only-connected');

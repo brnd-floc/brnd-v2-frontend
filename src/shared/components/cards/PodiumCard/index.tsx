@@ -1,17 +1,17 @@
 // /src/components/cards/PodiumCard/index.tsx
 
 // Dependencies
-import React from "react";
-import classNames from "clsx";
+import React from 'react';
+import classNames from 'clsx';
 
 // Components
-import Typography from "@/components/Typography";
+import Typography from '@/components/Typography';
 
 // StyleSheet
-import styles from "./PodiumCard.module.scss";
+import styles from './PodiumCard.module.scss';
 
 // Types
-import { BrandStateScoreType } from "@/hooks/brands";
+import { BrandStateScoreType } from '@/hooks/brands';
 
 interface PodiumCardProps {
   position: number;
@@ -76,14 +76,14 @@ const PodiumCard: React.FC<PodiumCardProps> = ({
   };
 
   const getVariationIcon = () => {
-    if (variation === "up") {
+    if (variation === 'up') {
       return (
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
           <path d="M6 2L10 8H2L6 2Z" fill="#22c55e" />
         </svg>
       );
     }
-    if (variation === "down") {
+    if (variation === 'down') {
       return (
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
           <path d="M6 10L2 4H10L6 10Z" fill="#ef4444" />

@@ -1,36 +1,36 @@
 // Dependencies
-import { useCallback, useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
-import { useNavigate, useLocation } from "react-router-dom";
-import { formatUnits } from "viem";
-import { useConnect } from "wagmi";
+import { useCallback, useState, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { formatUnits } from 'viem';
+import { useConnect } from 'wagmi';
 
 // Hooks
-import { Brand } from "@/hooks/brands";
-import { useAuth } from "@/shared/hooks/auth";
-import { useStoriesInMotion } from "@/shared/hooks/contract/useStoriesInMotion";
+import { Brand } from '@/hooks/brands';
+import { useAuth } from '@/shared/hooks/auth';
+import { useStoriesInMotion } from '@/shared/hooks/contract/useStoriesInMotion';
 
-import QuestionMarkIcon from "@/shared/assets/icons/question-mark.svg?react";
+import QuestionMarkIcon from '@/shared/assets/icons/question-mark.svg?react';
 
 // Components
-import Podium from "@/components/Podium";
-import Typography from "@/components/Typography";
-import IconButton from "@/components/IconButton";
+import Podium from '@/components/Podium';
+import Typography from '@/components/Typography';
+import IconButton from '@/components/IconButton';
 
 // Types
-import { VotingViewProps } from "../../types";
+import { VotingViewProps } from '../../types';
 
 // StyleSheet
-import styles from "./PodiumView.module.scss";
+import styles from './PodiumView.module.scss';
 
 // Assets
-import Logo from "@/assets/images/logo.svg";
-import GoBackIcon from "@/assets/icons/go-back-icon.svg?react";
+import Logo from '@/assets/images/logo.svg';
+import GoBackIcon from '@/assets/icons/go-back-icon.svg?react';
 
 // Hooks
-import { ModalsIds, useModal } from "@/hooks/ui";
-import sdk from "@farcaster/miniapp-sdk";
-import Button from "@/shared/components/Button";
+import { ModalsIds, useModal } from '@/hooks/ui';
+import sdk from '@farcaster/miniapp-sdk';
+import Button from '@/shared/components/Button';
 
 interface PodiumViewProps extends VotingViewProps {}
 
@@ -48,7 +48,7 @@ export default function PodiumView({}: PodiumViewProps) {
 
   const [isVotingOnChain, setIsVotingOnChain] = useState(false);
   const [voteCompleted, setVoteCompleted] = useState(false);
-  const [_voteCost, setVoteCost] = useState<string>("0");
+  const [_voteCost, setVoteCost] = useState<string>('0');
   const [, setVotedBrands] = useState<Brand[] | null>(null);
   // Use ref to access current votedBrands in async callback
   const votedBrandsRef = useRef<Brand[] | null>(null);
@@ -70,7 +70,7 @@ export default function PodiumView({}: PodiumViewProps) {
     undefined, // onLevelUpSuccess
     // onVoteSuccess - after successful vote transaction
     async (txData) => {
-      sdk.haptics.notificationOccurred("success");
+      sdk.haptics.notificationOccurred('success');
 
       const txHash = txData?.txHash;
 
@@ -105,12 +105,12 @@ export default function PodiumView({}: PodiumViewProps) {
         todaysVote:
           brandsInBackendFormat && brandsInBackendFormat.length >= 3
             ? {
-                id: authData?.todaysVote?.id || "", // Will be updated by backend later
-                date: new Date().toISOString(),
-                brand1: brandsInBackendFormat[0], // 1st place
-                brand2: brandsInBackendFormat[1], // 2nd place
-                brand3: brandsInBackendFormat[2], // 3rd place
-              }
+              id: authData?.todaysVote?.id || '', // Will be updated by backend later
+              date: new Date().toISOString(),
+              brand1: brandsInBackendFormat[0], // 1st place
+              brand2: brandsInBackendFormat[1], // 2nd place
+              brand3: brandsInBackendFormat[2], // 3rd place
+            }
             : authData?.todaysVote || null,
         todaysVoteStatus: {
           hasVoted: true,
@@ -123,7 +123,7 @@ export default function PodiumView({}: PodiumViewProps) {
         },
         contextualTransaction: {
           transactionHash: txHash,
-          transactionType: "vote",
+          transactionType: 'vote',
           day: day,
         },
       });
@@ -173,7 +173,7 @@ export default function PodiumView({}: PodiumViewProps) {
       // Check if we have exactly 3 brands
       if (brands.length !== 3) {
         openModal(ModalsIds.BOTTOM_ALERT, {
-          title: "Invalid Selection",
+          title: 'Invalid Selection',
           content: (
             <Typography>
               Please select exactly 3 brands for your podium.
@@ -188,7 +188,7 @@ export default function PodiumView({}: PodiumViewProps) {
       const uniqueIds = new Set(brandIds);
       if (uniqueIds.size !== 3) {
         openModal(ModalsIds.BOTTOM_ALERT, {
-          title: "Duplicate Selection",
+          title: 'Duplicate Selection',
           content: (
             <Typography>
               Please select 3 different brands for your podium.
@@ -201,7 +201,7 @@ export default function PodiumView({}: PodiumViewProps) {
       // Check if user has already voted today (backend check)
       if (authData?.hasVotedToday) {
         openModal(ModalsIds.BOTTOM_ALERT, {
-          title: "Already Voted",
+          title: 'Already Voted',
           content: (
             <Typography>
               You have already voted today. Come back tomorrow to vote again!
@@ -214,7 +214,7 @@ export default function PodiumView({}: PodiumViewProps) {
       // Check if user has already voted on-chain today
       if (hasVotedOnChain) {
         openModal(ModalsIds.BOTTOM_ALERT, {
-          title: "Already Voted On-Chain",
+          title: 'Already Voted On-Chain',
           content: (
             <Typography>
               You have already voted on-chain today. Come back tomorrow to vote
@@ -236,14 +236,14 @@ export default function PodiumView({}: PodiumViewProps) {
    */
   const determineVotingStrategy = useCallback(() => {
     const powerLevel = userInfo?.brndPowerLevel || 0;
-    const balance = parseFloat(brndBalance || "0");
+    const balance = parseFloat(brndBalance || '0');
     const requiredAmount = parseFloat(formatUnits(getVoteCost(powerLevel), 18));
 
     if (!isConnected) {
       return {
-        strategy: "connect-wallet",
+        strategy: 'connect-wallet',
         canVote: false,
-        reason: "Connect your wallet to start voting",
+        reason: 'Connect your wallet to start voting',
         requiredAmount,
         currentBalance: balance,
       };
@@ -251,7 +251,7 @@ export default function PodiumView({}: PodiumViewProps) {
 
     if (balance < requiredAmount) {
       return {
-        strategy: "insufficient-brnd",
+        strategy: 'insufficient-brnd',
         canVote: false,
         reason: `You need ${requiredAmount.toFixed(
           0,
@@ -262,7 +262,7 @@ export default function PodiumView({}: PodiumViewProps) {
     }
 
     return {
-      strategy: "on-chain",
+      strategy: 'on-chain',
       canVote: true,
       reason: `Ready to vote with ${requiredAmount.toFixed(0)} BRND`,
       requiredAmount,
@@ -282,7 +282,7 @@ export default function PodiumView({}: PodiumViewProps) {
 
       // Use wagmi's useConnect with Farcaster Mini App connector
       if (!connectors || connectors.length === 0) {
-        throw new Error("No wallet connectors available");
+        throw new Error('No wallet connectors available');
       }
 
       // Connect using the first connector (Farcaster Mini App connector)
@@ -293,11 +293,11 @@ export default function PodiumView({}: PodiumViewProps) {
       // If there's an error, it will be available in connectError
       return true;
     } catch (error: any) {
-      console.error("Wallet connection failed:", error);
+      console.error('Wallet connection failed:', error);
 
       // Show user-friendly error message
       openModal(ModalsIds.BOTTOM_ALERT, {
-        title: "Wallet Connection Failed",
+        title: 'Wallet Connection Failed',
         content: (
           <div>
             <Typography>
@@ -305,7 +305,7 @@ export default function PodiumView({}: PodiumViewProps) {
             </Typography>
             <br />
             <Typography size={12}>
-              {error.message || "Unknown error occurred"}
+              {error.message || 'Unknown error occurred'}
             </Typography>
           </div>
         ),
@@ -318,9 +318,9 @@ export default function PodiumView({}: PodiumViewProps) {
   // Handle connection errors from useConnect
   useEffect(() => {
     if (connectError) {
-      console.error("Wallet connection error:", connectError);
+      console.error('Wallet connection error:', connectError);
       openModal(ModalsIds.BOTTOM_ALERT, {
-        title: "Wallet Connection Failed",
+        title: 'Wallet Connection Failed',
         content: (
           <div>
             <Typography>
@@ -328,7 +328,7 @@ export default function PodiumView({}: PodiumViewProps) {
             </Typography>
             <br />
             <Typography size={12}>
-              {connectError.message || "Unknown error occurred"}
+              {connectError.message || 'Unknown error occurred'}
             </Typography>
           </div>
         ),
@@ -361,7 +361,7 @@ export default function PodiumView({}: PodiumViewProps) {
         ];
 
         // In V4 contract: ALL voting requires BRND payment - no backend-only voting
-        if (votingStatus.strategy !== "on-chain") {
+        if (votingStatus.strategy !== 'on-chain') {
           // This should not happen as validation should catch it, but handle gracefully
           throw new Error(votingStatus.reason);
         }
@@ -388,7 +388,7 @@ export default function PodiumView({}: PodiumViewProps) {
 
         // Success handling is now done in the onVoteSuccess callback
       } catch (error: any) {
-        console.error("❌ [PodiumView] Voting error:", error);
+        console.error('❌ [PodiumView] Voting error:', error);
 
         // Always clear voting state on error to prevent stuck spinners
         setIsVotingOnChain(false);
@@ -397,15 +397,15 @@ export default function PodiumView({}: PodiumViewProps) {
         votedBrandsRef.current = null;
 
         // Show appropriate error feedback
-        sdk.haptics.notificationOccurred("error");
+        sdk.haptics.notificationOccurred('error');
 
         openModal(ModalsIds.TRANSACTION_ERROR, {
-          error: error.message || "Failed to submit your vote. Please try again.",
+          error: error.message || 'Failed to submit your vote. Please try again.',
           route: window.location.pathname,
           timestamp: new Date().toISOString(),
-          transactionType: "Vote Transaction",
+          transactionType: 'Vote Transaction',
           additionalInfo: {
-            tip: "Make sure you have enough BRND tokens and try again.",
+            tip: 'Make sure you have enough BRND tokens and try again.',
           },
         });
       }
@@ -425,21 +425,21 @@ export default function PodiumView({}: PodiumViewProps) {
   const getNextAction = useCallback(() => {
     const votingStatus = determineVotingStrategy();
 
-    if (votingStatus.strategy === "connect-wallet") {
+    if (votingStatus.strategy === 'connect-wallet') {
       return {
-        label: "🔗 Connect Wallet",
-        description: "Connect your wallet to start voting",
+        label: '🔗 Connect Wallet',
+        description: 'Connect your wallet to start voting',
         action: () => {
           sdk.haptics.selectionChanged();
           handleWalletConnection();
         },
-        variant: "primary" as const,
+        variant: 'primary' as const,
       };
     }
 
-    if (votingStatus.strategy === "insufficient-brnd") {
+    if (votingStatus.strategy === 'insufficient-brnd') {
       return {
-        label: "💰 Get $BRND",
+        label: '💰 Get $BRND',
         description: `You Need ${votingStatus.requiredAmount.toFixed(
           0,
         )} tokens to vote onchain.`,
@@ -447,25 +447,25 @@ export default function PodiumView({}: PodiumViewProps) {
           sdk.haptics.selectionChanged();
           sdk.actions.swapToken({
             sellToken:
-              "eip155:8453/erc20:0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+              'eip155:8453/erc20:0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
             buyToken:
-              "eip155:8453/erc20:0x41Ed0311640A5e489A90940b1c33433501a21B07",
+              'eip155:8453/erc20:0x41Ed0311640A5e489A90940b1c33433501a21B07',
             sellAmount: votingStatus.requiredAmount.toString(),
           });
         },
-        variant: "primary" as const,
+        variant: 'primary' as const,
       };
     }
 
     // Default action for users who can vote
     return {
-      label: "🗳️ Vote Now",
-      description: "Ready to vote",
+      label: '🗳️ Vote Now',
+      description: 'Ready to vote',
       action: () => {
         // Action is handled by handleSubmitVote
-        sdk.haptics.notificationOccurred("success");
+        sdk.haptics.notificationOccurred('success');
       },
-      variant: "primary" as const,
+      variant: 'primary' as const,
     };
   }, [determineVotingStrategy, handleWalletConnection, navigate]);
 
@@ -479,8 +479,8 @@ export default function PodiumView({}: PodiumViewProps) {
 
       // If user needs to connect wallet or get BRND, handle that first
       if (
-        votingStatus.strategy === "connect-wallet" ||
-        votingStatus.strategy === "insufficient-brnd"
+        votingStatus.strategy === 'connect-wallet' ||
+        votingStatus.strategy === 'insufficient-brnd'
       ) {
         const nextAction = getNextAction();
         nextAction.action();
@@ -500,7 +500,7 @@ export default function PodiumView({}: PodiumViewProps) {
     sdk.haptics.selectionChanged();
 
     openModal(ModalsIds.BOTTOM_ALERT, {
-      title: "BRND Voting Rules & Rewards",
+      title: 'BRND Voting Rules & Rewards',
       content: (
         <div className={styles.list}>
           <Typography size={13} lineHeight={16} weight="medium">
@@ -546,10 +546,10 @@ export default function PodiumView({}: PodiumViewProps) {
             • Once per day • Resets at midnight UTC
           </Typography>
           <Typography size={11} lineHeight={13}>
-            • All votes recorded on Base blockchain, the contract is here{" "}
+            • All votes recorded on Base blockchain, the contract is here{' '}
             <span
               onClick={() => {
-                sdk.actions.openUrl({ url: "" });
+                sdk.actions.openUrl({ url: '' });
               }}
             >
               PASTE LAST URL HERE
@@ -573,9 +573,9 @@ export default function PodiumView({}: PodiumViewProps) {
         transition={{ duration: 1, delay: 0.5 }}
       >
         <IconButton
-          variant={"solid"}
+          variant={'solid'}
           icon={<GoBackIcon />}
-          onClick={() => navigate("/")}
+          onClick={() => navigate('/')}
           className={styles.backBtn}
         />
         <div className={styles.center}>
@@ -583,16 +583,16 @@ export default function PodiumView({}: PodiumViewProps) {
           <Typography
             size={18}
             lineHeight={24}
-            variant={"druk"}
-            weight={"text-wide"}
+            variant={'druk'}
+            weight={'text-wide'}
           >
             {authData?.todaysVoteStatus?.hasClaimed
-              ? "Rewards Claimed!"
+              ? 'Rewards Claimed!'
               : authData?.todaysVoteStatus?.hasShared
-                ? "Already voted and shared!"
+                ? 'Already voted and shared!'
                 : authData?.todaysVoteStatus?.hasVoted || hasVotedOnChain
-                  ? "Already voted today!"
-                  : "Add your top brands on this podium"}
+                  ? 'Already voted today!'
+                  : 'Add your top brands on this podium'}
           </Typography>
 
           <span onClick={handleClickHowToScore}>
@@ -603,7 +603,7 @@ export default function PodiumView({}: PodiumViewProps) {
               lineHeight={16}
               className={styles.howToScoreBtn}
             >
-              How Onchain Voting & Rewards Work{" "}
+              How Onchain Voting & Rewards Work{' '}
               <span className={styles.questionMarkIcon}>
                 <QuestionMarkIcon />
               </span>
@@ -611,12 +611,12 @@ export default function PodiumView({}: PodiumViewProps) {
           </span>
           {isConnected ? (
             <Typography size={12} lineHeight={16} textAlign="center">
-              Your $BRND balance:{" "}
+              Your $BRND balance:{' '}
               {isLoadingBrndBalance
-                ? "Loading..."
+                ? 'Loading...'
                 : brndBalance
                   ? parseFloat(brndBalance).toFixed(0)
-                  : "0"}
+                  : '0'}
             </Typography>
           ) : (
             <Button
@@ -635,7 +635,7 @@ export default function PodiumView({}: PodiumViewProps) {
             // 3. Strategy is actually "insufficient-brnd"
             if (
               !isLoadingBrndBalance && // Wait for balance to load
-              votingStatus.strategy === "insufficient-brnd" &&
+              votingStatus.strategy === 'insufficient-brnd' &&
               !hasVotedOnChain
             ) {
               return (
@@ -653,7 +653,7 @@ export default function PodiumView({}: PodiumViewProps) {
                     vote
                   </Typography>
                   <Typography size={11} lineHeight={14} textAlign="center">
-                    Current balance: {votingStatus.currentBalance.toFixed(2)}{" "}
+                    Current balance: {votingStatus.currentBalance.toFixed(2)}{' '}
                     $BRND
                   </Typography>
                 </div>
@@ -666,180 +666,180 @@ export default function PodiumView({}: PodiumViewProps) {
       {/* Show podium only if wallet is connected */}
       {isConnected &&
       (isLoadingBrndBalance ||
-        determineVotingStrategy().strategy !== "insufficient-brnd") ? (
-        <Podium
-          onVote={handlePodiumButtonClick}
-          variant={
-            authData?.todaysVoteStatus?.hasVoted || hasVotedOnChain
-              ? "readonly"
-              : "selection"
-          }
-          initial={
-            authData?.todaysVote
-              ? [
+        determineVotingStrategy().strategy !== 'insufficient-brnd') ? (
+          <Podium
+            onVote={handlePodiumButtonClick}
+            variant={
+              authData?.todaysVoteStatus?.hasVoted || hasVotedOnChain
+                ? 'readonly'
+                : 'selection'
+            }
+            initial={
+              authData?.todaysVote
+                ? [
                   authData.todaysVote.brand2!, // left slot (2nd place)
                   authData.todaysVote.brand1!, // middle slot (1st place)
                   authData.todaysVote.brand3!, // right slot (3rd place)
                 ]
-              : preselectedBrand
-                ? [
+                : preselectedBrand
+                  ? [
                     undefined, // left slot (2nd place) - empty
                     preselectedBrand, // middle slot (1st place) - preselected brand
                     undefined, // right slot (3rd place) - empty
                   ]
-                : undefined
-          }
-          buttonLabel={(() => {
+                  : undefined
+            }
+            buttonLabel={(() => {
             // PRIORITY 1: If vote is completed locally, show success immediately
-            if (
-              voteCompleted ||
+              if (
+                voteCompleted ||
               authData?.todaysVoteStatus?.hasVoted ||
               hasVotedOnChain
-            ) {
-              return "✅ Voted Today";
-            }
+              ) {
+                return '✅ Voted Today';
+              }
 
-            // Show vote button with status
-            const nextAction = getNextAction();
-            let buttonLabel = nextAction.label;
+              // Show vote button with status
+              const nextAction = getNextAction();
+              let buttonLabel = nextAction.label;
 
-            const hasApprovalError =
+              const hasApprovalError =
               contractError &&
               (isApproving ||
-                contractError.toLowerCase().includes("approval") ||
-                contractError.toLowerCase().includes("approve")) &&
+                contractError.toLowerCase().includes('approval') ||
+                contractError.toLowerCase().includes('approve')) &&
               !isPending &&
               !isConfirming;
-            const hasVotingError =
+              const hasVotingError =
               contractError &&
-              (isVoting || contractError.toLowerCase().includes("vote")) &&
+              (isVoting || contractError.toLowerCase().includes('vote')) &&
               !isPending &&
               !isConfirming;
-            const hasGeneralError =
+              const hasGeneralError =
               contractError &&
               !isPending &&
               !isConfirming &&
               !isApproving &&
               !isVoting;
 
-            if (isApproving) {
-              if (hasApprovalError) {
-                buttonLabel = "❌ Approval Failed - Try Again";
-              } else if (isPending) {
-                buttonLabel = "⏳ Approve BRND spending...";
-              } else if (isConfirming) {
-                buttonLabel = "🔄 Approving BRND spending...";
-              } else {
-                buttonLabel = "✅ Approval Complete - Preparing vote...";
-              }
-            } else if (isVoting) {
-              if (hasVotingError) {
-                buttonLabel = "❌ Vote Failed - Try Again";
-              } else if (isPending) {
-                buttonLabel = "⏳ Confirm in wallet...";
-              } else if (isConfirming) {
-                buttonLabel = "🔄 Processing vote...";
-              } else {
-                buttonLabel = "🗳️ Vote Now";
-              }
-            } else if (hasApprovalError || hasGeneralError) {
-              buttonLabel = "❌ Transaction Failed - Try Again";
-            } else if (isPending || isConfirming) {
-              if (isPending) {
-                buttonLabel = "⏳ Confirm transaction in wallet...";
-              } else if (isConfirming) {
-                buttonLabel = "🔄 Processing transaction...";
-              } else {
-                buttonLabel = nextAction.label;
-              }
-            } else if (
-              isVotingOnChain &&
+              if (isApproving) {
+                if (hasApprovalError) {
+                  buttonLabel = '❌ Approval Failed - Try Again';
+                } else if (isPending) {
+                  buttonLabel = '⏳ Approve BRND spending...';
+                } else if (isConfirming) {
+                  buttonLabel = '🔄 Approving BRND spending...';
+                } else {
+                  buttonLabel = '✅ Approval Complete - Preparing vote...';
+                }
+              } else if (isVoting) {
+                if (hasVotingError) {
+                  buttonLabel = '❌ Vote Failed - Try Again';
+                } else if (isPending) {
+                  buttonLabel = '⏳ Confirm in wallet...';
+                } else if (isConfirming) {
+                  buttonLabel = '🔄 Processing vote...';
+                } else {
+                  buttonLabel = '🗳️ Vote Now';
+                }
+              } else if (hasApprovalError || hasGeneralError) {
+                buttonLabel = '❌ Transaction Failed - Try Again';
+              } else if (isPending || isConfirming) {
+                if (isPending) {
+                  buttonLabel = '⏳ Confirm transaction in wallet...';
+                } else if (isConfirming) {
+                  buttonLabel = '🔄 Processing transaction...';
+                } else {
+                  buttonLabel = nextAction.label;
+                }
+              } else if (
+                isVotingOnChain &&
               !authData?.todaysVoteStatus?.hasVoted &&
               !voteCompleted
-            ) {
+              ) {
               // Only show voting states if we haven't completed the vote yet
-              if (isPending) {
-                buttonLabel = "⏳ Confirm in wallet...";
-              } else if (isConfirming) {
-                buttonLabel = "🔄 Processing vote...";
-              } else {
-                buttonLabel = "🔄 Completing vote...";
+                if (isPending) {
+                  buttonLabel = '⏳ Confirm in wallet...';
+                } else if (isConfirming) {
+                  buttonLabel = '🔄 Processing vote...';
+                } else {
+                  buttonLabel = '🔄 Completing vote...';
+                }
               }
-            }
 
-            return buttonLabel;
-          })()}
-          buttonDisabled={(() => {
+              return buttonLabel;
+            })()}
+            buttonDisabled={(() => {
             // PRIORITY 1: If vote is completed locally, disable button
-            if (
-              voteCompleted ||
+              if (
+                voteCompleted ||
               authData?.todaysVoteStatus?.hasVoted ||
               hasVotedOnChain
-            ) {
-              return true;
-            }
+              ) {
+                return true;
+              }
 
-            // Use vote button disabled logic
-            let buttonDisabled = false;
-            const hasApprovalError =
+              // Use vote button disabled logic
+              let buttonDisabled = false;
+              const hasApprovalError =
               contractError &&
               (isApproving ||
-                contractError.toLowerCase().includes("approval") ||
-                contractError.toLowerCase().includes("approve")) &&
+                contractError.toLowerCase().includes('approval') ||
+                contractError.toLowerCase().includes('approve')) &&
               !isPending &&
               !isConfirming;
-            const hasVotingError =
+              const hasVotingError =
               contractError &&
-              (isVoting || contractError.toLowerCase().includes("vote")) &&
+              (isVoting || contractError.toLowerCase().includes('vote')) &&
               !isPending &&
               !isConfirming;
-            const hasGeneralError =
+              const hasGeneralError =
               contractError &&
               !isPending &&
               !isConfirming &&
               !isApproving &&
               !isVoting;
 
-            if (isApproving) {
-              buttonDisabled = (isPending || isConfirming) && !hasApprovalError;
-            } else if (isVoting) {
-              buttonDisabled = (isPending || isConfirming) && !hasVotingError;
-            } else if (hasApprovalError || hasGeneralError) {
-              buttonDisabled = false;
-            } else if (isPending || isConfirming) {
-              buttonDisabled = isPending || isConfirming;
-            } else if (
-              isVotingOnChain &&
+              if (isApproving) {
+                buttonDisabled = (isPending || isConfirming) && !hasApprovalError;
+              } else if (isVoting) {
+                buttonDisabled = (isPending || isConfirming) && !hasVotingError;
+              } else if (hasApprovalError || hasGeneralError) {
+                buttonDisabled = false;
+              } else if (isPending || isConfirming) {
+                buttonDisabled = isPending || isConfirming;
+              } else if (
+                isVotingOnChain &&
               !authData?.todaysVoteStatus?.hasVoted &&
               !voteCompleted
-            ) {
+              ) {
               // Only disable if we're voting AND haven't completed yet
-              buttonDisabled = true;
-            }
+                buttonDisabled = true;
+              }
 
-            return buttonDisabled;
-          })()}
-          buttonVariant={(() => {
-            const nextAction = getNextAction();
-            return nextAction.variant;
-          })()}
-        />
-      ) : (
-        isConnected && (
-          <Button
-            caption="Buy $BRND"
-            onClick={() => {
-              sdk.actions.swapToken({
-                sellToken:
-                  "eip155:8453/erc20:0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-                buyToken:
-                  "eip155:8453/erc20:0x41Ed0311640A5e489A90940b1c33433501a21B07",
-                sellAmount: "1000000",
-              });
-            }}
+              return buttonDisabled;
+            })()}
+            buttonVariant={(() => {
+              const nextAction = getNextAction();
+              return nextAction.variant;
+            })()}
           />
-        )
-      )}
+        ) : (
+          isConnected && (
+            <Button
+              caption="Buy $BRND"
+              onClick={() => {
+                sdk.actions.swapToken({
+                  sellToken:
+                  'eip155:8453/erc20:0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+                  buyToken:
+                  'eip155:8453/erc20:0x41Ed0311640A5e489A90940b1c33433501a21B07',
+                  sellAmount: '1000000',
+                });
+              }}
+            />
+          )
+        )}
     </div>
   );
 }

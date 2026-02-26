@@ -1,25 +1,25 @@
 // /src/pages/RankingPage/partials/TopRanking/index.tsx
 
 // Dependencies
-import { useCallback, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useCallback, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 // Components
-import { BrandListItem } from "@/components/BrandListItem";
+import { BrandListItem } from '@/components/BrandListItem';
 
 // StyleSheet
-import styles from "./TopRanking.module.scss";
+import styles from './TopRanking.module.scss';
 
 // Hook
-import { Brand, useBrandList } from "@/hooks/brands";
-import useDisableScrollBody from "@/hooks/ui/useDisableScrollBody";
+import { Brand, useBrandList } from '@/hooks/brands';
+import useDisableScrollBody from '@/hooks/ui/useDisableScrollBody';
 
 // Utils
-import { getBrandScoreVariation } from "@/utils/brand";
+import { getBrandScoreVariation } from '@/utils/brand';
 
 function TopRanking() {
   const navigate = useNavigate();
-  const { data, refetch } = useBrandList("top", "", 1, 50);
+  const { data, refetch } = useBrandList('top', '', 1, 50);
   useDisableScrollBody();
 
   useEffect(() => {
@@ -31,7 +31,7 @@ function TopRanking() {
    *
    * @param {Brand['id']} id - The ID of the brand.
    */
-  const handleClickCard = useCallback((id: Brand["id"]) => {
+  const handleClickCard = useCallback((id: Brand['id']) => {
     navigate(`/brand/${id}`);
   }, []);
 

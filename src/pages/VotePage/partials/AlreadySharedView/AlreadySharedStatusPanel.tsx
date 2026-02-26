@@ -1,4 +1,4 @@
-import { AlreadySharedStatus } from "./AlreadySharedStatus";
+import { AlreadySharedStatus } from './AlreadySharedStatus';
 
 type AlreadySharedStatusPanelProps = {
   transactionHash?: string;

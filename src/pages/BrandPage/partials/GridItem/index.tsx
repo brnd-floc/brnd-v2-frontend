@@ -1,15 +1,15 @@
 // Dependencies
-import React from "react";
-import classNames from "clsx";
+import React from 'react';
+import classNames from 'clsx';
 
 // StyleSheet
-import styles from "./GridItem.module.scss";
+import styles from './GridItem.module.scss';
 
 // Components
-import Typography from "@/components/Typography";
+import Typography from '@/components/Typography';
 
 interface GridItemProps {
-  variant?: "primary" | "green" | "red" | "blue";
+  variant?: 'primary' | 'green' | 'red' | 'blue';
   title?: string;
   children: React.ReactNode;
   className?: string;
@@ -17,7 +17,7 @@ interface GridItemProps {
 }
 
 const GridItem: React.FC<GridItemProps> = ({
-  variant = "primary",
+  variant = 'primary',
   children,
   className,
   rightElement,
@@ -29,9 +29,9 @@ const GridItem: React.FC<GridItemProps> = ({
         <div className={styles.header}>
           {title && (
             <Typography
-              as={"h5"}
-              variant={"druk"}
-              weight={"text-wide"}
+              as={'h5'}
+              variant={'druk'}
+              weight={'text-wide'}
               size={10}
               lineHeight={12}
               className={styles.title}

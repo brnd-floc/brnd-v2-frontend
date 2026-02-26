@@ -1,17 +1,17 @@
-import { useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 // StyleSheet
-import styles from "./MyBrands.module.scss";
+import styles from './MyBrands.module.scss';
 
 // Hooks
-import { useUserBrands } from "@/hooks/user";
+import { useUserBrands } from '@/hooks/user';
 
 // Components
-import { BrandListItem } from "@/shared/components/BrandListItem";
-import LoaderIndicator from "@/shared/components/LoaderIndicator";
-import Typography from "@/shared/components/Typography";
-import Button from "@/shared/components/Button";
+import { BrandListItem } from '@/shared/components/BrandListItem';
+import LoaderIndicator from '@/shared/components/LoaderIndicator';
+import Typography from '@/shared/components/Typography';
+import Button from '@/shared/components/Button';
 
 function MyBrands() {
   const navigate = useNavigate();
@@ -31,7 +31,7 @@ function MyBrands() {
   if (isLoading) {
     return (
       <div className={styles.layout}>
-        <LoaderIndicator size={30} variant={"fullscreen"} />
+        <LoaderIndicator size={30} variant={'fullscreen'} />
       </div>
     );
   }
@@ -55,17 +55,17 @@ function MyBrands() {
     return (
       <div className={styles.layout}>
         <div className={styles.empty}>
-          <Typography size={16} weight={"regular"} lineHeight={20}>
+          <Typography size={16} weight={'regular'} lineHeight={20}>
             Nothing here yet
           </Typography>
-          <Typography size={16} weight={"regular"} lineHeight={20}>
+          <Typography size={16} weight={'regular'} lineHeight={20}>
             Start voting to see your personal brand rankings!
           </Typography>
           <div className={styles.center}>
             <Button
               caption="Vote Now"
               variant="primary"
-              onClick={() => navigate("/vote")}
+              onClick={() => navigate('/vote')}
             />
           </div>
         </div>
@@ -85,7 +85,7 @@ function MyBrands() {
               photoUrl={userBrand.brand.imageUrl}
               score={userBrand.points}
               // No variation for personal rankings
-              variation={"hide"}
+              variation={'hide'}
               onClick={() => handleClickCard(userBrand.brand.id)}
               // Extended fields
               category={userBrand.brand.category}

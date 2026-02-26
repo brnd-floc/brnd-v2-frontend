@@ -1,11 +1,11 @@
-import { Globe, Loader2 } from 'lucide-react'
-import { locales, localeNames, type Locale } from '@/i18n/config'
-import { useChangeLocale, useLocale } from '@/i18n/useLocale'
-import styles from './LocaleSwitcher.module.scss'
+import { Globe, Loader2 } from 'lucide-react';
+import { locales, localeNames, type Locale } from '@/i18n/config';
+import { useChangeLocale, useLocale } from '@/i18n/useLocale';
+import styles from './LocaleSwitcher.module.scss';
 
 export function LocaleSwitcher() {
-  const currentLocale = useLocale()
-  const { changeLocale, isPending } = useChangeLocale()
+  const currentLocale = useLocale();
+  const { changeLocale, isPending } = useChangeLocale();
 
   return (
     <div className={styles.container}>
@@ -28,5 +28,5 @@ export function LocaleSwitcher() {
         ))}
       </select>
     </div>
-  )
+  );
 }

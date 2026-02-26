@@ -1,5 +1,5 @@
-import styles from "./PodiumCarouselGSAP.module.scss";
-import type { LivePodium } from "./livePodiums.types";
+import styles from './PodiumCarouselGSAP.module.scss';
+import type { LivePodium } from './livePodiums.types';
 
 interface PodiumCardProps {
   podium: LivePodium;
@@ -7,16 +7,16 @@ interface PodiumCardProps {
 }
 
 export function PodiumCard({ podium, priority = false }: PodiumCardProps) {
-  const username = (podium.username || "").trim() || "user";
+  const username = (podium.username || '').trim() || 'user';
   const userInitial = username.charAt(0).toUpperCase();
-  const brand1Name = (podium.brand1?.name || "").trim() || "Brand";
-  const brand2Name = (podium.brand2?.name || "").trim() || "Brand";
-  const brand3Name = (podium.brand3?.name || "").trim() || "Brand";
+  const brand1Name = (podium.brand1?.name || '').trim() || 'Brand';
+  const brand2Name = (podium.brand2?.name || '').trim() || 'Brand';
+  const brand3Name = (podium.brand3?.name || '').trim() || 'Brand';
 
   const dateValue = new Date(podium.date);
   const displayDate = Number.isNaN(dateValue.getTime())
-    ? new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" })
-    : dateValue.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    ? new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    : dateValue.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
   return (
     <div
@@ -34,7 +34,7 @@ export function PodiumCard({ podium, priority = false }: PodiumCardProps) {
               height={40}
               alt={username}
               className={styles.userPhoto}
-              loading={priority ? "eager" : "lazy"}
+              loading={priority ? 'eager' : 'lazy'}
             />
           ) : (
             <div className={styles.userPlaceholder}>{userInitial}</div>
@@ -57,7 +57,7 @@ export function PodiumCard({ podium, priority = false }: PodiumCardProps) {
                       height={100}
                       alt={`${brand2Name} brand logo in 2nd place`}
                       className={styles.brandImage}
-                      loading={priority ? "eager" : "lazy"}
+                      loading={priority ? 'eager' : 'lazy'}
                     />
                   ) : (
                     <div className={styles.brandPlaceholder}>{brand2Name.charAt(0)}</div>
@@ -82,7 +82,7 @@ export function PodiumCard({ podium, priority = false }: PodiumCardProps) {
                       height={100}
                       alt={`${brand1Name} brand logo in 1st place`}
                       className={styles.brandImage}
-                      loading={priority ? "eager" : "lazy"}
+                      loading={priority ? 'eager' : 'lazy'}
                     />
                   ) : (
                     <div className={styles.brandPlaceholder}>{brand1Name.charAt(0)}</div>
@@ -107,7 +107,7 @@ export function PodiumCard({ podium, priority = false }: PodiumCardProps) {
                       height={100}
                       alt={`${brand3Name} brand logo in 3rd place`}
                       className={styles.brandImage}
-                      loading={priority ? "eager" : "lazy"}
+                      loading={priority ? 'eager' : 'lazy'}
                     />
                   ) : (
                     <div className={styles.brandPlaceholder}>{brand3Name.charAt(0)}</div>

@@ -1,7 +1,7 @@
-import Button from "@/components/Button";
-import LoaderIndicator from "@/shared/components/LoaderIndicator";
-import ShareIcon from "@/assets/icons/share-icon.svg?react";
-import styles from "./ShareView.module.scss";
+import Button from '@/components/Button';
+import LoaderIndicator from '@/shared/components/LoaderIndicator';
+import ShareIcon from '@/assets/icons/share-icon.svg?react';
+import styles from './ShareView.module.scss';
 
 type SharePrimaryActionProps = {
   buttonCaption: string;
@@ -27,7 +27,7 @@ export function SharePrimaryAction({
   if (showManualVerifyButton) {
     return (
       <Button
-        caption={isVerifying ? "Verifying Share" : "Verify share"}
+        caption={isVerifying ? 'Verifying Share' : 'Verify share'}
         onClick={onManualVerify}
         className={styles.button}
         iconLeft={isVerifying ? <LoaderIndicator size={16} /> : undefined}

@@ -1,6 +1,6 @@
-import Button from "@/components/Button";
-import LoaderIndicator from "@/shared/components/LoaderIndicator";
-import styles from "./AlreadySharedView.module.scss";
+import Button from '@/components/Button';
+import LoaderIndicator from '@/shared/components/LoaderIndicator';
+import styles from './AlreadySharedView.module.scss';
 
 type AlreadySharedClaimActionProps = {
   buttonCaption: string;

@@ -1,34 +1,34 @@
 // Dependencies
-import { useEffect, useState, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import classNames from "clsx";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import classNames from 'clsx';
+import { useNavigate } from 'react-router-dom';
 
 // Components
-import SearchInput from "@/components/SearchInput";
-import BrandCard from "@/components/cards/BrandCard";
-import Button from "@/components/Button";
-import LoaderIndicator from "../LoaderIndicator";
-import Typography from "../Typography";
+import SearchInput from '@/components/SearchInput';
+import BrandCard from '@/components/cards/BrandCard';
+import Button from '@/components/Button';
+import LoaderIndicator from '../LoaderIndicator';
+import Typography from '../Typography';
 
 // StyleSheet
-import styles from "./BrandsList.module.scss";
+import styles from './BrandsList.module.scss';
 
 // Assets
-import CheckLabelIcon from "@/assets/icons/check-label-icon.svg?react";
+import CheckLabelIcon from '@/assets/icons/check-label-icon.svg?react';
 
 // Hooks
-import { Brand, useBrandList } from "@/hooks/brands";
+import { Brand, useBrandList } from '@/hooks/brands';
 
 // Utils
-import { getBrandScoreVariation } from "@/utils/brand";
-import sdk from "@farcaster/miniapp-sdk";
-import { BrandTimePeriod } from "@/services/brands";
+import { getBrandScoreVariation } from '@/utils/brand';
+import sdk from '@farcaster/miniapp-sdk';
+import { BrandTimePeriod } from '@/services/brands';
 
 interface BrandsListProps {
-  readonly value?: Brand["id"][];
+  readonly value?: Brand['id'][];
   readonly config?: {
-    order: "new" | "top" | "all";
+    order: 'new' | 'top' | 'all';
     limit: number;
     period?: BrandTimePeriod;
   };
@@ -42,18 +42,18 @@ interface BrandsListProps {
 export default function BrandsList({
   positionBeingChanged,
   value = [],
-  className = "",
+  className = '',
   onSelect,
   config = {
-    order: "all",
+    order: 'all',
     limit: 27,
-    period: "all",
+    period: 'all',
   },
   isFinderEnabled = true,
   isSelectable = false,
 }: BrandsListProps) {
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [selected, setSelected] = useState<Brand | null>(null);
   const [displayBrands, setDisplayBrands] = useState<Brand[]>([]);
   const [pageId, setPageId] = useState<number>(1);
@@ -64,7 +64,7 @@ export default function BrandsList({
     searchQuery,
     pageId,
     config.limit,
-    config.period || "all"
+    config.period || 'all'
   );
 
   /**
@@ -90,13 +90,13 @@ export default function BrandsList({
    */
   const getScoreForPeriod = (brand: Brand): number => {
     switch (config.period) {
-      case "day":
+      case 'day':
         return brand.scoreDay;
-      case "week":
+      case 'week':
         return brand.scoreWeek;
-      case "month":
+      case 'month':
         return brand.scoreMonth || brand.scoreWeek;
-      case "all":
+      case 'all':
       default:
         return brand.score;
     }
@@ -104,13 +104,13 @@ export default function BrandsList({
 
   const getStateScoreForPeriod = (brand: Brand): number => {
     switch (config.period) {
-      case "day":
+      case 'day':
         return brand.scoreDay;
-      case "week":
+      case 'week':
         return brand.stateScoreWeek;
-      case "month":
+      case 'month':
         return brand.stateScoreMonth || brand.stateScoreWeek;
-      case "all":
+      case 'all':
       default:
         return brand.stateScore;
     }
@@ -133,9 +133,9 @@ export default function BrandsList({
 
   // Disable body scroll while component is mounted
   useEffect(() => {
-    document.body.style.overflow = "hidden";
+    document.body.style.overflow = 'hidden';
     return () => {
-      document.body.style.overflow = "auto";
+      document.body.style.overflow = 'auto';
     };
   }, []);
 
@@ -154,7 +154,7 @@ export default function BrandsList({
       // For "new" order, preserve backend sorting (by createdAt DESC)
       // For other orders, shuffle to add variety
       const processedBrands =
-        config.order === "new"
+        config.order === 'new'
           ? newBrands
           : [...newBrands].sort(() => Math.random() - 0.5);
 
@@ -182,10 +182,10 @@ export default function BrandsList({
                 photoUrl={brand.imageUrl}
                 orientation={
                   index % 3 === 0
-                    ? "left"
+                    ? 'left'
                     : index % 3 === 1
-                    ? "center"
-                    : "right"
+                      ? 'center'
+                      : 'right'
                 }
                 score={getScoreForPeriod(brand)}
                 variation={getBrandScoreVariation(
@@ -194,15 +194,15 @@ export default function BrandsList({
                 disabled={!!value.find((e) => e === brand.id)}
                 {...(isSelectable
                   ? {
-                      selected: selected?.id === brand.id,
-                      onClick: () => {
-                        sdk.haptics.selectionChanged();
-                        onSelect?.(brand);
-                      },
-                    }
+                    selected: selected?.id === brand.id,
+                    onClick: () => {
+                      sdk.haptics.selectionChanged();
+                      onSelect?.(brand);
+                    },
+                  }
                   : {
-                      onClick: () => navigate(`/brand/${brand.id}`),
-                    })}
+                    onClick: () => navigate(`/brand/${brand.id}`),
+                  })}
               />
             </li>
           ))}
@@ -210,16 +210,16 @@ export default function BrandsList({
       </div>
     ) : (
       <div className={styles.empty}>
-        <Typography variant={"geist"} as={"p"} size={18} lineHeight={22}>
+        <Typography variant={'geist'} as={'p'} size={18} lineHeight={22}>
           It is not in our database at the moment, DM @victoctero to add it.
         </Typography>
         <Button
-          caption={"Send DC"}
-          variant={"primary"}
+          caption={'Send DC'}
+          variant={'primary'}
           onClick={() => {
             sdk.actions.openUrl(
               `https://farcaster.xyz/~/inbox/create/8109?text=${encodeURIComponent(
-                "hey victor, i want to add my brand to the BRND ecosystem"
+                'hey victor, i want to add my brand to the BRND ecosystem'
               )}`
             );
           }}
@@ -235,8 +235,8 @@ export default function BrandsList({
     <div className={styles.layout}>
       {positionBeingChanged && (
         <div className={styles.positionBeingChanged}>
-          <Typography variant={"druk"} as={"p"} size={16} weight={"wide"}>
-            Select your favorite brand for the position #{positionBeingChanged}{" "}
+          <Typography variant={'druk'} as={'p'} size={16} weight={'wide'}>
+            Select your favorite brand for the position #{positionBeingChanged}{' '}
             of today's podium.
           </Typography>
         </div>
@@ -261,11 +261,11 @@ export default function BrandsList({
               initial={{ y: 300 }}
               animate={{ y: 0 }}
               exit={{ y: 300 }}
-              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
             >
               <Button
                 iconLeft={<CheckLabelIcon />}
-                caption={"Confirm"}
+                caption={'Confirm'}
                 onClick={() => {
                   sdk.haptics.selectionChanged();
                   onSelect?.(selected);

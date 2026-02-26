@@ -1,11 +1,11 @@
 // Dependencies
-import React from "react";
+import React from 'react';
 
 // StyleSheet
-import styles from "./BaseModal.module.scss";
+import styles from './BaseModal.module.scss';
 
 // Components
-import Button from "@/components/Button";
+import Button from '@/components/Button';
 
 interface BaseModalProps {
   readonly onClose?: () => void;

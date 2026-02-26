@@ -1,4 +1,4 @@
-import { formatUnits } from "viem";
+import { formatUnits } from 'viem';
 
 export type ShareBrand = {
   profile?: string;
@@ -15,12 +15,12 @@ export const getClaimAmountLabel = (amountWei?: string) => {
 export const getProfileOrChannel = (brand: ShareBrand) => {
   if (brand?.profile) {
     const profile = brand.profile;
-    return profile.startsWith("@") ? profile : `@${profile}`;
+    return profile.startsWith('@') ? profile : `@${profile}`;
   }
 
   if (brand?.channel) {
     const channel = brand.channel;
-    return channel.startsWith("/") ? channel : `/${channel}`;
+    return channel.startsWith('/') ? channel : `/${channel}`;
   }
 
   return brand?.name;
@@ -32,12 +32,12 @@ export const buildShareCastText = (currentBrands: ShareBrand[]) => {
   const formattedBrand3 = getProfileOrChannel(currentBrands[2] || {});
 
   return `I just created my @BRND podium of today:\n\n🥇${
-    currentBrands[1]?.name || ""
-  } ${formattedBrand1 ? `- ${formattedBrand1}` : ""}\n🥈${
-    currentBrands[0]?.name || ""
-  } ${formattedBrand2 ? `- ${formattedBrand2}` : ""}\n🥉${
-    currentBrands[2]?.name || ""
-  } ${formattedBrand3 ? `- ${formattedBrand3}` : ""}`;
+    currentBrands[1]?.name || ''
+  } ${formattedBrand1 ? `- ${formattedBrand1}` : ''}\n🥈${
+    currentBrands[0]?.name || ''
+  } ${formattedBrand2 ? `- ${formattedBrand2}` : ''}\n🥉${
+    currentBrands[2]?.name || ''
+  } ${formattedBrand3 ? `- ${formattedBrand3}` : ''}`;
 };
 
 export const getShareButtonState = ({
@@ -59,22 +59,22 @@ export const getShareButtonState = ({
   hasSharedManually: boolean;
   isFarcasterClient: boolean | null;
 }) => {
-  if (isSharing) return "Sharing...";
-  if (isVerifying) return "Verifying Share";
+  if (isSharing) return 'Sharing...';
+  if (isVerifying) return 'Verifying Share';
   if (claimAmountWei) {
     const amount = getClaimAmountLabel(claimAmountWei);
     return `Claim ${amount} $BRND`;
   }
   if (isClaiming || isClaimPending || isClaimConfirming) {
-    if (isClaimPending) return "⏳ Confirm in wallet...";
-    if (isClaimConfirming) return "🔄 Processing...";
-    return "Claiming...";
+    if (isClaimPending) return '⏳ Confirm in wallet...';
+    if (isClaimConfirming) return '🔄 Processing...';
+    return 'Claiming...';
   }
-  if (hasSharedManually && isFarcasterClient !== true) return "Verify Share";
-  return "Share now";
+  if (hasSharedManually && isFarcasterClient !== true) return 'Verify Share';
+  return 'Share now';
 };
 
-export type SharePrimaryAction = "share" | "manual-verify" | "claim";
+export type SharePrimaryAction = 'share' | 'manual-verify' | 'claim';
 
 export const shouldRenderShareLoadingState = (currentBrands?: ShareBrand[]) =>
   !currentBrands || currentBrands.length < 3;
@@ -90,9 +90,9 @@ export const getSharePrimaryAction = ({
   hasSharedManually: boolean;
   isFarcasterClient: boolean | null;
 }): SharePrimaryAction => {
-  if (hasClaimData && !isVerifying) return "claim";
-  if (hasSharedManually && isFarcasterClient !== true) return "manual-verify";
-  return "share";
+  if (hasClaimData && !isVerifying) return 'claim';
+  if (hasSharedManually && isFarcasterClient !== true) return 'manual-verify';
+  return 'share';
 };
 
 export const getShareUiState = ({
@@ -123,8 +123,8 @@ export const getShareUiState = ({
     isFarcasterClient,
   });
 
-  const showShareIcon = !isLoading && primaryAction === "share";
-  const disablePrimaryButton = isLoading && primaryAction !== "claim";
+  const showShareIcon = !isLoading && primaryAction === 'share';
+  const disablePrimaryButton = isLoading && primaryAction !== 'claim';
 
   return {
     isLoading,
