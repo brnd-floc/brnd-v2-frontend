@@ -121,20 +121,18 @@ export const shouldRefreshAfterClaim = ({
 }) =>
   votingStateType === 'shared_not_claimed' && hasClaimed && !isTransitioning;
 
-export const shouldRedirectToVoteHome = ({
-  isLoading,
-  isTransitioning,
-  unixDate,
-  hasVoteRecord,
-  hasVoted,
-}: {
+export const shouldRedirectToVoteHome = (_params: {
   isLoading: boolean;
   isTransitioning: boolean;
   unixDate?: string;
   hasVoteRecord: boolean;
   hasVoted: boolean;
-}) =>
-  !isLoading && !isTransitioning && Boolean(unixDate) && !hasVoteRecord && !hasVoted;
+}) => {
+  void _params;
+  // Keep users in the vote flow instead of bouncing to home for date-route mismatches.
+  // This avoids false negatives when route day and backend vote day drift.
+  return false;
+};
 
 export const shouldFetchFallbackVoteData = ({
   user,
