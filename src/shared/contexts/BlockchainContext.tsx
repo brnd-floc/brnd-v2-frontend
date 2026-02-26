@@ -58,7 +58,9 @@ interface BlockchainActions {
   getRewardAmount: (powerLevel: number) => Promise<string>;
 
   // Brand actions
-  getBrand: (brandId: number) => Promise<any>;
+  getBrand: (brandId: number) => Promise<
+    readonly [bigint, string, bigint, bigint, string, string, bigint] | null
+  >;
 
   // Utility actions
   refreshData: () => void;
@@ -228,7 +230,10 @@ export const BlockchainProvider: React.FC<BlockchainProviderProps> = ({
     getRewardAmount: storiesInMotion.getRewardAmount,
 
     // Brand actions
-    getBrand: storiesInMotion.getBrand,
+    getBrand: (brandId: number) =>
+      storiesInMotion.getBrand(brandId) as Promise<
+        readonly [bigint, string, bigint, bigint, string, string, bigint] | null
+      >,
 
     // Utility actions
     refreshData: () => {

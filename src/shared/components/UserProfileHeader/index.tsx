@@ -28,9 +28,10 @@ const UserProfileHeader: React.FC<UserProfileHeaderProps> = ({
   const navigate = useNavigate();
   const { data } = useAuth();
   const { miniappContext } = useContext(AuthContext);
-  const isAdmin = [16098, 8109, 5431, 1108951].includes(
-    miniappContext?.user?.fid!
-  );
+  const userFid = miniappContext?.user?.fid;
+  const isAdmin =
+    typeof userFid === 'number' &&
+    [16098, 8109, 5431, 1108951].includes(userFid);
 
   // Get blockchain data for BRND balance and staking info
   const { brndBalance, stakedBrndAmount, isLoadingBrndBalances } =

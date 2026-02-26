@@ -37,6 +37,7 @@ const BrandProfileHeader: React.FC<BrandProfileHeaderProps> = ({
   onBackClick,
 }) => {
   const navigate = useNavigate();
+  type ProfileOrChannelBrand = BrandProfileHeaderProps['brand'];
 
   const handleBackClick = useCallback(() => {
     sdk.haptics.selectionChanged();
@@ -48,21 +49,21 @@ const BrandProfileHeader: React.FC<BrandProfileHeaderProps> = ({
   }, [onBackClick, navigate]);
 
   const handleClickShare = useCallback(() => {
-    const getProfileOrChannel = (brand: any) => {
+    const getProfileOrChannel = (brandValue: ProfileOrChannelBrand) => {
       // Priority: profile first, then channel
-      if (brand?.profile) {
-        const profile = brand.profile;
+      if (brandValue.profile) {
+        const profile = brandValue.profile;
         // If profile starts with "@", remove it; otherwise add it
         return profile.startsWith('@') ? profile : `@${profile}`;
       }
 
-      if (brand?.channel) {
-        const channel = brand.channel;
+      if (brandValue.channel) {
+        const channel = brandValue.channel;
         // If channel starts with "/", keep it; otherwise add it
         return channel.startsWith('/') ? channel : `/${channel}`;
       }
 
-      return brand?.name;
+      return brandValue.name;
     };
 
     const formattedProfileOrChannel = getProfileOrChannel(brand);
