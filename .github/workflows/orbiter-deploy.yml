@@ -1,0 +1,30 @@
+name: Deploy Frontend to Orbiter
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: orbiter-deploy-main
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy to Orbiter
+        uses: orbiterhost/orbiter-github-actions@v0.1.8
+        with:
+          project-name: "rebrndprod"
+          build-dir: "./dist"
+          api-key: ${{ secrets.ORBITER_API_KEY }}
+          node-version: "20.x"
+          build-command: "bun run build"
