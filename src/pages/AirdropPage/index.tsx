@@ -44,6 +44,85 @@ const ADMIN_FIDS = [6431, 6099, 8109, 222144, 16098];
 
 type PageView = 'main' | 'leaderboard' | 'multipliers' | 'claim' | 'admin';
 
+type ChallengeTier = {
+  requirement: number;
+  multiplier: number;
+  achieved: boolean;
+};
+
+type ChallengeProgress = {
+  current: number;
+  required: number;
+  unit: string;
+};
+
+type ChallengeDetails = {
+  accounts?: Array<{ name: string; followed: boolean }>;
+  channelFollow?: { followed: boolean };
+  podiumCasts?: { count: number; required: number };
+  formattedWalletBalance?: string;
+  formattedStakedBalance?: string;
+  formattedBalance?: string;
+  nextTier?: { requirement: number; multiplier: number } | null;
+  uniqueBrandsVoted?: number;
+  sharedPodiumsCount?: number;
+  neynarScore?: number;
+  isProUser?: boolean;
+};
+
+type AirdropChallenge = {
+  name: string;
+  description: string;
+  currentValue: number;
+  currentMultiplier: number;
+  maxMultiplier: number;
+  completed: boolean;
+  details: ChallengeDetails;
+  nextTier: { requirement: number; multiplier: number } | null;
+  progress: ChallengeProgress;
+  tiers: ChallengeTier[];
+};
+
+type QuestTaskView = {
+  name: string;
+  multiplier: string;
+  completed: boolean;
+  requirement: number;
+};
+
+type QuestViewModel = {
+  id: number;
+  title: string;
+  progress: string;
+  isCompleted: boolean;
+  currentMultiplier: number;
+  maxMultiplier: number;
+  progressData: ChallengeProgress;
+  progressPercentage: number;
+  nextTier?: { requirement: number; multiplier: number } | null;
+  customDetails?: {
+    accounts?: Array<{ name: string; followed: boolean; status: string }>;
+    channelStatus?: string;
+    podiumsPublished?: string;
+    requirement?: string;
+    walletBalance?: string;
+    stakedBalance?: string;
+    totalBalance?: string;
+    nextTierInfo?: string;
+    collected?: string;
+    needed?: string;
+    source?: string;
+    uniqueBrands?: string;
+    nextTarget?: string;
+    tip?: string;
+    shared?: string;
+    currentScore?: string;
+    status?: string;
+    benefit?: string;
+  };
+  tasks: QuestTaskView[];
+};
+
 function AirdropPage(): React.ReactNode {
   const navigate = useNavigate();
   const location = useLocation();
@@ -235,19 +314,22 @@ function AirdropPage(): React.ReactNode {
   };
 
   // Helper function to get challenge data by name
-  const getChallengeData = (challengeName: string) => {
-    const challenges = questsDataResponse?.calculation?.challenges || [];
-    return challenges.find((c: any) => c.name === challengeName);
+  const getChallengeData = (
+    challengeName: string
+  ): AirdropChallenge | undefined => {
+    const challenges =
+      (questsDataResponse?.calculation?.challenges as AirdropChallenge[]) || [];
+    return challenges.find((c) => c.name === challengeName);
   };
 
   // Individual quest rendering functions for granular control
-  const renderFollowAccountsQuest = () => {
+  const renderFollowAccountsQuest = (): QuestViewModel | null => {
     const challenge = getChallengeData('Follow Accounts');
     if (!challenge) return null;
 
     const accounts = challenge.details?.accounts || [];
-    const brndAccount = accounts.find((acc: any) => acc.name === '@brnd');
-    const flocAccount = accounts.find((acc: any) => acc.name === '@floc');
+    const brndAccount = accounts.find((acc) => acc.name === '@brnd');
+    const flocAccount = accounts.find((acc) => acc.name === '@floc');
 
     return {
       id: 1,
@@ -261,7 +343,7 @@ function AirdropPage(): React.ReactNode {
         (challenge.progress.current / challenge.progress.required) * 100,
         100
       ),
-      nextTier: challenge.tiers.find((tier: any) => !tier.achieved),
+      nextTier: challenge.tiers.find((tier) => !tier.achieved),
       customDetails: {
         accounts: [
           {
@@ -276,7 +358,7 @@ function AirdropPage(): React.ReactNode {
           },
         ],
       },
-      tasks: challenge.tiers.map((tier: any) => ({
+      tasks: challenge.tiers.map((tier) => ({
         name: `${tier.requirement} accounts`,
         multiplier: `${tier.multiplier}X`,
         completed: tier.achieved,
@@ -285,7 +367,7 @@ function AirdropPage(): React.ReactNode {
     };
   };
 
-  const renderChannelInteractionQuest = () => {
+  const renderChannelInteractionQuest = (): QuestViewModel | null => {
     const challenge = getChallengeData('Channel Interaction /brnd');
     if (!challenge) return null;
 
@@ -304,7 +386,7 @@ function AirdropPage(): React.ReactNode {
         (challenge.progress.current / challenge.progress.required) * 100,
         100
       ),
-      nextTier: challenge.tiers.find((tier: any) => !tier.achieved),
+      nextTier: challenge.tiers.find((tier) => !tier.achieved),
       customDetails: {
         channelStatus: channelFollow?.followed
           ? '✅ Following /brnd'
@@ -314,7 +396,7 @@ function AirdropPage(): React.ReactNode {
           podiumCasts?.required || 1
         } podium + follow channel`,
       },
-      tasks: challenge.tiers.map((tier: any) => ({
+      tasks: challenge.tiers.map((tier) => ({
         name:
           tier.requirement === 1
             ? 'Follow channel'
@@ -326,7 +408,7 @@ function AirdropPage(): React.ReactNode {
     };
   };
 
-  const renderHoldingBrndQuest = () => {
+  const renderHoldingBrndQuest = (): QuestViewModel | null => {
     const challenge = getChallengeData('Holding $BRND');
     if (!challenge) return null;
 
@@ -359,7 +441,7 @@ function AirdropPage(): React.ReactNode {
           } $BRND (${details.nextTier?.multiplier?.toLocaleString() ?? 0}X)`
           : 'Max tier reached!',
       },
-      tasks: challenge.tiers.map((tier: any) => ({
+      tasks: challenge.tiers.map((tier) => ({
         name: `${tier.requirement?.toLocaleString() ?? 0} $BRND`,
         multiplier: `${tier.multiplier}X`,
         completed: tier.achieved,
@@ -368,7 +450,7 @@ function AirdropPage(): React.ReactNode {
     };
   };
 
-  const renderCollectiblesQuest = () => {
+  const renderCollectiblesQuest = (): QuestViewModel | null => {
     const challenge = getChallengeData('Collect @brndbot casts');
     if (!challenge) return null;
 
@@ -384,7 +466,7 @@ function AirdropPage(): React.ReactNode {
         (challenge.progress.current / challenge.progress.required) * 100,
         100
       ),
-      nextTier: challenge.tiers.find((tier: any) => !tier.achieved),
+      nextTier: challenge.tiers.find((tier) => !tier.achieved),
       customDetails: {
         collected: `🎨 ${challenge.progress.current} collectibles`,
         needed: `Need ${
@@ -392,7 +474,7 @@ function AirdropPage(): React.ReactNode {
         } more`,
         source: 'From @brndy or @brnd casts',
       },
-      tasks: challenge.tiers.map((tier: any) => ({
+      tasks: challenge.tiers.map((tier) => ({
         name: `${tier.requirement} collectibles`,
         multiplier: `${tier.multiplier}X`,
         completed: tier.achieved,
@@ -401,7 +483,7 @@ function AirdropPage(): React.ReactNode {
     };
   };
 
-  const renderVotingQuest = () => {
+  const renderVotingQuest = (): QuestViewModel | null => {
     const challenge = getChallengeData('# of different brands voted');
     if (!challenge) return null;
 
@@ -427,7 +509,7 @@ function AirdropPage(): React.ReactNode {
           : 'Max tier reached!',
         tip: 'Vote for more variety to increase multiplier',
       },
-      tasks: challenge.tiers.map((tier: any) => ({
+      tasks: challenge.tiers.map((tier) => ({
         name: `${tier.requirement} brands`,
         multiplier: `${tier.multiplier}X`,
         completed: tier.achieved,
@@ -436,7 +518,7 @@ function AirdropPage(): React.ReactNode {
     };
   };
 
-  const renderSharingQuest = () => {
+  const renderSharingQuest = (): QuestViewModel | null => {
     const challenge = getChallengeData('Podiums Shared');
     if (!challenge) return null;
 
@@ -462,7 +544,7 @@ function AirdropPage(): React.ReactNode {
           : 'Max tier reached!',
         tip: 'Share your voting results to increase multiplier',
       },
-      tasks: challenge.tiers.map((tier: any) => ({
+      tasks: challenge.tiers.map((tier) => ({
         name: `${tier.requirement} podiums`,
         multiplier: `${tier.multiplier}X`,
         completed: tier.achieved,
@@ -471,7 +553,7 @@ function AirdropPage(): React.ReactNode {
     };
   };
 
-  const renderNeynarQuest = () => {
+  const renderNeynarQuest = (): QuestViewModel | null => {
     const challenge = getChallengeData('Neynar Score');
     if (!challenge) return null;
 
@@ -497,7 +579,7 @@ function AirdropPage(): React.ReactNode {
           : 'Max tier reached!',
         tip: 'Maintain high reputation score on Neynar',
       },
-      tasks: challenge.tiers.map((tier: any) => ({
+      tasks: challenge.tiers.map((tier) => ({
         name: `${tier.requirement}`,
         multiplier: `${tier.multiplier}X`,
         completed: tier.achieved,
@@ -506,7 +588,7 @@ function AirdropPage(): React.ReactNode {
     };
   };
 
-  const renderProUserQuest = () => {
+  const renderProUserQuest = (): QuestViewModel | null => {
     const challenge = getChallengeData('Pro User');
     if (!challenge) return null;
 
@@ -527,7 +609,7 @@ function AirdropPage(): React.ReactNode {
           : '❌ Not Farcaster Pro',
         benefit: 'Subscribe to Farcaster Pro for multiplier boost',
       },
-      tasks: challenge.tiers.map((tier: any) => ({
+      tasks: challenge.tiers.map((tier) => ({
         name: 'Pro subscription',
         multiplier: '1.2X',
         completed: tier.achieved,
@@ -537,12 +619,12 @@ function AirdropPage(): React.ReactNode {
   };
 
   // Create hardcoded quest elements using individual render functions
-  const questsData = useMemo(() => {
+  const questsData = useMemo<QuestViewModel[]>(() => {
     if (!questsDataResponse?.calculation?.challenges) {
       return [];
     }
 
-    return [
+    const quests: Array<QuestViewModel | null> = [
       renderFollowAccountsQuest(),
       renderChannelInteractionQuest(),
       renderHoldingBrndQuest(),
@@ -551,7 +633,9 @@ function AirdropPage(): React.ReactNode {
       renderSharingQuest(),
       renderNeynarQuest(),
       renderProUserQuest(),
-    ].filter(Boolean); // Remove any null values
+    ];
+
+    return quests.filter((quest): quest is QuestViewModel => quest !== null);
   }, [questsDataResponse]);
 
   // Check if airdrop has ended but snapshot is not yet available
@@ -1109,7 +1193,7 @@ function AirdropPage(): React.ReactNode {
             </div>
           ) : questsData.length > 0 ? (
             <div className={styles.questsList}>
-              {questsData.map((quest: any) => (
+              {questsData.map((quest) => (
                 <div key={quest.id} className={styles.questItem}>
                   <div
                     className={`${styles.questHeader} ${
@@ -1214,7 +1298,7 @@ function AirdropPage(): React.ReactNode {
                             {(() => {
                               const followedAccounts =
                                 quest.customDetails.accounts.filter(
-                                  (acc: any) => acc.followed
+                                  (acc) => acc.followed
                                 );
                               const firstFollowedAccount = followedAccounts[0];
                               const tier1Completed =
@@ -1295,7 +1379,7 @@ function AirdropPage(): React.ReactNode {
                             {(() => {
                               const followedAccounts =
                                 quest.customDetails.accounts.filter(
-                                  (acc: any) => acc.followed
+                                  (acc) => acc.followed
                                 );
                               const tier2Completed =
                                 followedAccounts.length >= 2;
@@ -1367,7 +1451,7 @@ function AirdropPage(): React.ReactNode {
                           </>
                         ) : (
                           /* Default Task Layout for all other quests */
-                          quest.tasks.map((task: any, index: number) => (
+                          quest.tasks.map((task, index: number) => (
                             <div key={index} className={`${styles.taskItem}`}>
                               <Typography
                                 variant="geist"
