@@ -41,13 +41,40 @@ export interface PodiumData {
     createdAt: number;
   }
 
+type PodiumTxCallbackData = {
+  txHash: string;
+  blockNumber: number;
+  operation: 'claimPodium' | 'buyPodium' | 'claimRepeatFees' | 'claimBalance';
+};
+
+type PodiumContractTuple = {
+  brandIds: readonly [bigint, bigint, bigint];
+  genesisCreatorFid: bigint;
+  ownerFid: bigint;
+  claimCount: bigint;
+  lastSalePrice: bigint;
+  totalFeesEarned: bigint;
+  createdAt: bigint;
+};
+
+const getErrorMessage = (error: unknown, fallback: string): string => {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'string') return error;
+  if (error && typeof error === 'object') {
+    const maybe = error as { message?: unknown; toString?: () => string };
+    if (typeof maybe.message === 'string') return maybe.message;
+    if (typeof maybe.toString === 'function') return maybe.toString();
+  }
+  return fallback;
+};
+
 // ============================================================================
 //                              HOOK
 // ============================================================================
 
 export const usePodiumCollectibles = (
-  onClaimPodiumSuccess?: (txData: any) => void,
-  onBuyPodiumSuccess?: (txData: any) => void,
+  onClaimPodiumSuccess?: (txData: PodiumTxCallbackData) => void,
+  onBuyPodiumSuccess?: (txData: PodiumTxCallbackData) => void,
 ) => {
   const { address: userAddress, isConnected, chainId } = useAccount();
   const { switchChain } = useSwitchChain();
@@ -78,8 +105,6 @@ export const usePodiumCollectibles = (
   const [pendingClaimBrandIds, setPendingClaimBrandIds] = useState<
       [number, number, number] | null
     >(null);
-  const [_pendingClaimData, setPendingClaimData] =
-      useState<ClaimPodiumParams | null>(null);
   const [pendingBuyTokenId, setPendingBuyTokenId] = useState<number | null>(
     null
   );
@@ -278,7 +303,7 @@ export const usePodiumCollectibles = (
         });
 
         // Contract returns: brandIds, genesisCreatorFid, ownerFid, claimCount, lastSalePrice, totalFeesEarned, createdAt
-        const result = podium as any;
+        const result = podium as PodiumContractTuple;
 
         return {
           brandIds: [
@@ -405,13 +430,6 @@ export const usePodiumCollectibles = (
           '✅ [ClaimPodium] Allowance sufficient, proceeding with claim'
         );
         setLastOperation('claimPodium');
-        setPendingClaimData({
-          brandIds,
-          fid: userFid,
-          deadline,
-          signature: signatureData.signature,
-        });
-
         const txHash = await writeContractAsync({
           address: PODIUM_CONTRACT_CONFIG.CONTRACT,
           abi: BRND_PODIUM_COLLECTABLES_ABI,
@@ -426,11 +444,10 @@ export const usePodiumCollectibles = (
           chainId: PODIUM_CONTRACT_CONFIG.CHAIN_ID,
         });
         setExpectedOperationHash(txHash);
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('❌ [ClaimPodium] Claim failed:', error);
-        setError(error.message || 'Claim podium failed');
+        setError(getErrorMessage(error, 'Claim podium failed'));
         setLastOperation(null);
-        setPendingClaimData(null);
         setPendingClaimBrandIds(null);
         setExpectedOperationHash(null);
         setIsFetchingSignature(false);
@@ -546,12 +563,12 @@ export const usePodiumCollectibles = (
           chainId: PODIUM_CONTRACT_CONFIG.CHAIN_ID,
         });
         setExpectedOperationHash(txHash);
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('❌ [BuyPodium] Buy failed:', error);
 
         // Parse contract-specific errors for better user messages
         let errorMessage = 'Buy podium failed';
-        const errorString = error.message || error.toString();
+        const errorString = getErrorMessage(error, 'Buy podium failed');
 
         if (errorString.includes('CannotBuyOwnPodium')) {
           errorMessage = 'You cannot buy your own podium';
@@ -565,8 +582,6 @@ export const usePodiumCollectibles = (
           errorMessage = 'This podium transfer is currently blocked';
         } else if (errorString.includes('User rejected') || errorString.includes('user rejected')) {
           errorMessage = 'Transaction was cancelled';
-        } else if (error.message) {
-          errorMessage = error.message;
         }
 
         setError(errorMessage);
@@ -666,13 +681,6 @@ export const usePodiumCollectibles = (
 
           const brandIds = pendingClaimBrandIds;
           setPendingClaimBrandIds(null);
-          setPendingClaimData({
-            brandIds,
-            fid: userFid!,
-            deadline: freshDeadline,
-            signature: freshSignatureData.signature,
-          });
-
           setIsFetchingSignature(false);
           const txHash = await writeContractAsync({
             address: PODIUM_CONTRACT_CONFIG.CONTRACT,
@@ -708,10 +716,9 @@ export const usePodiumCollectibles = (
           });
           setExpectedOperationHash(txHash);
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('❌ [Approve] Auto-retry failed:', error);
-        setError(error.message || 'Failed to claim after approval');
-        setPendingClaimData(null);
+        setError(getErrorMessage(error, 'Failed to claim after approval'));
         setPendingClaimBrandIds(null);
         setPendingBuyTokenId(null);
         setPendingApprovalAmount(null);
@@ -769,7 +776,6 @@ export const usePodiumCollectibles = (
       switch (lastOperation) {
         case 'claimPodium':
           onClaimPodiumSuccess?.(txData);
-          setPendingClaimData(null);
           break;
         case 'buyPodium':
           onBuyPodiumSuccess?.(txData);
@@ -802,7 +808,6 @@ export const usePodiumCollectibles = (
       });
       setLastOperation(null);
       setError(writeError.message || 'Transaction failed');
-      setPendingClaimData(null);
       setPendingClaimBrandIds(null);
       setPendingBuyTokenId(null);
       setPendingApprovalAmount(null);

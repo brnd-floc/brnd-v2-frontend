@@ -23,9 +23,29 @@ export interface WithdrawBrndParams {
   shares: string; // Amount in BRND equivalent (will be converted to vault shares)
 }
 
+type StakingTxCallbackData = {
+  txHash: string;
+  blockNumber: number;
+  currentBrndBalance: string;
+  currentStakedAmount: string;
+  amount: string;
+  shares: string;
+};
+
+const getErrorMessage = (error: unknown, fallback = 'Unknown error'): string => {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'string') return error;
+  if (error && typeof error === 'object') {
+    const maybeMessage = (error as { message?: unknown; shortMessage?: unknown });
+    if (typeof maybeMessage.message === 'string') return maybeMessage.message;
+    if (typeof maybeMessage.shortMessage === 'string') return maybeMessage.shortMessage;
+  }
+  return fallback;
+};
+
 export const useContractWagmi = (
-  onStakeSuccess?: (txData: any) => void,
-  onWithdrawSuccess?: (txData: any) => void
+  onStakeSuccess?: (txData: StakingTxCallbackData) => void,
+  onWithdrawSuccess?: (txData: StakingTxCallbackData) => void
 ) => {
   const { address: userAddress, isConnected } = useAccount();
   const {
@@ -284,9 +304,8 @@ export const useContractWagmi = (
   }, []);
 
   // Enhanced error handling
-  const parseContractError = (error: any): string => {
-    const errorMessage =
-      error?.message || error?.shortMessage || 'Unknown error';
+  const parseContractError = (error: unknown): string => {
+    const errorMessage = getErrorMessage(error, 'Unknown error');
 
     // Parse contract error for user-friendly message
 
@@ -346,8 +365,7 @@ export const useContractWagmi = (
   // Clear operation state when user rejects transaction
   useEffect(() => {
     if (writeError) {
-      const errorMessage =
-        (writeError as any)?.message || (writeError as any)?.shortMessage || '';
+      const errorMessage = getErrorMessage(writeError, '');
       if (
         errorMessage.includes('rejected') ||
         errorMessage.includes('User rejected')
@@ -437,7 +455,7 @@ export const useContractWagmi = (
             chainId: 8453,
           });
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         setError(parseContractError(error));
         // Clear operation state on error
         setLastOperation(null);
@@ -491,7 +509,7 @@ export const useContractWagmi = (
           args: [sharesBigInt, userAddress, userAddress],
           chainId: 8453,
         });
-      } catch (error: any) {
+      } catch (error: unknown) {
         setError(parseContractError(error));
         // Clear operation state on error
         setLastOperation(null);
@@ -532,7 +550,7 @@ export const useContractWagmi = (
         });
 
         setPendingDepositAmount(null);
-      } catch (error: any) {
+      } catch (error: unknown) {
         setError('Failed to deposit after approval');
         setNeedsDeposit(false);
         setPendingDepositAmount(null);
@@ -576,6 +594,7 @@ export const useContractWagmi = (
         if (onStakeSuccess) {
           onStakeSuccess({
             amount: lastStakeParams.amount,
+            shares: '0',
             txHash: receipt.transactionHash,
             blockNumber: Number(receipt.blockNumber),
             currentBrndBalance,
@@ -591,7 +610,7 @@ export const useContractWagmi = (
 
         setLastStakeParams(null);
         setLastOperation(null);
-      } catch (error: any) {
+      } catch (error: unknown) {
         // Error in success handler
       }
     };
@@ -633,6 +652,7 @@ export const useContractWagmi = (
         // Trigger callback FIRST with old balances for optimistic updates
         if (onWithdrawSuccess) {
           onWithdrawSuccess({
+            amount: '0',
             shares: lastWithdrawParams.shares,
             txHash: receipt.transactionHash,
             blockNumber: Number(receipt.blockNumber),
@@ -648,7 +668,7 @@ export const useContractWagmi = (
 
         setLastWithdrawParams(null);
         setLastOperation(null);
-      } catch (error: any) {
+      } catch (error: unknown) {
         // Error in withdraw success handler
       }
     };
