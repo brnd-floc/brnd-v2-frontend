@@ -6,6 +6,54 @@
       "openMiniapp": "Abrir Miniapp",
       "goToDashboard": "Ir al Dashboard"
     },
+    "credibility": {
+      "title": {
+        "line1": "Convirtiendo la actividad de la comunidad en",
+        "line2": "credibilidad onchain medible."
+      },
+      "tabs": {
+        "users": {
+          "label": "PARA USUARIOS (AMANTES DE MARCAS)",
+          "shortLabel": "PARA USUARIOS",
+          "item1": {
+            "title": "Crea y colecciona podios:",
+            "description": "Construye tus rankings de marcas, comparte tu criterio y define lo que importa con tu comunidad onchain."
+          },
+          "item2": {
+            "title": "Gana $BRND:",
+            "description": "Recibe recompensas por crear, compartir e interactuar con podios."
+          },
+          "item3": {
+            "title": "Señala valor:",
+            "description": "Impulsa las marcas en las que crees y observa la respuesta de la comunidad."
+          },
+          "item4": {
+            "title": "Sigue la evolución:",
+            "description": "Observa cómo las marcas suben, bajan o mantienen relevancia onchain en un solo lugar."
+          }
+        },
+        "brands": {
+          "label": "PARA MARCAS (QUE AMAN A LOS USUARIOS)",
+          "shortLabel": "PARA MARCAS",
+          "item1": {
+            "title": "Visibilidad:",
+            "description": "Descubre nuevas audiencias en podios creados por la comunidad y fortalece tu presencia onchain."
+          },
+          "item2": {
+            "title": "Validación comunitaria:",
+            "description": "Mide tu posición con la misma puntuación transparente que recompensa a los usuarios."
+          },
+          "item3": {
+            "title": "Posicionamiento dinámico:",
+            "description": "Tu lugar evoluciona continuamente con claims, resets y nueva actividad de podios."
+          },
+          "item4": {
+            "title": "Contexto confiable:",
+            "description": "Aparece en un entorno onchain transparente y comunitario, no en algoritmos ocultos."
+          }
+        }
+      }
+    },
     "footer": {
       "rights": "© {year} BRND. Todos los derechos reservados."
     }

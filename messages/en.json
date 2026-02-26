@@ -6,6 +6,54 @@
       "openMiniapp": "Open Miniapp",
       "goToDashboard": "Go to Dashboard"
     },
+    "credibility": {
+      "title": {
+        "line1": "Turning community activity into",
+        "line2": "measurable, onchain credibility."
+      },
+      "tabs": {
+        "users": {
+          "label": "FOR USERS (BRAND LOVERS)",
+          "shortLabel": "FOR USERS",
+          "item1": {
+            "title": "Create & collect podiums:",
+            "description": "Build your own brand rankings, showcase your takes, and shape what matters with your community onchain."
+          },
+          "item2": {
+            "title": "Earn $BRND:",
+            "description": "Receive rewards for creating, sharing, and interacting with podiums."
+          },
+          "item3": {
+            "title": "Signal value:",
+            "description": "Promote the brands you believe in, and see the community respond."
+          },
+          "item4": {
+            "title": "Track evolution:",
+            "description": "Follow how brands climb, drop, or sustain relevance onchain in one place."
+          }
+        },
+        "brands": {
+          "label": "FOR BRANDS (THAT LOVE USERS)",
+          "shortLabel": "FOR BRANDS",
+          "item1": {
+            "title": "Visibility:",
+            "description": "Get discovered in community-created podiums and strengthen your onchain presence."
+          },
+          "item2": {
+            "title": "Community validation:",
+            "description": "See where your brand ranks with the same transparent scoring that rewards users."
+          },
+          "item3": {
+            "title": "Dynamic positioning:",
+            "description": "Your position evolves continuously through claims, resets, and new podium activity."
+          },
+          "item4": {
+            "title": "Trusted context:",
+            "description": "Show up in a transparent, community-powered onchain environment, not hidden algorithms."
+          }
+        }
+      }
+    },
     "footer": {
       "rights": "© {year} BRND. All rights reserved."
     }

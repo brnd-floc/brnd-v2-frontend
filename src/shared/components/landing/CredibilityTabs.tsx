@@ -1,83 +1,46 @@
 import { useState } from 'react'
 import classNames from "clsx"
+import { useTranslations } from "@/i18n/useTranslations"
 import styles from "./CredibilityTabs.module.scss"
 
-const TABS = [
-    {
-        id: 'users',
-        label: 'FOR USERS (BRAND LOVERS)',
-        shortLabel: 'FOR USERS',
-        content: [
-            {
-                title: 'Create & collect podiums:',
-                description: 'Build your own brand rankings → Podiums, and showcase your takes. → Shape what matters: Create podiums that reflect what brands mean to you. Your taste, your community, onchain.'
-            },
-            {
-                title: 'Earn $BRND:',
-                description: 'Receive rewards for creating, sharing, and interacting with podiums.'
-            },
-            {
-                title: 'Signal value:',
-                description: 'Promote the brands you believe in, and see the community respond.'
-            },
-            {
-                title: 'Track evolution:',
-                description: 'Follow how brands climb, drop, or sustain relevance onchain. All in one place.'
-            }
-        ]
-    },
-    {
-        id: 'brands',
-        label: 'FOR BRANDS (THAT LOVE USERS)',
-        shortLabel: 'FOR BRANDS',
-        content: [
-            {
-                title: 'Visibility:',
-                description: 'Get discovered in podiums created by the community and gain onchain presence.'
-            },
-            {
-                title: 'Community validation:',
-                description: 'See where your brand ranks, powered by the same scoring that rewards users. Every vote contributes to your brand\'s perceived value.'
-            },
-            {
-                title: 'Dynamic positioning:',
-                description: 'Your place isn\'t fixed. Claims, resets, and new podiums ensure constant movement and real-time relevance.'
-            },
-            {
-                title: 'Trusted context:',
-                description: 'Appear in a transparent, community-powered, onchain environment — not behind hidden algorithms.'
-            }
-        ]
-    }
-]
+const TAB_IDS = ['users', 'brands'] as const
+const ITEM_KEYS = ['item1', 'item2', 'item3', 'item4'] as const
 
 export function CredibilityTabs() {
+    const t = useTranslations('landing.credibility')
     const [activeTab, setActiveTab] = useState('users')
 
-    const activeContent = TABS.find(tab => tab.id === activeTab)?.content ?? []
+    const activeContent = ITEM_KEYS.map((itemKey) => ({
+        title: t(`tabs.${activeTab}.${itemKey}.title`),
+        description: t(`tabs.${activeTab}.${itemKey}.description`),
+    }))
 
     return (
         <section className={styles.section}>
             <div className={styles.container}>
                 {/* Title */}
                 <h2 className={styles.title}>
-                    Turning community activity into<br />
-                    measurable, onchain credibility.
+                    {t('title.line1')}<br />
+                    {t('title.line2')}
                 </h2>
 
                 {/* Tabs */}
                 <div className={styles.tabsContainer}>
-                    {TABS.map((tab) => (
+                    {TAB_IDS.map((tabId) => (
                         <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
+                            key={tabId}
+                            onClick={() => setActiveTab(tabId)}
                             className={classNames(styles.tab, {
-                                [styles.active]: activeTab === tab.id
+                                [styles.active]: activeTab === tabId
                             })}
                         >
-                            <span className={styles.tabLabelFull}>{tab.label}</span>
-                            <span className={styles.tabLabelShort}>{tab.shortLabel}</span>
-                            {activeTab === tab.id && (
+                            <span className={styles.tabLabelFull}>
+                                {t(`tabs.${tabId}.label`)}
+                            </span>
+                            <span className={styles.tabLabelShort}>
+                                {t(`tabs.${tabId}.shortLabel`)}
+                            </span>
+                            {activeTab === tabId && (
                                 <span className={styles.tabIndicator} />
                             )}
                         </button>

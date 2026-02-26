@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import classNames from "clsx"
 import styles from './ScreenshotsGallery.module.scss'
 
 // Registrar plugin
@@ -16,38 +17,38 @@ if (typeof window !== 'undefined') {
 // Scaler: imagen central que se expande
 
 const LAYER_1_IMAGES = [
-    '/app_pics/BRND no selected.png',
-    '/app_pics/BRND selected.png',
-    '/app_pics/Claim.png',
-    '/app_pics/Claimed.png',
-    '/app_pics/Share Now.png',
-    '/app_pics/Section [BRND of the Week].png',
+    '/app_pics/BRND no selected.jpg',
+    '/app_pics/BRND selected.jpg',
+    '/app_pics/Claim.jpg',
+    '/app_pics/Claimed.jpg',
+    '/app_pics/Share Now.jpg',
+    '/app_pics/Section [BRND of the Week].jpg',
 ]
 
 const LAYER_2_IMAGES = [
-    '/app_pics/1st Position.png',
-    '/app_pics/2nd Position.png',
-    '/app_pics/BRND no selected.png',
-    '/app_pics/BRND selected.png',
-    '/app_pics/Claim.png',
-    '/app_pics/Claimed.png',
+    '/app_pics/1st Position.jpg',
+    '/app_pics/2nd Position.jpg',
+    '/app_pics/BRND no selected.jpg',
+    '/app_pics/BRND selected.jpg',
+    '/app_pics/Claim.jpg',
+    '/app_pics/Claimed.jpg',
 ]
 
 const LAYER_3_IMAGES = [
-    '/app_pics/Share Now.png',
-    '/app_pics/Section [BRND of the Week].png',
-    '/app_pics/1st Position.png',
-    '/app_pics/2nd Position.png',
-    '/app_pics/BRND no selected.png',
-    '/app_pics/BRND selected.png',
+    '/app_pics/Share Now.jpg',
+    '/app_pics/Section [BRND of the Week].jpg',
+    '/app_pics/1st Position.jpg',
+    '/app_pics/2nd Position.jpg',
+    '/app_pics/BRND no selected.jpg',
+    '/app_pics/BRND selected.jpg',
 ]
 
 const LAYER_4_IMAGES = [
-    '/app_pics/Claim.png',
-    '/app_pics/Claimed.png',
+    '/app_pics/Claim.jpg',
+    '/app_pics/Claimed.jpg',
 ]
 
-const SCALER_IMAGE = '/app_pics/1.png'
+const SCALER_IMAGE = '/app_pics/1.jpg'
 
 export function ScreenshotsGallery() {
     const sectionRef = useRef<HTMLElement>(null)
@@ -182,10 +183,10 @@ export function ScreenshotsGallery() {
                         {LAYER_1_IMAGES.map((src, i) => (
                             <div 
                                 key={`l1-${i}`}
-                                className={styles.imageContainer}
-                                style={{
-                                    gridColumn: i % 2 === 0 ? 1 : 7,
-                                }}
+                                className={classNames(
+                                    styles.imageContainer,
+                                    i % 2 === 0 ? styles.imageCol1 : styles.imageCol7
+                                )}
                             >
                                 <img
                                     src={src}
@@ -207,10 +208,10 @@ export function ScreenshotsGallery() {
                         {LAYER_2_IMAGES.map((src, i) => (
                             <div 
                                 key={`l2-${i}`}
-                                className={styles.imageContainer}
-                                style={{
-                                    gridColumn: i % 2 === 0 ? 2 : 6,
-                                }}
+                                className={classNames(
+                                    styles.imageContainer,
+                                    i % 2 === 0 ? styles.imageCol2 : styles.imageCol6
+                                )}
                             >
                                 <img
                                     src={src}
@@ -232,10 +233,10 @@ export function ScreenshotsGallery() {
                         {LAYER_3_IMAGES.map((src, i) => (
                             <div 
                                 key={`l3-${i}`}
-                                className={styles.imageContainer}
-                                style={{
-                                    gridColumn: i % 2 === 0 ? 3 : 5,
-                                }}
+                                className={classNames(
+                                    styles.imageContainer,
+                                    i % 2 === 0 ? styles.imageCol3 : styles.imageCol5
+                                )}
                             >
                                 <img
                                     src={src}
@@ -255,8 +256,7 @@ export function ScreenshotsGallery() {
                         className={styles.layer}
                     >
                         <div 
-                            className={styles.imageContainer}
-                            style={{ gridColumn: 4, gridRow: 1 }}
+                            className={classNames(styles.imageContainer, styles.imageCol4, styles.imageRow1)}
                         >
                             <img
                                 src={LAYER_4_IMAGES[0]}
@@ -268,8 +268,7 @@ export function ScreenshotsGallery() {
                             />
                         </div>
                         <div 
-                            className={styles.imageContainer}
-                            style={{ gridColumn: 4, gridRow: 3 }}
+                            className={classNames(styles.imageContainer, styles.imageCol4, styles.imageRow3)}
                         >
                             <img
                                 src={LAYER_4_IMAGES[1]}
@@ -285,8 +284,7 @@ export function ScreenshotsGallery() {
                     {/* Scaler - Imagen central (columna 4, fila 2) */}
                     <div 
                         ref={scalerRef}
-                        className={styles.scaler}
-                        style={{ gridArea: '2 / 4' }}
+                        className={classNames(styles.scaler, styles.scalerCenter)}
                     >
                         <img
                             src={SCALER_IMAGE}
