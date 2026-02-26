@@ -1,3 +1,11 @@
+// Mixin map
+// - layout: page/container/flex primitives
+// - typography: text hierarchy helpers
+// - interaction: hover/focus/press patterns
+// - state: disabled/loading/error helpers
+// - modal: modal-sheet layout and spacing
+// - podium: podium-specific reusable patterns
+// - scroll: scroll/overflow utility helpers
 @import "_mixins.layout.scss";
 @import "_mixins.typography.scss";
 @import "_mixins.interaction.scss";

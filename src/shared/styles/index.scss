@@ -1,7 +1,12 @@
+// Shared style entrypoint.
+// Import order is intentional:
+// 1) foundations (breakpoints/theme)
+// 2) design tokens
+// 3) mixins/utilities
+// 4) visual effects helpers
 @import "breakpoints.scss";
 @import "theme.scss";
 
 @import "_tokens.index.scss";
-
 @import "_mixins.index.scss";
 @import "_effects.index.scss";
