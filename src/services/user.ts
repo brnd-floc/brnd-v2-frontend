@@ -171,8 +171,26 @@ export interface AirdropCheckResponse {
       currentMultiplier: number;
       maxMultiplier: number;
       completed: boolean;
-      details: any;
-      nextTier: any;
+      details: {
+        accounts?: Array<{ name?: string; followed?: boolean }>;
+        channelFollow?: { followed?: boolean };
+        podiumCasts?: { count?: number; required?: number };
+        formattedWalletBalance?: string;
+        formattedStakedBalance?: string;
+        formattedBalance?: string;
+        nextTier?: { requirement?: number; multiplier?: number } | null;
+        uniqueBrandsVoted?: number;
+        sharedPodiumsCount?: number;
+        neynarScore?: number;
+        isProUser?: boolean;
+        [key: string]: unknown;
+      };
+      nextTier: {
+        requirement?: number;
+        multiplier?: number;
+        achieved?: boolean;
+        [key: string]: unknown;
+      } | null;
       progress: {
         current: number;
         required: number;

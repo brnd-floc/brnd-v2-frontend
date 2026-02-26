@@ -14,18 +14,20 @@ import { usePodiumCollectibles } from '@/shared/hooks/contract/usePodiumCollecti
 import { useAuth } from '@/shared/hooks/auth';
 import { useModal } from '@/shared/hooks/ui/useModal';
 import { ModalsIds } from '@/shared/providers/ModalProvider/types';
+import type { PublicPodium } from '@/services/brands';
+import type { User } from '@/shared/hooks/user';
 
 // Utils
 import { sdk } from '@farcaster/miniapp-sdk';
 
 // Types
 import { CollectibleData } from '@/shared/types/collectibles';
-import { MintingStep } from '@/shared/components/IndividualPodium';
+import { MintingStep, IndividualPodiumProps } from '@/shared/components/IndividualPodium';
 
 function PublicPodiumsFeed() {
   const { openModal } = useModal();
   const [currentPage, setCurrentPage] = useState(1);
-  const [allPodiums, setAllPodiums] = useState<any[]>([]); // Accumulate all podiums
+  const [allPodiums, setAllPodiums] = useState<PublicPodium[]>([]); // Accumulate all podiums
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false); // Track initialization
   const [processingPodiumId, setProcessingPodiumId] = useState<string | null>(
@@ -131,6 +133,44 @@ function PublicPodiumsFeed() {
   };
 
   const currentMintingStep = getCurrentMintingStep();
+
+  const toUser = useCallback(
+    (podiumUser: PublicPodium['user']): User => ({
+      fid: podiumUser.fid,
+      username: podiumUser.username,
+      photoUrl: podiumUser.photoUrl,
+      createdAt: '',
+      points: 0,
+      hasVotedToday: false,
+      isNewUser: false,
+    }),
+    [],
+  );
+
+  const toIndividualPodium = useCallback(
+    (podium: PublicPodium): NonNullable<IndividualPodiumProps['podium']> => ({
+      ...podium,
+      user: {
+        fid: podium.user.fid,
+        username: podium.user.username,
+      },
+      collectibleTokenId:
+        podium.collectibleTokenId !== null
+          ? String(podium.collectibleTokenId)
+          : null,
+      claimed: false,
+      brndPaidWhenCreatingPodium: null,
+      collectibleOwner:
+        podium.collectibleOwnerFid !== null
+          ? toUser({
+            fid: podium.collectibleOwnerFid,
+            username: podium.collectibleOwnerUsername ?? 'Unknown',
+            photoUrl: '',
+          })
+          : undefined,
+    }),
+    [toUser],
+  );
 
   // Show error modal when contract error occurs
   useEffect(() => {
@@ -238,7 +278,7 @@ function PublicPodiumsFeed() {
       try {
         setProcessingPodiumId(podiumId);
         await claimPodium(brandIds);
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('Failed to mint podium:', error);
         setProcessingPodiumId(null);
       }
@@ -252,7 +292,7 @@ function PublicPodiumsFeed() {
       try {
         setProcessingPodiumId(podiumId);
         await buyPodium(tokenId);
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('Failed to buy podium:', error);
         setProcessingPodiumId(null);
       }
@@ -261,7 +301,7 @@ function PublicPodiumsFeed() {
   );
 
   // Transform podium data to CollectibleData format
-  const toCollectibleData = useCallback((podium: any): CollectibleData => {
+  const toCollectibleData = useCallback((podium: PublicPodium): CollectibleData => {
     return {
       isCollectible: podium.isCollectible ?? false,
       tokenId: podium.collectibleTokenId ?? null,
@@ -271,7 +311,7 @@ function PublicPodiumsFeed() {
       genesisCreatorUsername: podium.collectibleGenesisCreatorUsername ?? null,
       ownerFid: podium.collectibleOwnerFid ?? null,
       ownerUsername: podium.collectibleOwnerUsername ?? null,
-      ownerPhotoUrl: podium.collectibleOwner?.photoUrl ?? null,
+      ownerPhotoUrl: null,
       totalFeesEarned: podium.collectibleTotalFeesEarned ?? '0',
     };
   }, []);
@@ -345,6 +385,8 @@ function PublicPodiumsFeed() {
         <ul className={styles.list}>
           {allPodiums.map((podium) => {
             const collectibleData = toCollectibleData(podium);
+            const feedUser = toUser(podium.user);
+            const individualPodium = toIndividualPodium(podium);
             const brandIds: [number, number, number] = [
               podium.brand1?.id || 0,
               podium.brand2?.id || 0,
@@ -353,7 +395,7 @@ function PublicPodiumsFeed() {
             const isProcessing = processingPodiumId === podium.id;
             const collectibleTokenId = podium.collectibleTokenId;
             const isLastVoteForCombination =
-              podium.isLastVoteForCombination ?? false;
+              individualPodium.isLastVoteForCombination ?? false;
 
             // Apply optimistic update if this podium was successfully transacted
             const successType = successfulPodiums.get(podium.id);
@@ -375,11 +417,11 @@ function PublicPodiumsFeed() {
             return (
               <li key={podium.id} className={styles.item}>
                 <FeedIndividualPodium
-                  user={podium.user}
+                  user={feedUser}
                   brand1={podium.brand1}
                   brand2={podium.brand2}
                   brand3={podium.brand3}
-                  podium={podium}
+                  podium={individualPodium}
                   collectibleData={optimisticCollectibleData}
                   isLastVoteForCombination={
                     hasSucceeded ? true : isLastVoteForCombination

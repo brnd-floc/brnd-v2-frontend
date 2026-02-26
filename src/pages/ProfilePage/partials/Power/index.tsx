@@ -104,7 +104,7 @@ const Power: React.FC = () => {
 
       // Convert backend levels to component format
       const convertedLevels =
-        info.allLevels?.map((level: any) => {
+        info.allLevels?.map((level) => {
           const progress = level.progress
             ? {
               current: level.progress.current,
@@ -120,7 +120,7 @@ const Power: React.FC = () => {
 
           // For streak levels, check completion based on maxStreak if available
           // If maxStreak >= total, the user has completed this mission before
-          let isCompleted = level.isCompleted;
+          let isCompleted = Boolean(level.isCompleted);
           if (
             level.actionType === 'streak' &&
             progress?.maxStreak !== undefined &&
@@ -138,8 +138,8 @@ const Power: React.FC = () => {
             podiumPoints: level.id * 100, // Calculated
             shareReward: level.id * 1000, // Calculated
             isCompleted,
-            isActive: level.isActive,
-            actionType: level.actionType,
+            isActive: Boolean(level.isActive),
+            actionType: (level.actionType ?? 'follow') as Level['actionType'],
             actionValue: level.requirement?.value.toString(),
             requirement: level.requirement,
             progress,
@@ -396,7 +396,7 @@ const Power: React.FC = () => {
       // This will call the backend API and then the smart contract
       await levelUpBrndPower(targetLevel);
       // Success is handled by the onLevelUpSuccess callback
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Level up failed:', error);
       // Error is handled by useStoriesInMotion hook
       setPendingLevelUp(null);

@@ -11,6 +11,7 @@ import LoaderIndicator from '@/shared/components/LoaderIndicator';
 // Hooks
 import { useUserLeaderboard } from '@/shared/hooks/user/useUserLeaderboard';
 import { useAuth } from '@/hooks/auth';
+import type { User } from '@/shared/hooks/user';
 
 // Icons
 import BPointIcon from '@/assets/icons/point-b.svg?react';
@@ -25,7 +26,7 @@ interface LeaderboardFeedProps {
 function LeaderboardFeed({ season }: LeaderboardFeedProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [usersBySeasonPage, setUsersBySeasonPage] = useState<
-    Record<string, any[]>
+    Record<string, User[]>
   >({});
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const limit = 50;
