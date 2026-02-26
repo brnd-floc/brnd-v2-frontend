@@ -20,12 +20,17 @@ export const useAirdropClaimStatus = (options: UseAirdropClaimStatusOptions = {}
     enabled: options.enabled ?? true,
     refetchInterval: options.refetchInterval,
     staleTime: 30 * 1000, // Consider data stale after 30 seconds
-    retry: (failureCount, error: any) => {
+    retry: (failureCount, error: unknown) => {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error ?? '');
       // Don't retry on authentication errors
-      if (error?.message?.includes('Unauthorized') || error?.message?.includes('401')) {
+      if (
+        errorMessage.includes('Unauthorized') ||
+        errorMessage.includes('401')
+      ) {
         return false;
       }
       return failureCount < 3;
-    }
+    },
   });
 };

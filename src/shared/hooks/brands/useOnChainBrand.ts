@@ -38,9 +38,9 @@ export const useOnChainBrand = (brandId: number) => {
       };
 
       setBrandData(parsedBrand);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to fetch on-chain brand data:', err);
-      setError(err.message || 'Failed to fetch brand data');
+      setError(err instanceof Error ? err.message : 'Failed to fetch brand data');
     } finally {
       setIsLoading(false);
     }

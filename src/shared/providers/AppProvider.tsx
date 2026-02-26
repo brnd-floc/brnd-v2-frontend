@@ -195,7 +195,6 @@ export function AppProvider(): JSX.Element {
           } finally {
             setIsLoadingAuth(false);
           }
-        } else if (newToken && hasCalledGetMe) {
         }
 
         setIsInitialized(true);
@@ -233,7 +232,6 @@ export function AppProvider(): JSX.Element {
 
       if (shouldShow) {
         setShowAddMiniappPrompt(true);
-      } else {
       }
     },
     [],
@@ -282,7 +280,11 @@ export function AppProvider(): JSX.Element {
           setIsLoadingAuth(false);
         }
       }
-    } catch (error) {}
+    } catch (error) {
+      setAuthError(
+        error instanceof Error ? error : new Error('Failed to sign in'),
+      );
+    }
   }, []);
 
   const signOut = useCallback(() => {
