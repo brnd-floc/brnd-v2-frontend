@@ -70,7 +70,6 @@ export default function PodiumView({}: PodiumViewProps) {
     undefined, // onLevelUpSuccess
     // onVoteSuccess - after successful vote transaction
     async (txData) => {
-      console.log("we are probably inside the onvote success callback", txData);
       sdk.haptics.notificationOccurred("success");
 
       const txHash = txData?.txHash;
@@ -142,7 +141,7 @@ export default function PodiumView({}: PodiumViewProps) {
         setVoteCompleted(true);
         navigate(`/vote/${currentUnix}`, { replace: true });
       });
-    }
+    },
   );
 
   // Calculate vote cost when user info changes
@@ -228,7 +227,7 @@ export default function PodiumView({}: PodiumViewProps) {
 
       return true;
     },
-    [openModal, authData, hasVotedOnChain]
+    [openModal, authData, hasVotedOnChain],
   );
 
   /**
@@ -255,7 +254,7 @@ export default function PodiumView({}: PodiumViewProps) {
         strategy: "insufficient-brnd",
         canVote: false,
         reason: `You need ${requiredAmount.toFixed(
-          0
+          0,
         )} BRND to vote. Buy BRND tokens to participate.`,
         requiredAmount,
         currentBalance: balance,
@@ -400,25 +399,14 @@ export default function PodiumView({}: PodiumViewProps) {
         // Show appropriate error feedback
         sdk.haptics.notificationOccurred("error");
 
-        openModal(ModalsIds.BOTTOM_ALERT, {
-          title: "Vote Failed",
-          content: (
-            <div>
-              <Typography>
-                Failed to submit your vote. Please try again.
-              </Typography>
-              {error.message && (
-                <>
-                  <br />
-                  <Typography size={12}>Error: {error.message}</Typography>
-                </>
-              )}
-              <br />
-              <Typography size={12}>
-                💡 Make sure you have enough BRND tokens and try again.
-              </Typography>
-            </div>
-          ),
+        openModal(ModalsIds.TRANSACTION_ERROR, {
+          error: error.message || "Failed to submit your vote. Please try again.",
+          route: window.location.pathname,
+          timestamp: new Date().toISOString(),
+          transactionType: "Vote Transaction",
+          additionalInfo: {
+            tip: "Make sure you have enough BRND tokens and try again.",
+          },
         });
       }
     },
@@ -428,7 +416,7 @@ export default function PodiumView({}: PodiumViewProps) {
       handleWalletConnection,
       voteOnChain,
       openModal,
-    ]
+    ],
   );
 
   /**
@@ -453,7 +441,7 @@ export default function PodiumView({}: PodiumViewProps) {
       return {
         label: "💰 Get $BRND",
         description: `You Need ${votingStatus.requiredAmount.toFixed(
-          0
+          0,
         )} tokens to vote onchain.`,
         action: () => {
           sdk.haptics.selectionChanged();
@@ -502,7 +490,7 @@ export default function PodiumView({}: PodiumViewProps) {
       // Otherwise, submit the vote
       handleSubmitVote(brands);
     },
-    [determineVotingStrategy, getNextAction, handleSubmitVote]
+    [determineVotingStrategy, getNextAction, handleSubmitVote],
   );
 
   /**
@@ -601,10 +589,10 @@ export default function PodiumView({}: PodiumViewProps) {
             {authData?.todaysVoteStatus?.hasClaimed
               ? "Rewards Claimed!"
               : authData?.todaysVoteStatus?.hasShared
-              ? "Already voted and shared!"
-              : authData?.todaysVoteStatus?.hasVoted || hasVotedOnChain
-              ? "Already voted today!"
-              : "Add your top brands on this podium"}
+                ? "Already voted and shared!"
+                : authData?.todaysVoteStatus?.hasVoted || hasVotedOnChain
+                  ? "Already voted today!"
+                  : "Add your top brands on this podium"}
           </Typography>
 
           <span onClick={handleClickHowToScore}>
@@ -627,8 +615,8 @@ export default function PodiumView({}: PodiumViewProps) {
               {isLoadingBrndBalance
                 ? "Loading..."
                 : brndBalance
-                ? parseFloat(brndBalance).toFixed(0)
-                : "0"}
+                  ? parseFloat(brndBalance).toFixed(0)
+                  : "0"}
             </Typography>
           ) : (
             <Button

@@ -633,3 +633,90 @@
     opacity: 0.9;
   }
 }
+
+// Apex Completion Section - shown when all levels are completed
+.apexSection {
+  width: 100%;
+  margin-bottom: 24px;
+}
+
+.apexCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 32px 24px;
+  border-radius: 12px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0.02) 100%
+  );
+  overflow: hidden;
+
+  // Rainbow gradient border
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    padding: 1px;
+    background: linear-gradient(
+      135deg,
+      #ff9533 0%,
+      #ff0000 25%,
+      #0c00ff 50%,
+      #00ff00 75%,
+      #ff9533 100%
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+}
+
+.apexIconContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 16px;
+  border-radius: 50%;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 149, 51, 0.2) 0%,
+    rgba(255, 0, 0, 0.2) 25%,
+    rgba(12, 0, 255, 0.2) 50%,
+    rgba(0, 255, 0, 0.2) 75%
+  );
+}
+
+.apexIcon {
+  font-size: 24px;
+  background: linear-gradient(
+    135deg,
+    #ff9533 0%,
+    #ff0000 25%,
+    #0c00ff 50%,
+    #00ff00 75%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.apexTitle {
+  color: #ffffff;
+  margin-bottom: 8px;
+}
+
+.apexSubtitle {
+  color: #9b92a5;
+  font-style: italic;
+}

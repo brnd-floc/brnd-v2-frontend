@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
 
 // Components
 import Typography from "@/components/Typography";
@@ -24,14 +23,13 @@ import { CollectibleData } from "@/shared/types/collectibles";
 import { MintingStep } from "@/shared/components/IndividualPodium";
 
 function PublicPodiumsFeed() {
-  const navigate = useNavigate();
   const { openModal } = useModal();
   const [currentPage, setCurrentPage] = useState(1);
   const [allPodiums, setAllPodiums] = useState<any[]>([]); // Accumulate all podiums
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false); // Track initialization
   const [processingPodiumId, setProcessingPodiumId] = useState<string | null>(
-    null
+    null,
   );
   // Track optimistic updates for successful transactions with their type
   const [successfulPodiums, setSuccessfulPodiums] = useState<
@@ -41,9 +39,8 @@ function PublicPodiumsFeed() {
 
   const { data, isLoading, isFetching, error, refetch } = useRecentPodiums(
     currentPage,
-    limit
+    limit,
   );
-  console.log("THE DATA IS", data);
 
   // Get current user's FID for filtering
   const { data: authData } = useAuth();
@@ -69,7 +66,9 @@ function PublicPodiumsFeed() {
       sdk.haptics.notificationOccurred("success");
       // Optimistically mark this podium as minted
       if (processingPodiumId) {
-        setSuccessfulPodiums((prev) => new Map(prev).set(processingPodiumId, "mint"));
+        setSuccessfulPodiums((prev) =>
+          new Map(prev).set(processingPodiumId, "mint"),
+        );
       }
       setProcessingPodiumId(null);
       refreshData();
@@ -82,12 +81,14 @@ function PublicPodiumsFeed() {
       sdk.haptics.notificationOccurred("success");
       // Optimistically mark this podium as bought
       if (processingPodiumId) {
-        setSuccessfulPodiums((prev) => new Map(prev).set(processingPodiumId, "buy"));
+        setSuccessfulPodiums((prev) =>
+          new Map(prev).set(processingPodiumId, "buy"),
+        );
       }
       setProcessingPodiumId(null);
       refreshData();
       // Don't refetch immediately - optimistic update handles the UI
-    }
+    },
   );
 
   // Clear processing state when transaction completes (success or error)
@@ -135,13 +136,11 @@ function PublicPodiumsFeed() {
   useEffect(() => {
     if (contractError) {
       sdk.haptics.notificationOccurred("error");
-      openModal(ModalsIds.BOTTOM_ALERT, {
-        title: "Transaction Failed",
-        content: (
-          <Typography size={14} className={styles.errorText}>
-            {contractError}
-          </Typography>
-        ),
+      openModal(ModalsIds.TRANSACTION_ERROR, {
+        error: contractError,
+        route: window.location.pathname,
+        timestamp: new Date().toISOString(),
+        transactionType: "Podium Transaction (Feed)",
       });
       setProcessingPodiumId(null);
     }
@@ -176,7 +175,6 @@ function PublicPodiumsFeed() {
     }
   }, [data, allPodiums, successfulPodiums, userFid]);
 
-  console.log("THE DATA IS", data);
   /**
    * Initialize component with first page data on mount
    */
@@ -194,12 +192,11 @@ function PublicPodiumsFeed() {
     if (data?.data && isInitialized) {
       if (currentPage === 1) {
         // First page after initialization - replace all podiums
-
         setAllPodiums(data.data);
       } else {
         // Subsequent pages - append new podiums
         setAllPodiums((prev) => {
-          // Filter out duplicates by id
+          // Filter out duplicates by id (transactionHash)
           const existingIds = new Set(prev.map((p) => p.id));
           const newPodiums = data.data.filter((p) => !existingIds.has(p.id));
           return [...prev, ...newPodiums];
@@ -218,8 +215,8 @@ function PublicPodiumsFeed() {
       const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
       const calc = scrollTop + clientHeight + 50; // 50px buffer before bottom
 
-      // Calculate if there's a next page based on count and current data
-      const hasNextPage = data?.count ? allPodiums.length < data.count : false;
+      // Calculate hasNextPage: if we have loaded fewer items than total count
+      const hasNextPage = data ? allPodiums.length < data.count : false;
 
       if (
         calc >= scrollHeight &&
@@ -231,7 +228,7 @@ function PublicPodiumsFeed() {
         setCurrentPage((prev) => prev + 1);
       }
     },
-    [isFetching, isLoadingMore, data?.count, allPodiums.length, currentPage]
+    [isFetching, isLoadingMore, data, allPodiums.length, currentPage],
   );
 
   // Helper functions for handling mint and buy actions
@@ -246,7 +243,7 @@ function PublicPodiumsFeed() {
         setProcessingPodiumId(null);
       }
     },
-    [userFid, claimPodium]
+    [userFid, claimPodium],
   );
 
   const handleBuyPodium = useCallback(
@@ -260,7 +257,7 @@ function PublicPodiumsFeed() {
         setProcessingPodiumId(null);
       }
     },
-    [userFid, buyPodium]
+    [userFid, buyPodium],
   );
 
   // Transform podium data to CollectibleData format
@@ -274,6 +271,7 @@ function PublicPodiumsFeed() {
       genesisCreatorUsername: podium.collectibleGenesisCreatorUsername ?? null,
       ownerFid: podium.collectibleOwnerFid ?? null,
       ownerUsername: podium.collectibleOwnerUsername ?? null,
+      ownerPhotoUrl: podium.collectibleOwner?.photoUrl ?? null,
       totalFeesEarned: podium.collectibleTotalFeesEarned ?? "0",
     };
   }, []);
@@ -367,117 +365,47 @@ function PublicPodiumsFeed() {
               optimisticCollectibleData = {
                 ...collectibleData,
                 isCollectible: true,
-                // For buy success, update owner to current user
-                ...(successType === "buy" && {
-                  ownerFid: userFid,
-                  ownerUsername: authData?.username || null,
-                }),
+                // For both mint and buy success, update owner to current user
+                ownerFid: userFid,
+                ownerUsername: authData?.username || null,
+                ownerPhotoUrl: authData?.photoUrl || null,
               };
             }
 
             return (
-              <div key={podium.id} className={styles.podiumItem}>
-                {/* User info header */}
-                <div className={styles.podiumHeader}>
-                  <div
-                    className={styles.userInfo}
-                    onClick={() => {
-                      sdk.actions.viewProfile({ fid: podium.user.fid });
-                    }}
-                  >
-                    {podium.user.photoUrl && (
-                      <img
-                        src={podium.user.photoUrl}
-                        alt={podium.user.username}
-                        className={styles.userAvatar}
-                      />
-                    )}
-                    <div className={styles.userDetails}>
-                      <div>
-                        <Typography size={14} weight="medium">
-                          {podium.user.username}
-                        </Typography>{" "}
-                        {podium.user.brndPowerLevel && (
-                          <Typography
-                            size={14}
-                            weight="medium"
-                            className={styles.levelText}
-                          >
-                            level {podium.user.brndPowerLevel}
-                          </Typography>
-                        )}
-                      </div>
-
-                      <Typography size={12} className={styles.timeAgo}>
-                        {getTimeAgo(podium.date)}
-                      </Typography>
-                    </div>
-                  </div>
-                  {/* Payment and claim info */}
-                  <div className={styles.paymentInfo}>
-                    {podium.brndPaidWhenCreatingPodium !== null &&
-                      podium.brndPaidWhenCreatingPodium !== undefined && (
-                        <span
-                          onClick={() => {
-                            sdk.actions.openUrl({
-                              url: `https://basescan.org/tx/${podium.id}`,
-                            });
-                          }}
-                        >
-                          <Typography size={12} className={styles.paidAmount}>
-                            Paid {podium.brndPaidWhenCreatingPodium} $BRND
-                          </Typography>
-                        </span>
-                      )}
-                    {podium.claimed && (
-                      <span
-                        onClick={() => {
-                          sdk.actions.openUrl({
-                            url: `https://basescan.org/tx/${podium.claimTxHash}`,
-                          });
-                        }}
-                      >
-                        {" "}
-                        <Typography size={12} className={styles.claimedAmount}>
-                          Claimed{" "}
-                          {Math.floor(
-                            Number(podium.brndPaidWhenCreatingPodium) * 10
-                          )}{" "}
-                          $BRND
-                        </Typography>
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Podium content */}
-                <div className={styles.podiumRow}>
-                  <div className={styles.podiumContent}>
-                    <div className={styles.podiumGrid}>
-                      {brands.map((brand: Brand, index: number) => (
-                        <BrandCard
-                          key={`${podium.id}-brand-${index}`}
-                          name={brand?.name || ""}
-                          photoUrl={brand?.imageUrl}
-                          context="podium"
-                          podiumPosition={index + 1}
-                          orientation={
-                            index === 0
-                              ? "left"
-                              : index === 1
-                              ? "center"
-                              : "right"
-                          }
-                          score={brand?.score || 0}
-                          variation={getBrandScoreVariation(brand?.score || 0)}
-                          size="s"
-                          onClick={() => handleClickCard(brand?.id || 0)}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <li key={podium.id} className={styles.item}>
+                <FeedIndividualPodium
+                  user={podium.user}
+                  brand1={podium.brand1}
+                  brand2={podium.brand2}
+                  brand3={podium.brand3}
+                  podium={podium}
+                  collectibleData={optimisticCollectibleData}
+                  isLastVoteForCombination={
+                    hasSucceeded ? true : isLastVoteForCombination
+                  }
+                  onMintClick={() => handleMintPodium(podium.id, brandIds)}
+                  onBuyClick={() => {
+                    if (collectibleTokenId) {
+                      handleBuyPodium(podium.id, collectibleTokenId);
+                    }
+                  }}
+                  onMintSuccess={() => {
+                    refreshData();
+                    refetch();
+                  }}
+                  isPending={
+                    isProcessing &&
+                    (isPending ||
+                      isConfirming ||
+                      isApproving ||
+                      isFetchingSignature)
+                  }
+                  mintingStep={isProcessing ? currentMintingStep : null}
+                  hasSucceeded={hasSucceeded}
+                  successType={successType}
+                />
+              </li>
             );
           })}
         </ul>

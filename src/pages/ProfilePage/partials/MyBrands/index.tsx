@@ -87,6 +87,12 @@ function MyBrands() {
               // No variation for personal rankings
               variation={"hide"}
               onClick={() => handleClickCard(userBrand.brand.id)}
+              // Extended fields
+              category={userBrand.brand.category}
+              guardianHandle={userBrand.brand.guardianHandle}
+              guardianPfp={userBrand.brand.guardianPfp}
+              guardianFid={userBrand.brand.guardianFid}
+              ticker={userBrand.brand.ticker}
             />
           </li>
         ))}

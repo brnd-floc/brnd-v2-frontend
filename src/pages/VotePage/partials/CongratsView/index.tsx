@@ -78,7 +78,7 @@ export default function CongratsView({
   // Level 0 -> 3, Level 1 -> 6, Level 2 -> 9, etc.
   // Formula: (level + 1) * 3
   const calculateLeaderboardPoints = useCallback((level: number): number => {
-    return 3 + (level + 1) * 3;
+    return 3 + level * 3;
   }, []);
 
   const rewardAmount = calculateRewardAmount(brndPowerLevel);
@@ -108,7 +108,7 @@ export default function CongratsView({
 
     return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
       2,
-      "0"
+      "0",
     )}:${String(seconds).padStart(2, "0")}`;
   }, []);
 
@@ -133,7 +133,7 @@ export default function CongratsView({
       setVerificationState("error");
       setErrorMessage(
         shareVerification.error?.message ||
-          "Verification failed. Please try sharing again."
+          "Verification failed. Please try sharing again.",
       );
     }
   }, [

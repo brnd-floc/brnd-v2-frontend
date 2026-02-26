@@ -1,0 +1,166 @@
+@import "@/styles/index.scss";
+
+.layout {
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  width: 100%;
+}
+
+.modal {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 360px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: #110f15;
+  border-radius: 16px;
+  padding: 20px;
+  position: relative;
+
+  // Rainbow gradient border
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 16px;
+    padding: 1px;
+    background: linear-gradient(
+      135deg,
+      #ff9533 0%,
+      #ff0000 25%,
+      #0c00ff 50%,
+      #00ff00 75%,
+      #ff9533 100%
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.logo {
+  width: 48px;
+  height: 48px;
+}
+
+.appName {
+  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.titleSection {
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.title {
+  color: #ff4444;
+}
+
+.instructions {
+  text-align: center;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: rgba(255, 149, 51, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 149, 51, 0.3);
+}
+
+.instructionText {
+  color: #ff9533;
+}
+
+.errorDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.detailRow {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+}
+
+.detailLabel {
+  color: #8a8a8a;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.detailValue {
+  color: #ffffff;
+  text-align: right;
+  word-break: break-all;
+  margin-left: 12px;
+}
+
+.errorSection,
+.additionalSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.errorBox {
+  padding: 12px;
+  background: rgba(255, 68, 68, 0.1);
+  border: 1px solid rgba(255, 68, 68, 0.2);
+  border-radius: 6px;
+  max-height: 150px;
+  overflow-y: auto;
+
+  // Custom scrollbar
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 2px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+  }
+}
+
+.errorText {
+  color: #ff8888;
+  font-family: "Geist Mono", monospace;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.contactButton {
+  width: 100%;
+}

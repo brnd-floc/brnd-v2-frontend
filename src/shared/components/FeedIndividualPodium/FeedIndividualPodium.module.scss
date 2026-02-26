@@ -243,6 +243,7 @@
   flex-direction: row;
   justify-content: center;
   align-items: center;
+  gap: 8px;
   padding: 12px 16px;
   width: 100%;
   max-width: 100%; // Prevent overflow
@@ -272,7 +273,7 @@
   padding: 8px 12px;
   gap: 8px;
   height: 34px;
-  border-radius: 12px;
+  border-radius: 4px;
   backdrop-filter: blur(12px);
   overflow: hidden;
   background: transparent;
@@ -284,7 +285,7 @@
     position: absolute;
     inset: 0;
     z-index: -2;
-    border-radius: 12px;
+    border-radius: 4px;
     background: linear-gradient(
       90deg,
       #ff9533 0%,
@@ -300,8 +301,8 @@
     position: absolute;
     inset: 1px; // Inset by 1px to show the rainbow border
     z-index: -1;
-    border-radius: 11px; // Slightly smaller to account for 1px inset
-    background: rgba(0, 0, 0, 0.75);
+    border-radius: 3px; // Slightly smaller to account for 1px inset
+    background: rgba(0, 0, 0, 0.95);
   }
 
   .actionButtonText {

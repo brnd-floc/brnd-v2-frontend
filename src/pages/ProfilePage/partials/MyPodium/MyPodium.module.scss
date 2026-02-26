@@ -12,6 +12,8 @@
   flex: 1;
   overflow-y: auto;
   width: 100%;
+  // Maintain scroll position when content changes
+  overflow-anchor: auto;
 
   // Hide scrollbar for Chrome, Safari and Opera
   &::-webkit-scrollbar {
@@ -27,9 +29,12 @@
   list-style: none;
   padding: 0;
   margin: 0;
+  display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 8px;
   width: 100%;
+  // Prevent layout shift during data updates
+  contain: layout;
 }
 
 .item {
@@ -38,11 +43,14 @@
   padding: 0;
   box-shadow: none;
   border: none;
-  margin-bottom: 8px;
+  // Removed margin-bottom since gap handles spacing now
+  min-height: 102px; // Match IndividualPodium container height to prevent layout shift
   height: fit-content;
   transition: none;
   width: 100%;
   overflow: hidden;
+  // Prevent item from causing layout reflows
+  contain: content;
 }
 
 .brands {
@@ -166,6 +174,8 @@
   justify-content: center;
   padding: 16px;
   margin-top: 8px;
+  // Prevent this from being an anchor point
+  overflow-anchor: none;
 }
 
 .loadingText {
@@ -176,21 +186,8 @@
 // REMOVED: Dark mode media query since we're using dark styles by default
 // The app theme should handle this, not system preference
 
-// Animation for smooth loading
-.item {
-  animation: fadeInUp 0.3s ease-out;
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+// Removed animation that was causing scroll position issues during pagination
+// Items now render without transform animations that cause layout shifts
 
 // Focus states for accessibility
 .startVotingButton:focus,

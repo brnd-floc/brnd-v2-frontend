@@ -60,7 +60,6 @@ export const PodiumDetailModal: React.FC<
     isApproving,
     isConfirming,
     error: txError,
-    brndBalance,
   } = usePodiumCollectibles(
     (txData) => {
       console.log("🎉 Podium claimed!", txData);
@@ -77,7 +76,6 @@ export const PodiumDetailModal: React.FC<
   const isMinted = collectibleData.isCollectible;
   const tokenId = collectibleData.tokenId;
   const currentPrice = collectibleData.price || "1000000000000000000000000";
-  const totalFeesEarned = collectibleData.totalFeesEarned || "0";
   const creator = collectibleData.genesisCreatorUsername;
   const owner = collectibleData.ownerUsername;
   const ownerFid = collectibleData.ownerFid;

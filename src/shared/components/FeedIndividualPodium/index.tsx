@@ -16,12 +16,12 @@ import { useNavigate } from "react-router-dom";
 
 // Contextual messages for each minting step
 const MINTING_STEP_MESSAGES: Record<Exclude<MintingStep, null>, string> = {
-  fetching_signature: "Checking eligibility...",
-  approving: "Approve $BRND in wallet",
-  confirming_approval: "Confirming approval...",
-  minting: "Confirm in wallet",
-  buying: "Confirm in wallet",
-  confirming: "Minting on chain...",
+  fetching_signature: "Preparing...",
+  approving: "Approve $BRND",
+  confirming_approval: "Approving...",
+  minting: "Confirm mint",
+  buying: "Confirm purchase",
+  confirming: "Confirming...",
 };
 
 // Format large numbers (1000000 -> "1M", 1200000 -> "1.2M")
@@ -197,32 +197,6 @@ const FeedIndividualPodium: React.FC<IndividualPodiumProps> = ({
     return "Not mintable";
   };
 
-  // Inline spinner component for loading state
-  const Spinner = () => (
-    <svg
-      className={styles.spinner}
-      width="16"
-      height="16"
-      viewBox="0 0 16 16"
-      fill="none"
-    >
-      <circle
-        cx="8"
-        cy="8"
-        r="6"
-        stroke="currentColor"
-        strokeOpacity="0.25"
-        strokeWidth="2"
-      />
-      <path
-        d="M14 8a6 6 0 0 0-6-6"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-
   const getButtonStyle = () => {
     // Success state shows as owned/success style
     if (hasSucceeded) return styles.successButton;
@@ -337,15 +311,9 @@ const FeedIndividualPodium: React.FC<IndividualPodiumProps> = ({
               <div className={styles.userInfo}>
                 {isMinted && owner ? (
                   <>
-                    {hasSucceeded && authData?.photoUrl ? (
+                    {collectibleData.ownerPhotoUrl ? (
                       <img
-                        src={authData.photoUrl}
-                        alt={owner}
-                        className={styles.userAvatar}
-                      />
-                    ) : podium?.collectibleOwner?.photoUrl ? (
-                      <img
-                        src={podium?.collectibleOwner?.photoUrl}
+                        src={collectibleData.ownerPhotoUrl}
                         alt={owner}
                         className={styles.userAvatar}
                       />
@@ -408,6 +376,32 @@ const FeedIndividualPodium: React.FC<IndividualPodiumProps> = ({
           onClick={handleActionClick}
           disabled={isButtonDisabled}
         >
+          {isPending && (
+            <svg
+              className={styles.spinner}
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <circle
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeLinecap="round"
+                opacity="0.25"
+              />
+              <path
+                d="M12 2C6.47715 2 2 6.47715 2 12"
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeLinecap="round"
+              />
+            </svg>
+          )}
           <Typography
             variant="geist"
             weight="bold"

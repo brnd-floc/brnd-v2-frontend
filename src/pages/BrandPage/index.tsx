@@ -66,7 +66,7 @@ function BrandPage() {
                   variant="primary"
                   title="FANS"
                   value={shortenNumber(totalFans)}
-                  subtext="VOTERS"
+                  subtext="ALL TIME VOTERS"
                 />
 
                 {/* Profile or Channel */}
@@ -97,7 +97,7 @@ function BrandPage() {
                       ) : (
                         <a
                           href={`https://warpcast.com/~/channel/${data.brand.channel?.slice(
-                            1
+                            1,
                           )}`}
                           target="_blank"
                           className={styles.channelLink}

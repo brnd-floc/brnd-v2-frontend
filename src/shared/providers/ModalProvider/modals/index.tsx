@@ -8,6 +8,7 @@ import { ShareBrandModal } from './ShareBrandModal';
 import { PerksModal } from './PerksModal';
 import { PodiumDetailModal } from './PodiumDetailModal';
 import { FeedPodiumDetailModal } from './FeedPodiumDetailModal';
+import { TransactionErrorModal } from './TransactionErrorModal';
 
 export const modals = {
   [ModalsIds.ERROR]: ErrorModal,
@@ -16,5 +17,6 @@ export const modals = {
   [ModalsIds.PERKS]: PerksModal,
   [ModalsIds.PODIUM_DETAIL]: PodiumDetailModal,
   [ModalsIds.FEED_PODIUM_DETAIL]: FeedPodiumDetailModal,
+  [ModalsIds.TRANSACTION_ERROR]: TransactionErrorModal,
 };
 

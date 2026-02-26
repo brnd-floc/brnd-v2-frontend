@@ -123,9 +123,9 @@ export default function ShareView({
         currentBrands,
         transactionHash || "", // Use transaction hash as vote ID
         transactionHash,
-        castHash || undefined
+        castHash || undefined,
       );
-    }
+    },
   );
 
   const [isSharing, setIsSharing] = useState(false);
@@ -134,7 +134,7 @@ export default function ShareView({
   const [shareError, setShareError] = useState<string | null>(null);
   const [hasSharedManually, setHasSharedManually] = useState(false);
   const [isFarcasterClient, setIsFarcasterClient] = useState<boolean | null>(
-    null
+    null,
   );
   const [claimData, setClaimData] = useState<{
     castHash: string;
@@ -204,7 +204,7 @@ export default function ShareView({
         voteIdForVerification || "", // Use transaction hash as vote ID
         transactionHash || "",
         rewardRecipient,
-        clientFid // Pass actual clientFid (309857 for TBA, etc.)
+        clientFid, // Pass actual clientFid (309857 for TBA, etc.)
       );
 
       // Store claim data for the claim button
@@ -246,7 +246,7 @@ export default function ShareView({
       setManualVerificationMessageDisplay(false);
       setShareError(
         error.message ||
-          "Share not found. Please make sure you shared and try again."
+          "Share not found. Please make sure you shared and try again.",
       );
       // Reset manual share state so user can try again
       setHasSharedManually(false);
@@ -296,7 +296,7 @@ export default function ShareView({
       const formattedBrand2 = getProfileOrChannel(currentBrands[0]);
       const formattedBrand3 = getProfileOrChannel(currentBrands[2]);
 
-      const castText = `I just created my @BRND podium of today:\n\n🥇${
+      const castText = `I just created my @brnd podium of today:\n\n🥇${
         currentBrands[1]?.name
       } ${formattedBrand1 ? `- ${formattedBrand1}` : ""}\n🥈${
         currentBrands[0]?.name
@@ -330,7 +330,7 @@ export default function ShareView({
       } else {
         // For TBA/other clients, use timeout to prevent hanging
         const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("composeCast timeout")), 5000)
+          setTimeout(() => reject(new Error("composeCast timeout")), 5000),
         );
 
         try {
@@ -358,7 +358,7 @@ export default function ShareView({
             voteIdForVerification,
             transactionHash,
             rewardRecipient, // Pass the authorized wallet as recipient
-            Number(contextFid)
+            Number(contextFid),
           );
 
           // Store claim data for the claim button
@@ -406,7 +406,7 @@ export default function ShareView({
           setIsSharing(false);
           setIsVerifying(false);
           setShareError(
-            error.message || "Failed to verify share. Please try again."
+            error.message || "Failed to verify share. Please try again.",
           );
         }
       } else {
@@ -455,7 +455,7 @@ export default function ShareView({
         claimData.castHash,
         claimData.claimSignature,
         claimData.day,
-        claimData.recipientAddress // Pass stored recipient
+        claimData.recipientAddress, // Pass stored recipient
       );
 
       // Note: Navigation to CongratsView happens in onClaimSuccess callback
@@ -466,7 +466,7 @@ export default function ShareView({
       setIsSharing(false);
       setIsVerifying(false);
       setShareError(
-        error.message || "Failed to claim reward. Please try again."
+        error.message || "Failed to claim reward. Please try again.",
       );
 
       // Reset claim data so user can try again with fresh state
@@ -499,7 +499,7 @@ export default function ShareView({
     if (claimData) {
       // Show claim amount after verification
       const claimAmount = parseFloat(
-        formatUnits(BigInt(claimData.claimSignature.amount), 18)
+        formatUnits(BigInt(claimData.claimSignature.amount), 18),
       );
       return `Claim ${claimAmount.toFixed(0)} $BRND`;
     }
@@ -590,7 +590,7 @@ export default function ShareView({
             >
               ✅ Share verified! Ready to claim{" "}
               {parseFloat(
-                formatUnits(BigInt(claimData.claimSignature.amount), 18)
+                formatUnits(BigInt(claimData.claimSignature.amount), 18),
               ).toFixed(0)}{" "}
               $BRND
             </Typography>
@@ -610,8 +610,8 @@ export default function ShareView({
             {isClaimPending
               ? "⏳ Confirm reward claim in wallet..."
               : isClaimConfirming
-              ? "🔄 Processing reward claim..."
-              : "💰 Claiming your reward..."}
+                ? "🔄 Processing reward claim..."
+                : "💰 Claiming your reward..."}
           </Typography>
         </div>
       )}
@@ -666,8 +666,8 @@ export default function ShareView({
                   showClaimButton
                     ? handleClickClaim
                     : hasSharedManually && isFarcasterClient !== true
-                    ? handleManualShareConfirmation
-                    : handleClickShare
+                      ? handleManualShareConfirmation
+                      : handleClickShare
                 }
                 disabled={isLoading && !showClaimButton}
               />
@@ -684,7 +684,7 @@ export default function ShareView({
               >
                 ⚠️ Rewards will be sent to your registered wallet:{" "}
                 {`${rewardRecipient.slice(0, 6)}...${rewardRecipient.slice(
-                  -4
+                  -4,
                 )}`}
               </Typography>
             </div>

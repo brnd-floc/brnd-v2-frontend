@@ -17,8 +17,6 @@ import { BrandRankingsProvider } from "../contexts/BrandRankingsContext";
 // Components
 import NotificationPrompt from "@/shared/components/NotificationPrompt";
 
-import NotInMiniappPage from "@/pages/NotInMiniappPage";
-
 // Farcaster Miniapp Init
 import sdk from "@farcaster/miniapp-sdk";
 import type { Context } from "@farcaster/miniapp-core";
@@ -55,7 +53,7 @@ export interface AuthContextData {
   refetch: () => Promise<void>;
   // Optimistic update function to update auth state immediately
   updateAuthData: (
-    updates: Partial<User & { hasVotedToday: boolean; isNewUser: boolean }>
+    updates: Partial<User & { hasVotedToday: boolean; isNewUser: boolean }>,
   ) => void;
 }
 
@@ -105,7 +103,7 @@ export function AppProvider(): JSX.Element {
   // Optimistic update function to immediately update auth state
   const updateAuthData = useCallback(
     (
-      updates: Partial<User & { hasVotedToday: boolean; isNewUser: boolean }>
+      updates: Partial<User & { hasVotedToday: boolean; isNewUser: boolean }>,
     ) => {
       setAuthData((prev) => {
         if (!prev) return prev;
@@ -137,7 +135,7 @@ export function AppProvider(): JSX.Element {
         return updated;
       });
     },
-    []
+    [],
   );
 
   // Refetch function - NO-OP since we only call /me once per session
@@ -190,7 +188,7 @@ export function AppProvider(): JSX.Element {
             setAuthError(
               error instanceof Error
                 ? error
-                : new Error("Failed to fetch user data")
+                : new Error("Failed to fetch user data"),
             );
             // Reset flag on error so user can retry
             hasCalledGetMe = false;
@@ -238,7 +236,7 @@ export function AppProvider(): JSX.Element {
       } else {
       }
     },
-    []
+    [],
   );
 
   /**
@@ -253,7 +251,7 @@ export function AppProvider(): JSX.Element {
         markNotificationsEnabled(userFid);
       }
     },
-    [userFid]
+    [userFid],
   );
 
   const signIn = useCallback(async () => {
@@ -278,7 +276,7 @@ export function AppProvider(): JSX.Element {
           setAuthError(
             error instanceof Error
               ? error
-              : new Error("Failed to refetch user data")
+              : new Error("Failed to refetch user data"),
           );
         } finally {
           setIsLoadingAuth(false);
@@ -328,7 +326,7 @@ export function AppProvider(): JSX.Element {
       authError,
       refetchAuthData,
       updateAuthData,
-    ]
+    ],
   );
 
   // If not in miniapp context, show landing page

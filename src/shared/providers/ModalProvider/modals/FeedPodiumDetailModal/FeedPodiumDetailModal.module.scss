@@ -349,25 +349,52 @@
   }
 }
 
-// Buy button with gradient
+// Buy button with rainbow gradient border and light background
 .buyButton {
-  background: linear-gradient(
-      360deg,
-      #eaeaea 0%,
-      rgba(255, 255, 255, 0.9) 50%,
-      #eaeaea 100%
-    ),
-    linear-gradient(
+  position: relative;
+  isolation: isolate;
+  backdrop-filter: blur(12px);
+  overflow: hidden;
+  background: transparent;
+  border: 1px solid transparent;
+
+  // Rainbow gradient border (outer layer)
+  &:before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -3;
+    border-radius: 8px;
+    background: linear-gradient(
       191.75deg,
       #fff000 0%,
       #ff0000 33%,
       #0e00ff 66%,
       #00ff00 100%
     );
-  background-blend-mode: overlay, normal;
+  }
+
+  // Light gradient background with green overlay (inner layer)
+  &:after {
+    content: "";
+    position: absolute;
+    inset: 1px;
+    z-index: -1;
+    border-radius: 7px;
+    background: linear-gradient(
+        360deg,
+        #eaeaea 0%,
+        rgba(255, 255, 255, 0.8) 50%,
+        #eaeaea 100%
+      ),
+      rgba(0, 255, 0, 0.12);
+    background-blend-mode: normal, overlay;
+  }
 
   .actionButtonText {
     color: #000000;
+    position: relative;
+    z-index: 1;
   }
 }
 
