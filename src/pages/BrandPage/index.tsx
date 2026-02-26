@@ -25,11 +25,6 @@ import { useAuth } from "@/hooks/auth";
 
 // Utils
 import { shortenNumber } from "@/utils/number";
-import {
-  viewMiniAppProfile,
-} from "@/shared/utils/farcasterActions";
-import { triggerSelectionHaptic } from "@/shared/utils/haptics";
-import { logFeatureError } from "@/shared/utils/logger";
 import { RiCheckLine, RiClipboardLine } from "react-icons/ri";
 
 function BrandPage() {
@@ -72,14 +67,9 @@ function BrandPage() {
 
     try {
       await navigator.clipboard.writeText(contractAddress);
-      triggerSelectionHaptic();
       setIsTickerContractCopied(true);
-    } catch (error) {
-      logFeatureError({
-        feature: "brand_page",
-        action: "copy_ticker_contract",
-        error,
-      });
+    } catch {
+      // No-op: clipboard can be unavailable in some embedded contexts.
     }
   }, [data?.brand?.contractAddress]);
 
@@ -91,7 +81,7 @@ function BrandPage() {
   const guardianFid = data?.brand?.guardianFid ?? data?.brand?.onChainFid;
 
   return (
-    <AppLayout disableContentScroll>
+    <AppLayout>
       <div className={styles.body}>
         {isLoading || !data || !data.brand?.name ? (
           <div className={styles.loadingContainer}>
@@ -178,7 +168,10 @@ function BrandPage() {
                 {guardianFid && (
                   <UserProfileGridItem
                     onClick={() => {
-                      viewMiniAppProfile(guardianFid);
+                      window.open(
+                        `https://warpcast.com/~/profiles/${guardianFid}`,
+                        "_blank",
+                      );
                     }}
                     variant="primary"
                     title="GUARDIAN"
