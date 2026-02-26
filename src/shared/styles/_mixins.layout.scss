@@ -73,3 +73,19 @@
   padding: 0 $padding-x;
   padding-bottom: $bottom-padding;
 }
+
+@mixin stickySurface(
+  $bg: #0a0b0d,
+  $blur: 6px,
+  $border: rgba(255, 255, 255, 0.08),
+  $shadow: rgba(0, 0, 0, 0.2),
+  $z: 20
+) {
+  position: sticky;
+  top: 0;
+  z-index: $z;
+  background-color: $bg;
+  backdrop-filter: blur($blur);
+  border-bottom: 1px solid $border;
+  box-shadow: 0 10px 20px $shadow;
+}

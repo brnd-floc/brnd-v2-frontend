@@ -1,3 +1,5 @@
+// Visual effect helpers should stay side-effect free.
+// They only expose mixins and keyframes for consumer modules.
 @mixin claimedRainbowText($duration: 3s, $weight: 600) {
   background: linear-gradient(
     90deg,
