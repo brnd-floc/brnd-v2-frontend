@@ -67,7 +67,7 @@ export const getRecentPodiums = async (
   limit: number = 20
 ): Promise<RecentPodiumsResponse> => {
   const response = await request<RecentPodiumsResponse>(
-    `${BRAND_SERVICE}/recent-podiums`,
+    `${BRAND_SERVICE}/public/recent-podiums`,
     {
       method: "GET",
       params: {
