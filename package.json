@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build && cp vercel.json dist/vercel.json",
+    "build": "tsc && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives",
     "lint:strict": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "lint:runtime-logs": "rg -n \"(console\\.log\\(|logger\\.debug\\(|console\\.error\\()\" src --glob '!src/pages/AirdropPage/**' --glob '!src/shared/hooks/contract/useAirdropClaim.ts' --glob '!src/shared/hooks/user/useAirdropClaimStatus.ts' --glob '!src/shared/utils/logger.ts' && (echo 'Runtime logs policy violation found' && exit 1) || (echo 'Runtime logs policy passed' && exit 0)",
