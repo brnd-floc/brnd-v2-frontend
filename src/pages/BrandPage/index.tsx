@@ -12,6 +12,7 @@ import Button from '@/components/Button';
 import LoaderIndicator from '@/components/LoaderIndicator';
 import UserProfileGridItem from '@/shared/components/UserProfileGridItem';
 import BrandProfileHeader from '@/shared/components/BrandProfileHeader';
+import StickyPageHeader from '@/components/StickyPageHeader';
 
 // Assets
 import FavoriteIcon from '@/assets/icons/favorite-icon.svg?react';
@@ -89,12 +90,12 @@ function BrandPage() {
           </div>
         ) : (
           <>
-            <div className={styles.stickyHeader}>
+            <StickyPageHeader paddingY="md">
               <BrandProfileHeader
                 brand={data.brand}
                 voteTrend7d={data.voteTrend7d}
               />
-            </div>
+            </StickyPageHeader>
 
             <div className={styles.container}>
               <div className={styles.grid}>
