@@ -173,6 +173,14 @@ interface BrandFormData {
   ticker?: string; // Ticker symbol (stored without $ prefix)
 }
 
+type EditableBrand = Brand & {
+  handle?: string;
+  fid?: number;
+  walletAddress?: string;
+  contractAddress?: string;
+  ticker?: string;
+};
+
 type AdminStep = 'menu' | 'form' | 'confirm' | 'success';
 
 function AdminPage(): React.ReactNode {
@@ -311,6 +319,7 @@ function AdminPage(): React.ReactNode {
 
   // Start editing an existing brand
   const handleBrandSelect = (brand: Brand) => {
+    const editableBrand = brand as EditableBrand;
     setSelectedBrand(brand);
     setIsEditing(true);
 
@@ -328,11 +337,11 @@ function AdminPage(): React.ReactNode {
       profile: '',
       channel: '',
       warpcastUrl: '',
-      handle: (brand as any).handle || '',
-      fid: (brand as any).fid || (user?.fid ? Number(user.fid) : undefined),
-      walletAddress: (brand as any).walletAddress || '',
-      contractAddress: (brand as any).contractAddress || '',
-      ticker: (brand as any).ticker || '',
+      handle: editableBrand.handle || '',
+      fid: editableBrand.fid || (user?.fid ? Number(user.fid) : undefined),
+      walletAddress: editableBrand.walletAddress || '',
+      contractAddress: editableBrand.contractAddress || '',
+      ticker: editableBrand.ticker || '',
     });
     setErrors({});
     setCurrentStep('form');
@@ -536,15 +545,18 @@ function AdminPage(): React.ReactNode {
       } else {
         throw new Error('IPFS metadata hash not returned from backend');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'Failed to prepare brand metadata. Please try again.';
       console.error('❌ [Admin] Validation/IPFS error:', error);
       console.error('❌ [Admin] Error details:', {
-        message: error.message,
-        stack: error.stack,
-        response: error.response,
+        message: errorMessage,
+        stack: error instanceof Error ? error.stack : undefined,
       });
       setValidationError(
-        error.message || 'Failed to prepare brand metadata. Please try again.'
+        errorMessage
       );
       setCurrentStepStatus('idle');
     } finally {
@@ -645,14 +657,18 @@ function AdminPage(): React.ReactNode {
         // Success will be handled by onBrandCreateSuccess callback
         // which will set currentStep to "success"
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'Something went wrong. Please try again.';
       console.error('❌ [Admin] Error in handleFinalSubmit:', error);
       console.error('❌ [Admin] Error details:', {
-        message: error.message,
-        stack: error.stack,
+        message: errorMessage,
+        stack: error instanceof Error ? error.stack : undefined,
       });
       setCurrentStepStatus('idle');
-      alert(error.message || 'Something went wrong. Please try again.');
+      alert(errorMessage);
     }
   };
 
