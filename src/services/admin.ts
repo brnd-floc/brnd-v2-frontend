@@ -41,7 +41,7 @@ export interface BrandFormData {
 export const getCycleRankings = async (
   period: 'week' | 'month',
   limit: number = 10
-): Promise<any> =>
+): Promise<unknown> =>
   await request(`${ADMIN_SERVICE}/cycles/${period}/rankings`, {
     method: 'GET',
     params: { limit: limit.toString() },
@@ -50,7 +50,7 @@ export const getCycleRankings = async (
 /**
  * Get deployment information and first vote details
  */
-export const getDeploymentInfo = async (): Promise<any> =>
+export const getDeploymentInfo = async (): Promise<unknown> =>
   await request(`${ADMIN_SERVICE}/deployment-info`, {
     method: 'GET',
   });
@@ -88,7 +88,9 @@ export const prepareBrandMetadata = async (
  * @param {BrandFormData} brandData - The data for creating the new brand
  * @returns {Promise<any>} A promise that resolves with the created brand data
  */
-export const createBrand = async (brandData: BrandFormData): Promise<any> =>
+export const createBrand = async (
+  brandData: BrandFormData
+): Promise<unknown> =>
   await request(`${ADMIN_SERVICE}/brands`, {
     method: 'POST',
     body: brandData,
@@ -108,7 +110,7 @@ export const createBrand = async (brandData: BrandFormData): Promise<any> =>
 export const updateBrand = async (
   brandId: number,
   brandData: Partial<BrandFormData>
-): Promise<any> =>
+): Promise<unknown> =>
   await request(`${ADMIN_SERVICE}/brands/${brandId}`, {
     method: 'PUT',
     body: brandData,
@@ -129,17 +131,17 @@ export const deleteBrand = async (brandId: number): Promise<void> =>
     method: 'DELETE',
   });
 
-export const getCategories = async (): Promise<any> =>
+export const getCategories = async (): Promise<unknown> =>
   await request(`${ADMIN_SERVICE}/categories`, {
     method: 'GET',
   });
 
-export const getBrands = async (): Promise<any> =>
+export const getBrands = async (): Promise<unknown> =>
   await request(`${ADMIN_SERVICE}/brands`, {
     method: 'GET',
   });
 
-export const fixWeeklyScores = async (): Promise<any> =>
+export const fixWeeklyScores = async (): Promise<unknown> =>
   await request(`${ADMIN_SERVICE}/fix-weekly-scores`, {
     method: 'GET',
   });
@@ -150,7 +152,7 @@ export const fixWeeklyScores = async (): Promise<any> =>
  *
  * @returns {Promise<any>} A promise that resolves with the snapshot and merkle root data
  */
-export const takeAirdropSnapshotAndCreateMerkleRoot = async (): Promise<any> =>
+export const takeAirdropSnapshotAndCreateMerkleRoot = async (): Promise<unknown> =>
   await request(`${ADMIN_SERVICE}/airdrop-snapshot`, {
     method: 'GET',
   });
@@ -161,7 +163,7 @@ export const takeAirdropSnapshotAndCreateMerkleRoot = async (): Promise<any> =>
  *
  * @returns {Promise<any>} A promise that resolves with the recalculation result
  */
-export const recalculateAllUsers = async (): Promise<any> =>
+export const recalculateAllUsers = async (): Promise<unknown> =>
   await request(`${AIRDROP_SERVICE}/recalculate-all-users`, {
     method: 'GET',
   });
