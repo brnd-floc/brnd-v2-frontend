@@ -20,6 +20,101 @@ export interface AirdropClaimParams {
   snapshotId?: number;
 }
 
+type ErrorWithMeta = {
+  message?: string;
+  shortMessage?: string;
+  reason?: string;
+  cause?: unknown;
+  data?: unknown;
+  error?: unknown;
+  stack?: string;
+  name?: string;
+};
+
+const asRecord = (value: unknown): Record<string, unknown> | null => {
+  if (typeof value !== 'object' || value === null) return null;
+  return value as Record<string, unknown>;
+};
+
+const asErrorWithMeta = (value: unknown): ErrorWithMeta => {
+  const record = asRecord(value);
+  if (!record) return {};
+
+  return {
+    message:
+      typeof record.message === 'string' ? (record.message as string) : undefined,
+    shortMessage:
+      typeof record.shortMessage === 'string'
+        ? (record.shortMessage as string)
+        : undefined,
+    reason:
+      typeof record.reason === 'string' ? (record.reason as string) : undefined,
+    cause: record.cause,
+    data: record.data,
+    error: record.error,
+    stack: typeof record.stack === 'string' ? (record.stack as string) : undefined,
+    name: typeof record.name === 'string' ? (record.name as string) : undefined,
+  };
+};
+
+const extractRevertMessage = (raw: string): string => {
+  const revertPatterns = [
+    /revert(?:ed)?:\s*(.+)/i,
+    /revert reason:\s*(.+)/i,
+    /execution reverted:\s*(.+)/i,
+    /reverted\s+(.+)/i,
+    /'(.+)'/,
+  ];
+
+  for (const pattern of revertPatterns) {
+    const match = raw.match(pattern);
+    if (match && match[1]) {
+      return `Reverted: ${match[1]}`;
+    }
+  }
+
+  return raw;
+};
+
+const extractTransactionErrorMessage = (
+  value: unknown,
+  {
+    mapUserRejected = false,
+  }: {
+    mapUserRejected?: boolean;
+  } = {}
+): string => {
+  const err = asErrorWithMeta(value);
+  let message = err.message || err.shortMessage || 'Transaction failed';
+  message = extractRevertMessage(message);
+
+  if (
+    mapUserRejected &&
+    (message.includes('User rejected') || message.includes('user rejected'))
+  ) {
+    return 'Transaction was rejected';
+  }
+
+  if (err.reason) {
+    return `Reverted: ${err.reason}`;
+  }
+
+  const dataRecord = asRecord(err.data);
+  if (typeof err.data === 'string') {
+    return `Reverted: ${err.data}`;
+  }
+  if (dataRecord && typeof dataRecord.message === 'string') {
+    return `Reverted: ${dataRecord.message}`;
+  }
+
+  const nestedError = asErrorWithMeta(err.error);
+  if (nestedError.message) {
+    return extractRevertMessage(nestedError.message);
+  }
+
+  return message;
+};
+
 export const useAirdropClaim = () => {
   const [isClaiming, setIsClaiming] = useState(false);
   const [transactionError, setTransactionError] = useState<string | null>(null);
@@ -345,27 +440,28 @@ export const useAirdropClaim = () => {
         });
 
         console.log('✅ [claimAirdrop] Contract write initiated successfully');
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const errorMeta = asErrorWithMeta(error);
         console.error('❌ [claimAirdrop] Airdrop claim failed:', error);
         console.error('❌ [claimAirdrop] Error details:', {
-          message: error?.message,
-          stack: error?.stack,
-          name: error?.name,
-          cause: error?.cause,
+          message: errorMeta.message,
+          stack: errorMeta.stack,
+          name: errorMeta.name,
+          cause: errorMeta.cause,
         });
 
         // Extract error message for UI display
-        let errorMessage = error?.message || 'Transaction failed';
+        let errorMessage = errorMeta.message || 'Transaction failed';
 
         // Try to extract revert reason from error
-        if (error?.message) {
+        if (errorMeta.message) {
           // Check for common revert patterns
-          const revertMatch = error.message.match(/revert(?:ed)?:\s*(.+)/i);
+          const revertMatch = errorMeta.message.match(/revert(?:ed)?:\s*(.+)/i);
           if (revertMatch) {
             errorMessage = `Reverted: ${revertMatch[1]}`;
-          } else if (error.message.includes('User rejected')) {
+          } else if (errorMeta.message.includes('User rejected')) {
             errorMessage = 'Transaction was rejected';
-          } else if (error.message.includes('insufficient funds')) {
+          } else if (errorMeta.message.includes('insufficient funds')) {
             errorMessage = 'Insufficient funds for transaction';
           }
         }
@@ -389,65 +485,18 @@ export const useAirdropClaim = () => {
         '❌ [useAirdropClaim] Transaction receipt error:',
         receiptError
       );
+      const receiptMeta = asErrorWithMeta(receiptError);
       console.error('❌ [useAirdropClaim] Error object structure:', {
-        message: receiptError.message,
-        shortMessage: (receiptError as any).shortMessage,
-        reason: (receiptError as any).reason,
-        cause: (receiptError as any).cause,
-        data: (receiptError as any).data,
-        error: (receiptError as any).error,
-        allKeys: Object.keys(receiptError),
+        message: receiptMeta.message,
+        shortMessage: receiptMeta.shortMessage,
+        reason: receiptMeta.reason,
+        cause: receiptMeta.cause,
+        data: receiptMeta.data,
+        error: receiptMeta.error,
+        allKeys: Object.keys(asRecord(receiptError) ?? {}),
       });
 
-      let errorMessage =
-        receiptError.message ||
-        (receiptError as any).shortMessage ||
-        'Transaction failed';
-
-      // Try multiple patterns to extract revert reason
-      const revertPatterns = [
-        /revert(?:ed)?:\s*(.+)/i,
-        /revert reason:\s*(.+)/i,
-        /execution reverted:\s*(.+)/i,
-        /reverted\s+(.+)/i,
-        /'(.+)'/g, // Extract quoted strings (like 'InvalidProof')
-      ];
-
-      for (const pattern of revertPatterns) {
-        const match = errorMessage.match(pattern);
-        if (match && match[1]) {
-          errorMessage = `Reverted: ${match[1]}`;
-          break;
-        }
-      }
-
-      // Also check for error in the error object itself
-      if ((receiptError as any).reason) {
-        errorMessage = `Reverted: ${(receiptError as any).reason}`;
-      }
-
-      // Check for data field which might contain revert reason
-      if ((receiptError as any).data) {
-        const data = (receiptError as any).data;
-        if (typeof data === 'string') {
-          errorMessage = `Reverted: ${data}`;
-        } else if (data.message) {
-          errorMessage = `Reverted: ${data.message}`;
-        }
-      }
-
-      // Check for nested error
-      if ((receiptError as any).error) {
-        const nestedError = (receiptError as any).error;
-        if (nestedError.message) {
-          const nestedMatch = nestedError.message.match(
-            /revert(?:ed)?:\s*(.+)/i
-          );
-          if (nestedMatch) {
-            errorMessage = `Reverted: ${nestedMatch[1]}`;
-          }
-        }
-      }
+      const errorMessage = extractTransactionErrorMessage(receiptError);
 
       console.error(
         '❌ [useAirdropClaim] Extracted error message:',
@@ -461,68 +510,20 @@ export const useAirdropClaim = () => {
   useEffect(() => {
     if (writeError) {
       console.error('❌ [useAirdropClaim] Write contract error:', writeError);
+      const writeMeta = asErrorWithMeta(writeError);
       console.error('❌ [useAirdropClaim] Write error object structure:', {
-        message: writeError.message,
-        shortMessage: (writeError as any).shortMessage,
-        reason: (writeError as any).reason,
-        cause: (writeError as any).cause,
-        data: (writeError as any).data,
-        error: (writeError as any).error,
-        allKeys: Object.keys(writeError),
+        message: writeMeta.message,
+        shortMessage: writeMeta.shortMessage,
+        reason: writeMeta.reason,
+        cause: writeMeta.cause,
+        data: writeMeta.data,
+        error: writeMeta.error,
+        allKeys: Object.keys(asRecord(writeError) ?? {}),
       });
 
-      let errorMessage =
-        writeError.message ||
-        (writeError as any).shortMessage ||
-        'Transaction failed';
-
-      // Try multiple patterns to extract revert reason
-      const revertPatterns = [
-        /revert(?:ed)?:\s*(.+)/i,
-        /revert reason:\s*(.+)/i,
-        /execution reverted:\s*(.+)/i,
-        /reverted\s+(.+)/i,
-        /'(.+)'/g, // Extract quoted strings (like 'InvalidProof')
-      ];
-
-      for (const pattern of revertPatterns) {
-        const match = errorMessage.match(pattern);
-        if (match && match[1]) {
-          errorMessage = `Reverted: ${match[1]}`;
-          break;
-        }
-      }
-
-      // Handle user rejection separately
-      if (
-        errorMessage.includes('User rejected') ||
-        errorMessage.includes('user rejected')
-      ) {
-        errorMessage = 'Transaction was rejected';
-      }
-
-      // Check for data field which might contain revert reason
-      if ((writeError as any).data) {
-        const data = (writeError as any).data;
-        if (typeof data === 'string') {
-          errorMessage = `Reverted: ${data}`;
-        } else if (data.message) {
-          errorMessage = `Reverted: ${data.message}`;
-        }
-      }
-
-      // Check for nested error
-      if ((writeError as any).error) {
-        const nestedError = (writeError as any).error;
-        if (nestedError.message) {
-          const nestedMatch = nestedError.message.match(
-            /revert(?:ed)?:\s*(.+)/i
-          );
-          if (nestedMatch) {
-            errorMessage = `Reverted: ${nestedMatch[1]}`;
-          }
-        }
-      }
+      const errorMessage = extractTransactionErrorMessage(writeError, {
+        mapUserRejected: true,
+      });
 
       console.error(
         '❌ [useAirdropClaim] Extracted write error message:',
