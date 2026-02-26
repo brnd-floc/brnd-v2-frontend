@@ -12,6 +12,7 @@ import withProtectionRoute from '@/hocs/withProtectionRoute';
 import BrandHeader from '@/shared/components/BrandHeader';
 import Typography from '@/shared/components/Typography';
 import { motion } from 'framer-motion';
+import StickyPageHeader from '@/components/StickyPageHeader';
 
 function PodiumPage(): React.ReactNode {
   const [indicatorWidth, setIndicatorWidth] = useState<number>(0);
@@ -38,33 +39,35 @@ function PodiumPage(): React.ReactNode {
   return (
     <AppLayout>
       <div className={styles.body}>
-        <div className={styles.header}>
-          <BrandHeader showBackButton={false} />
-          <div className={styles.titleContainer}>
-            <Typography variant={'druk'} weight={'wide'}>
-              PODIUMS
-            </Typography>
-          </div>
+        <StickyPageHeader paddingY="sm">
+          <div className={styles.header}>
+            <BrandHeader showBackButton={false} />
+            <div className={styles.titleContainer}>
+              <Typography variant={'druk'} weight={'wide'}>
+                PODIUMS
+              </Typography>
+            </div>
 
-          <motion.div
-            className={styles.indicator}
-            initial={{ x: 0, width: 0 }}
-            animate={{ x: indicatorOffset, width: indicatorWidth }}
-            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          />
+            <motion.div
+              className={styles.indicator}
+              initial={{ x: 0, width: 0 }}
+              animate={{ x: indicatorOffset, width: indicatorWidth }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            />
 
-          <div className={styles.description}>
-            <Typography
-              variant="geist"
-              weight="regular"
-              size={15}
-              textAlign="left"
-              lineHeight={20}
-            >
-              Discover the latest podiums and connect with their creators.
-            </Typography>
+            <div className={styles.description}>
+              <Typography
+                variant="geist"
+                weight="regular"
+                size={15}
+                textAlign="left"
+                lineHeight={20}
+              >
+                Discover the latest podiums and connect with their creators.
+              </Typography>
+            </div>
           </div>
-        </div>
+        </StickyPageHeader>
         <PublicPodiumsFeed />
       </div>
     </AppLayout>

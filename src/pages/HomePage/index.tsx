@@ -15,6 +15,7 @@ import { BrandTimePeriod } from '@/shared/components/TimePeriodFilter';
 import BrandOfTheDay from './partials/BrandOfTheDay';
 import PeriodBasedBrandsList from './partials/PeriodBasedBrandsList';
 import CustomLinksFrame from '@/shared/components/CustomLinksFrame';
+import StickyPageHeader from '@/components/StickyPageHeader';
 
 function HomePage(): React.ReactNode {
   const [selectedPeriod, setSelectedPeriod] = useState<BrandTimePeriod>('all');
@@ -22,13 +23,15 @@ function HomePage(): React.ReactNode {
   return (
     <AppLayout>
       <div className={styles.body}>
-        <div className={styles.header}>
-          <BrandHeader
-            showBackButton={false}
-            showUserProfile={true}
-            showUserPoints={false}
-          />
-        </div>
+        <StickyPageHeader paddingY="sm">
+          <div className={styles.header}>
+            <BrandHeader
+              showBackButton={false}
+              showUserProfile={true}
+              showUserPoints={false}
+            />
+          </div>
+        </StickyPageHeader>
         <AirdropBanner />
         <CustomLinksFrame />
 
