@@ -1,23 +1,20 @@
 @import "@/styles/index.scss";
 
 .layout {
-  position: sticky;
-  top: 0;
-  z-index: 20;
+  @include stickySurface();
 }
 
 .tone-default {
-  background-color: #0a0b0d;
-  backdrop-filter: blur(6px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  @include stickySurface();
 }
 
 .tone-subtle {
-  background-color: rgba(10, 11, 13, 0.92);
-  backdrop-filter: blur(4px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.16);
+  @include stickySurface(
+    rgba(10, 11, 13, 0.92),
+    4px,
+    rgba(255, 255, 255, 0.05),
+    rgba(0, 0, 0, 0.16)
+  );
 }
 
 .padding-none {
