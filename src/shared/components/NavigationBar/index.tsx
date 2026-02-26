@@ -16,11 +16,14 @@ import LeadersIcon from '@/assets/icons/user-icon.svg?react';
 // Components
 import Typography from '../Typography';
 
+// Hooks
+import { useAuth } from '@/hooks/auth';
 import sdk from '@farcaster/miniapp-sdk';
 
 interface NavigationBarProps {}
 
 const NavigationBar: React.FC<NavigationBarProps> = () => {
+  const { data } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -45,8 +48,9 @@ const NavigationBar: React.FC<NavigationBarProps> = () => {
    */
   const handleClickCreate = useCallback(() => {
     sdk.haptics.selectionChanged();
-    navigate('/vote');
-  }, [navigate]);
+    const currentUnixDate = Math.floor(new Date().getTime() / 1000);
+    navigate(data?.hasVotedToday ? `/vote/${currentUnixDate}` : '/vote');
+  }, [data, navigate]);
 
   /**
    * Handles navigation to ranking page
