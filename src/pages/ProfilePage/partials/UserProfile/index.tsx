@@ -1,16 +1,16 @@
 // Dependencies
-import React from "react";
+import React from 'react';
 
 // StyleSheet
-import styles from "./UserProfile.module.scss";
+import styles from './UserProfile.module.scss';
 
 // Components
-import UserProfileGridItem from "@/shared/components/UserProfileGridItem";
-import Typography from "@/components/Typography";
+import UserProfileGridItem from '@/shared/components/UserProfileGridItem';
+import Typography from '@/components/Typography';
 
 // Hooks
-import { useUserProfile } from "@/shared/hooks/user";
-import LoaderIndicator from "@/shared/components/LoaderIndicator";
+import { useUserProfile } from '@/shared/hooks/user';
+import LoaderIndicator from '@/shared/components/LoaderIndicator';
 
 const UserProfile: React.FC = () => {
   const { data: profileData, isLoading, error } = useUserProfile();
@@ -18,7 +18,7 @@ const UserProfile: React.FC = () => {
   if (isLoading) {
     return (
       <div className={styles.container}>
-        <LoaderIndicator size={30} variant={"fullscreen"} />
+        <LoaderIndicator size={30} variant={'fullscreen'} />
       </div>
     );
   }

@@ -1,19 +1,19 @@
 // Dependencies
-import React from "react";
-import sdk from "@farcaster/miniapp-sdk";
+import React from 'react';
+import sdk from '@farcaster/miniapp-sdk';
 
 // Types
-import { BaseModalProps, TransactionErrorModalData } from "../../types";
+import { BaseModalProps, TransactionErrorModalData } from '../../types';
 
 // StyleSheet
-import styles from "./TransactionErrorModal.module.scss";
+import styles from './TransactionErrorModal.module.scss';
 
 // Components
-import Typography from "@/components/Typography";
-import Button from "@/components/Button";
+import Typography from '@/components/Typography';
+import Button from '@/components/Button';
 
 // Assets
-import BrndLogo from "@/shared/assets/images/logo.svg?react";
+import BrndLogo from '@/shared/assets/images/logo.svg?react';
 
 const DEV_FID = 16098; // @jpfraneto
 
@@ -24,7 +24,7 @@ export const TransactionErrorModal: React.FC<
     sdk.haptics.selectionChanged();
     // Open cast composer with error details to mention the dev
     sdk.actions.composeCast({
-      text: `@jpfraneto BRND miniapp error:\n\nRoute: ${route}\nTime: ${timestamp}\n${transactionType ? `Type: ${transactionType}\n` : ""}Error: ${error.slice(0, 200)}${error.length > 200 ? "..." : ""}`,
+      text: `@jpfraneto BRND miniapp error:\n\nRoute: ${route}\nTime: ${timestamp}\n${transactionType ? `Type: ${transactionType}\n` : ''}Error: ${error.slice(0, 200)}${error.length > 200 ? '...' : ''}`,
     });
   };
 

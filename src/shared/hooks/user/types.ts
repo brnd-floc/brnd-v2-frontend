@@ -1,4 +1,4 @@
-import { Brand } from "../brands";
+import { Brand } from '../brands';
 
 export interface TodaysVoteStatus {
   hasVoted: boolean;
@@ -16,7 +16,7 @@ export interface TodaysVoteStatus {
 
 export interface ContextualTransaction {
   transactionHash: string | null;
-  transactionType: "vote" | "claim" | null;
+  transactionType: 'vote' | 'claim' | null;
   rewardAmount?: string; // Only present when transactionType is 'claim' (in wei)
   castHash?: string; // Only present when transactionType is 'claim' - the Farcaster cast hash
   day?: number;
@@ -79,8 +79,8 @@ export type User = {
 };
 
 export enum UserRoleEnum {
-  ADMIN = "admin",
-  USER = "user",
+  ADMIN = 'admin',
+  USER = 'user',
 }
 
 export interface UserVoteHistory {

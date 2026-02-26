@@ -1,9 +1,9 @@
 // src/shared/components/BlockchainErrorHandler/index.tsx
-import React, { useEffect } from "react";
-import { useBlockchain } from "../../contexts/BlockchainContext";
-import Typography from "@/components/Typography";
-import Button from "@/components/Button";
-import styles from "./BlockchainErrorHandler.module.scss";
+import React, { useEffect } from 'react';
+import { useBlockchain } from '../../contexts/BlockchainContext';
+import Typography from '@/components/Typography';
+import Button from '@/components/Button';
+import styles from './BlockchainErrorHandler.module.scss';
 
 interface BlockchainErrorHandlerProps {
   children: React.ReactNode;
@@ -33,95 +33,95 @@ const BlockchainErrorHandler: React.FC<BlockchainErrorHandlerProps> = ({ childre
     const lowerError = error.toLowerCase();
 
     // Network errors
-    if (lowerError.includes("switch to base network") || lowerError.includes("wrong network")) {
+    if (lowerError.includes('switch to base network') || lowerError.includes('wrong network')) {
       return {
-        title: "Wrong Network",
-        message: "Please switch to Base network to continue.",
+        title: 'Wrong Network',
+        message: 'Please switch to Base network to continue.',
         action: switchToBaseNetwork,
-        actionLabel: "Switch Network"
+        actionLabel: 'Switch Network'
       };
     }
 
     // Wallet connection errors
-    if (lowerError.includes("wallet not connected")) {
+    if (lowerError.includes('wallet not connected')) {
       return {
-        title: "Wallet Not Connected",
-        message: "Please connect your wallet to continue.",
+        title: 'Wallet Not Connected',
+        message: 'Please connect your wallet to continue.',
       };
     }
 
     // Authorization errors
-    if (lowerError.includes("wallet not authorized") || lowerError.includes("unauthorized")) {
+    if (lowerError.includes('wallet not authorized') || lowerError.includes('unauthorized')) {
       return {
-        title: "Wallet Not Authorized",
-        message: "Please try your transaction again. Authorization will happen automatically.",
+        title: 'Wallet Not Authorized',
+        message: 'Please try your transaction again. Authorization will happen automatically.',
       };
     }
 
     // Balance errors
-    if (lowerError.includes("insufficient") && lowerError.includes("brnd")) {
+    if (lowerError.includes('insufficient') && lowerError.includes('brnd')) {
       return {
-        title: "Insufficient BRND",
-        message: "You don't have enough BRND tokens for this transaction.",
+        title: 'Insufficient BRND',
+        message: 'You don\'t have enough BRND tokens for this transaction.',
       };
     }
 
-    if (lowerError.includes("insufficient funds")) {
+    if (lowerError.includes('insufficient funds')) {
       return {
-        title: "Insufficient Gas",
-        message: "You don't have enough ETH to pay for gas fees.",
+        title: 'Insufficient Gas',
+        message: 'You don\'t have enough ETH to pay for gas fees.',
       };
     }
 
     // Transaction errors
-    if (lowerError.includes("user rejected") || lowerError.includes("user denied")) {
+    if (lowerError.includes('user rejected') || lowerError.includes('user denied')) {
       return {
-        title: "Transaction Cancelled",
-        message: "You cancelled the transaction in your wallet.",
+        title: 'Transaction Cancelled',
+        message: 'You cancelled the transaction in your wallet.',
       };
     }
 
-    if (lowerError.includes("already voted")) {
+    if (lowerError.includes('already voted')) {
       return {
-        title: "Already Voted",
-        message: "You have already voted today. Come back tomorrow!",
+        title: 'Already Voted',
+        message: 'You have already voted today. Come back tomorrow!',
       };
     }
 
-    if (lowerError.includes("already used")) {
+    if (lowerError.includes('already used')) {
       return {
-        title: "Already Claimed",
-        message: "This reward has already been claimed.",
+        title: 'Already Claimed',
+        message: 'This reward has already been claimed.',
       };
     }
 
     // Contract errors
-    if (lowerError.includes("invalid input")) {
+    if (lowerError.includes('invalid input')) {
       return {
-        title: "Invalid Input",
-        message: "Please check your input and try again.",
+        title: 'Invalid Input',
+        message: 'Please check your input and try again.',
       };
     }
 
-    if (lowerError.includes("expired")) {
+    if (lowerError.includes('expired')) {
       return {
-        title: "Transaction Expired",
-        message: "The transaction deadline has passed. Please try again.",
+        title: 'Transaction Expired',
+        message: 'The transaction deadline has passed. Please try again.',
       };
     }
 
     // Generic RPC/Network errors
-    if (lowerError.includes("rpc") || lowerError.includes("network")) {
+    if (lowerError.includes('rpc') || lowerError.includes('network')) {
       return {
-        title: "Network Error",
-        message: "There was a problem connecting to the blockchain. Please try again.",
+        title: 'Network Error',
+        message: 'There was a problem connecting to the blockchain. Please try again.',
       };
     }
 
     // Fallback for unknown errors
     return {
-      title: "Transaction Failed",
-      message: error.length > 100 ? "An unexpected error occurred. Please try again." : error,
+      title: 'Transaction Failed',
+      message: error.length > 100 ? 'An unexpected error occurred. Please try again.' : error,
     };
   };
 
@@ -153,7 +153,7 @@ const BlockchainErrorHandler: React.FC<BlockchainErrorHandlerProps> = ({ childre
                 variant="primary"
                 className={styles.actionButton}
                 disabled={isTransactionPending}
-                caption={isTransactionPending ? "Processing..." : errorInfo.actionLabel}
+                caption={isTransactionPending ? 'Processing...' : errorInfo.actionLabel}
               />
             )}
             
@@ -169,20 +169,20 @@ const BlockchainErrorHandler: React.FC<BlockchainErrorHandlerProps> = ({ childre
           <div className={styles.statusIndicators}>
             <div className={`${styles.statusItem} ${isConnected ? styles.connected : styles.disconnected}`}>
               <span className={styles.statusIcon}>
-                {isConnected ? "🟢" : "🔴"}
+                {isConnected ? '🟢' : '🔴'}
               </span>
               <Typography variant="geist" weight="regular" size={12}>
-                {isConnected ? "Wallet Connected" : "Wallet Disconnected"}
+                {isConnected ? 'Wallet Connected' : 'Wallet Disconnected'}
               </Typography>
             </div>
             
             {isConnected && (
               <div className={`${styles.statusItem} ${isWalletAuthorized ? styles.connected : styles.disconnected}`}>
                 <span className={styles.statusIcon}>
-                  {isWalletAuthorized ? "🟢" : "🟡"}
+                  {isWalletAuthorized ? '🟢' : '🟡'}
                 </span>
                 <Typography variant="geist" weight="regular" size={12}>
-                  {isWalletAuthorized ? "Wallet Authorized" : "Authorization Needed"}
+                  {isWalletAuthorized ? 'Wallet Authorized' : 'Authorization Needed'}
                 </Typography>
               </div>
             )}

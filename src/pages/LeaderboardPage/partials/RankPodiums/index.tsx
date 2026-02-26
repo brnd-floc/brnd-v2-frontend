@@ -1,23 +1,23 @@
 // /src/pages/RankingPage/partials/RankPodiums/index.tsx
 
 // Dependencies
-import { useCallback, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 // Components
-import PodiumCard from "@/components/cards/PodiumCard";
-import Typography from "@/components/Typography";
+import PodiumCard from '@/components/cards/PodiumCard';
+import Typography from '@/components/Typography';
 
 // StyleSheet
-import styles from "./RankPodiums.module.scss";
+import styles from './RankPodiums.module.scss';
 
 // Hook
-import { Brand, useBrandList } from "@/hooks/brands";
-import useDisableScrollBody from "@/hooks/ui/useDisableScrollBody";
+import { Brand, useBrandList } from '@/hooks/brands';
+import useDisableScrollBody from '@/hooks/ui/useDisableScrollBody';
 
 // Utils
-import { getBrandScoreVariation } from "@/utils/brand";
-import sdk from "@farcaster/miniapp-sdk";
+import { getBrandScoreVariation } from '@/utils/brand';
+import sdk from '@farcaster/miniapp-sdk';
 
 function RankPodiums() {
   const navigate = useNavigate();
@@ -30,7 +30,7 @@ function RankPodiums() {
   >([]);
 
   // Get current top brands
-  const { data, refetch } = useBrandList("top", "", 1, 20);
+  const { data, refetch } = useBrandList('top', '', 1, 20);
 
   useDisableScrollBody();
 
@@ -42,24 +42,24 @@ function RankPodiums() {
     // Simulate historical podium data - in real app this would come from API
     const mockHistory = [
       {
-        date: "Today",
+        date: 'Today',
         brands: data?.brands?.slice(0, 3) || [],
-        timeAgo: "",
+        timeAgo: '',
       },
       {
-        date: "1 day ago",
+        date: '1 day ago',
         brands: data?.brands?.slice(1, 4) || [],
-        timeAgo: "1 day",
+        timeAgo: '1 day',
       },
       {
-        date: "2 days ago",
+        date: '2 days ago',
         brands: data?.brands?.slice(2, 5) || [],
-        timeAgo: "2 days ago",
+        timeAgo: '2 days ago',
       },
       {
-        date: "3 days ago",
+        date: '3 days ago',
         brands: data?.brands?.slice(3, 6) || [],
-        timeAgo: "3 days ago",
+        timeAgo: '3 days ago',
       },
     ];
 
@@ -70,7 +70,7 @@ function RankPodiums() {
    * Handles the click event on a brand card and navigates to the brand's page.
    */
   const handleClickCard = useCallback(
-    (id: Brand["id"]) => {
+    (id: Brand['id']) => {
       navigate(`/brand/${id}`);
     },
     [navigate]
@@ -80,10 +80,10 @@ function RankPodiums() {
    * Handles sharing a podium result
    */
   const handleShare = useCallback(() => {
-    sdk.haptics.impactOccurred("medium");
+    sdk.haptics.impactOccurred('medium');
     sdk.actions.composeCast({
-      text: "Check out the top farcaster brands on BRND!",
-      embeds: ["https://brnd.land"],
+      text: 'Check out the top farcaster brands on BRND!',
+      embeds: ['https://brnd.land'],
     });
   }, []);
 

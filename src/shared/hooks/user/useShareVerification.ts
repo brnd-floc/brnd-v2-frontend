@@ -1,12 +1,12 @@
 // Dependencies
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 // Services
 import {
   verifyShare,
   ShareVerificationData,
   ShareVerificationResponse,
-} from "@/services/user";
+} from '@/services/user';
 
 /**
  * Hook for verifying shared casts and awarding points.
@@ -23,13 +23,13 @@ export const useShareVerification = () => {
     mutationFn: verifyShare,
     onSuccess: () => {
       // Invalidate auth cache to refresh user points
-      queryClient.invalidateQueries({ queryKey: ["auth"] });
+      queryClient.invalidateQueries({ queryKey: ['auth'] });
 
       // Optionally invalidate other relevant queries
-      queryClient.invalidateQueries({ queryKey: ["user-brands"] });
+      queryClient.invalidateQueries({ queryKey: ['user-brands'] });
     },
     onError: (error) => {
-      console.error("❌ [ShareVerification] Verification failed:", error);
+      console.error('❌ [ShareVerification] Verification failed:', error);
     },
   });
 };

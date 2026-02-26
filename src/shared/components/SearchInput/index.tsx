@@ -1,12 +1,12 @@
 // Dependencies
-import { useState } from "react";
-import classNames from "clsx";
+import { useState } from 'react';
+import classNames from 'clsx';
 
 // StyleSheet
-import styles from "./SearchInput.module.scss";
+import styles from './SearchInput.module.scss';
 
 // Assets
-import SearchIcon from "@/assets/icons/search.svg?react";
+import SearchIcon from '@/assets/icons/search.svg?react';
 
 interface SearchInputProps {
   onChangeText: (text: string) => void;
@@ -19,10 +19,10 @@ export default function SearchInput({ onChangeText }: SearchInputProps) {
     <div className={classNames(styles.container, isActive && styles.active)}>
       <SearchIcon />
       <input
-        name={"name"}
+        name={'name'}
         className={styles.input}
-        type={"text"}
-        placeholder={"Search your favorite brands..."}
+        type={'text'}
+        placeholder={'Search your favorite brands...'}
         onFocus={() => setActive(true)}
         onBlur={() => setActive(false)}
         onChange={(e) => onChangeText(e.target.value)}

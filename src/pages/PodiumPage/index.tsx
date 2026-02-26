@@ -1,17 +1,17 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react';
 
 // StyleSheet
-import styles from "./PodiumPage.module.scss";
+import styles from './PodiumPage.module.scss';
 
 // Components
-import AppLayout from "../../shared/layouts/AppLayout";
-import PublicPodiumsFeed from "./partials/PublicPodiumsFeed";
+import AppLayout from '../../shared/layouts/AppLayout';
+import PublicPodiumsFeed from './partials/PublicPodiumsFeed';
 
 // Hocs
-import withProtectionRoute from "@/hocs/withProtectionRoute";
-import BrandHeader from "@/shared/components/BrandHeader";
-import Typography from "@/shared/components/Typography";
-import { motion } from "framer-motion";
+import withProtectionRoute from '@/hocs/withProtectionRoute';
+import BrandHeader from '@/shared/components/BrandHeader';
+import Typography from '@/shared/components/Typography';
+import { motion } from 'framer-motion';
 
 function PodiumPage(): React.ReactNode {
   const [indicatorWidth, setIndicatorWidth] = useState<number>(0);
@@ -29,10 +29,10 @@ function PodiumPage(): React.ReactNode {
 
   useEffect(() => {
     updateIndicator();
-    window.addEventListener("resize", updateIndicator);
+    window.addEventListener('resize', updateIndicator);
 
     return () => {
-      window.removeEventListener("resize", updateIndicator);
+      window.removeEventListener('resize', updateIndicator);
     };
   }, []);
   return (
@@ -41,7 +41,7 @@ function PodiumPage(): React.ReactNode {
         <div className={styles.header}>
           <BrandHeader showBackButton={false} />
           <div className={styles.titleContainer}>
-            <Typography variant={"druk"} weight={"wide"}>
+            <Typography variant={'druk'} weight={'wide'}>
               PODIUMS
             </Typography>
           </div>
@@ -50,7 +50,7 @@ function PodiumPage(): React.ReactNode {
             className={styles.indicator}
             initial={{ x: 0, width: 0 }}
             animate={{ x: indicatorOffset, width: indicatorWidth }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
           />
 
           <div className={styles.description}>
@@ -71,4 +71,4 @@ function PodiumPage(): React.ReactNode {
   );
 }
 
-export default withProtectionRoute(PodiumPage, "only-connected");
+export default withProtectionRoute(PodiumPage, 'only-connected');

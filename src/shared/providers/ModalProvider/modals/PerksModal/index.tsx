@@ -1,8 +1,8 @@
-import React from "react";
-import { BaseModalProps } from "../../types";
-import Typography from "@/shared/components/Typography";
-import styles from "./PerksModal.module.scss";
-import sdk from "@farcaster/miniapp-sdk";
+import React from 'react';
+import { BaseModalProps } from '../../types';
+import Typography from '@/shared/components/Typography';
+import styles from './PerksModal.module.scss';
+import sdk from '@farcaster/miniapp-sdk';
 
 export type PerksModalData = {};
 

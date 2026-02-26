@@ -1,6 +1,6 @@
-import { BLOCKCHAIN_SERVICE, BRAND_SERVICE } from "@/config/api";
-import { request } from "@/services/api";
-import { getFarcasterToken } from "@/shared/utils/auth";
+import { BLOCKCHAIN_SERVICE, BRAND_SERVICE } from '@/config/api';
+import { request } from '@/services/api';
+import { getFarcasterToken } from '@/shared/utils/auth';
 
 export interface StoriesPowerLevelInfo {
   currentLevel: number;
@@ -71,7 +71,7 @@ export const requestAuthorizationSignature = async ({
       authData?: string;
       signature?: string;
     }>(`${BLOCKCHAIN_SERVICE}/authorize-wallet`, {
-      method: "POST",
+      method: 'POST',
       body: {
         walletAddress: userAddress,
         deadline,
@@ -79,7 +79,7 @@ export const requestAuthorizationSignature = async ({
     });
     return apiOk(data);
   } catch (error) {
-    return apiErr(error, "Failed to request authorization signature");
+    return apiErr(error, 'Failed to request authorization signature');
   }
 };
 
@@ -109,7 +109,7 @@ export const requestLevelUpSignature = async ({
       };
       signature: string;
     }>(`${BLOCKCHAIN_SERVICE}/level-up`, {
-      method: "POST",
+      method: 'POST',
       body: {
         newLevel,
         deadline,
@@ -118,7 +118,7 @@ export const requestLevelUpSignature = async ({
     });
     return apiOk(data);
   } catch (error) {
-    return apiErr(error, "Failed to request level-up signature");
+    return apiErr(error, 'Failed to request level-up signature');
   }
 };
 
@@ -150,7 +150,7 @@ export const requestVoteAuthorizationSignature = async ({
       deadline: number;
       message: string;
     }>(`${BLOCKCHAIN_SERVICE}/authorize-vote`, {
-      method: "POST",
+      method: 'POST',
       body: {
         walletAddress: userAddress,
         brandIds,
@@ -159,7 +159,7 @@ export const requestVoteAuthorizationSignature = async ({
     });
     return apiOk(data);
   } catch (error) {
-    return apiErr(error, "Failed to request vote authorization signature");
+    return apiErr(error, 'Failed to request vote authorization signature');
   }
 };
 
@@ -213,7 +213,7 @@ export const requestClaimRewardSignature = async ({
       note?: string;
       castHash: string;
     }>(`${BRAND_SERVICE}/verify-share`, {
-      method: "POST",
+      method: 'POST',
       body: {
         castHash,
         voteId,
@@ -224,7 +224,7 @@ export const requestClaimRewardSignature = async ({
     });
     return apiOk(data);
   } catch (error) {
-    return apiErr(error, "Failed to verify share");
+    return apiErr(error, 'Failed to verify share');
   }
 };
 
@@ -276,9 +276,9 @@ export const requestClaimSignatureForSharedVote = async ({
       castHash?: string;
       note?: string;
     }>(`${BRAND_SERVICE}/verify-share`, {
-      method: "POST",
+      method: 'POST',
       body: {
-        castHash: "",
+        castHash: '',
         voteId,
         recipientAddress: recipientAddress || userAddress,
         transactionHash,
@@ -287,7 +287,7 @@ export const requestClaimSignatureForSharedVote = async ({
     });
     return apiOk(data);
   } catch (error) {
-    return apiErr(error, "Failed to fetch shared vote claim signature");
+    return apiErr(error, 'Failed to fetch shared vote claim signature');
   }
 };
 
@@ -298,12 +298,12 @@ export const requestPowerLevelInfo = async (
     const data = await request<StoriesPowerLevelInfo>(
       `${BLOCKCHAIN_SERVICE}/power-level/${fid}`,
       {
-        method: "GET",
+        method: 'GET',
       }
     );
     return apiOk(data);
   } catch (error) {
-    return apiErr(error, "Failed to fetch power level info");
+    return apiErr(error, 'Failed to fetch power level info');
   }
 };
 
@@ -314,11 +314,11 @@ export const requestStakeInfo = async (
     const data = await request<StoriesStakeInfo>(
       `${BLOCKCHAIN_SERVICE}/user-stake/${fid}`,
       {
-        method: "GET",
+        method: 'GET',
       }
     );
     return apiOk(data);
   } catch (error) {
-    return apiErr(error, "Failed to fetch stake info");
+    return apiErr(error, 'Failed to fetch stake info');
   }
 };

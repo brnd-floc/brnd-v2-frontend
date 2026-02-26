@@ -1,10 +1,10 @@
-import React from "react";
-import Button from "@/shared/components/Button";
-import Typography from "@/shared/components/Typography";
-import { NotificationPromptProps } from "@/shared/components/NotificationPrompt/types";
-import { useNotificationPrompt } from "@/shared/hooks/notifications/useNotificationPrompt";
-import styles from "./NotificationPrompt.module.scss";
-import sdk from "@farcaster/miniapp-sdk";
+import React from 'react';
+import Button from '@/shared/components/Button';
+import Typography from '@/shared/components/Typography';
+import { NotificationPromptProps } from '@/shared/components/NotificationPrompt/types';
+import { useNotificationPrompt } from '@/shared/hooks/notifications/useNotificationPrompt';
+import styles from './NotificationPrompt.module.scss';
+import sdk from '@farcaster/miniapp-sdk';
 
 const NotificationPrompt: React.FC<NotificationPromptProps> = ({
   onComplete,
@@ -31,8 +31,8 @@ const NotificationPrompt: React.FC<NotificationPromptProps> = ({
           </Typography>
           <Typography size={14} className={styles.successText}>
             {isAppLoadContext
-              ? "Welcome to BRND! We'll keep you updated with the latest."
-              : "We'll remind you to vote daily so you never miss earning points"}
+              ? 'Welcome to BRND! We\'ll keep you updated with the latest.'
+              : 'We\'ll remind you to vote daily so you never miss earning points'}
           </Typography>
         </div>
       </div>
@@ -51,13 +51,13 @@ const NotificationPrompt: React.FC<NotificationPromptProps> = ({
           className={styles.title}
         >
           {isAppLoadContext
-            ? "Get the best BRND experience!"
-            : "Never miss earning points!"}
+            ? 'Get the best BRND experience!'
+            : 'Never miss earning points!'}
         </Typography>
 
         <Typography size={14} className={styles.description}>
           {isAppLoadContext
-            ? "Add BRND to your apps to get daily vote reminders and stay competitive on the leaderboard."
+            ? 'Add BRND to your apps to get daily vote reminders and stay competitive on the leaderboard.'
             : `You just earned ${points} points! Get daily reminders to vote and keep climbing the leaderboard.`}
         </Typography>
 
@@ -95,7 +95,7 @@ const NotificationPrompt: React.FC<NotificationPromptProps> = ({
         />
         <Button
           variant="primary"
-          caption={state.isLoading ? "Adding..." : "Add BRND"}
+          caption={state.isLoading ? 'Adding...' : 'Add BRND'}
           onClick={actions.addMiniapp}
           className={styles.addButton}
         />

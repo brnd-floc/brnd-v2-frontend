@@ -1,8 +1,8 @@
 // Dependencies
-import {useQuery} from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 
 // Services
-import {getUserVotes} from '@/services/user';
+import { getUserVotes } from '@/services/user';
 
 export const useUserVotes = (unixDate?: number) => {
   return useQuery({

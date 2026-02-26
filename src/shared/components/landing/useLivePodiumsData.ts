@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { normalizePodiumsResponse } from "./livePodiums.normalize";
-import type { LivePodium } from "./livePodiums.types";
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { normalizePodiumsResponse } from './livePodiums.normalize';
+import type { LivePodium } from './livePodiums.types';
 
 const DEFAULT_POLLING_INTERVAL = 10000;
 
@@ -24,7 +24,7 @@ function resolvePodiumsDataUrl(): string {
     return `${import.meta.env.VITE_API_URL}/brand-service/public/recent-podiums?page=1&limit=20`;
   }
 
-  return "";
+  return '';
 }
 
 export function useLivePodiumsData({

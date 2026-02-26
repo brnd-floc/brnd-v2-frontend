@@ -1,16 +1,16 @@
 // Dependencies
-import React from "react";
+import React from 'react';
 
 // StyleSheet
-import styles from "./LoaderIndicator.module.scss";
+import styles from './LoaderIndicator.module.scss';
 
 interface LoaderIndicatorProps {
-  variant?: "default" | "fullscreen";
+  variant?: 'default' | 'fullscreen';
   size?: number;
 }
 
 const LoaderIndicator: React.FC<LoaderIndicatorProps> = ({
-  variant = "default",
+  variant = 'default',
   size = 48,
 }) => {
   return (

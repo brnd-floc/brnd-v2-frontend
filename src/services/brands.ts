@@ -1,11 +1,11 @@
 // API Dependency
-import { request } from "./api";
+import { request } from './api';
 
 // Configuration
-import { BRAND_SERVICE } from "@/config/api";
+import { BRAND_SERVICE } from '@/config/api';
 
 // Types
-import { Brand, BrandCast } from "../shared/hooks/brands";
+import { Brand, BrandCast } from '../shared/hooks/brands';
 
 /* =======================================
    = = = = = = = = = = = = = = = = = = = =
@@ -38,7 +38,7 @@ export interface PublicPodium {
   };
 }
 
-export type BrandTimePeriod = "day" | "week" | "month" | "all";
+export type BrandTimePeriod = 'day' | 'week' | 'month' | 'all';
 
 /**
  * Cache for brand list requests
@@ -69,7 +69,7 @@ export const getRecentPodiums = async (
   const response = await request<RecentPodiumsResponse>(
     `${BRAND_SERVICE}/public/recent-podiums`,
     {
-      method: "GET",
+      method: 'GET',
       params: {
         page: page.toString(),
         limit: limit.toString(),
@@ -111,9 +111,9 @@ export type BrandResponse = {
 export const getBrandList = async (
   searchQuery: string,
   pageId: string,
-  limit: string = "27",
-  order: "top" | "new" | "all" = "all",
-  period: BrandTimePeriod = "all" // NEW: Added period parameter
+  limit: string = '27',
+  order: 'top' | 'new' | 'all' = 'all',
+  period: BrandTimePeriod = 'all' // NEW: Added period parameter
 ): Promise<GetBrandListResponse> => {
   // Create cache key from all parameters
   const cacheKey = `${searchQuery}|${pageId}|${limit}|${order}|${period}`;
@@ -125,7 +125,7 @@ export const getBrandList = async (
 
   // Fetch from API
   const result = await request<GetBrandListResponse>(`${BRAND_SERVICE}/list`, {
-    method: "GET",
+    method: 'GET',
     params: {
       search: searchQuery,
       pageId,
@@ -187,7 +187,7 @@ export type VoteBrandsResponse = {
  */
 export const voteBrands = async (body: VoteBrandsParams) =>
   await request<VoteBrandsResponse>(`${BRAND_SERVICE}/vote`, {
-    method: "POST",
+    method: 'POST',
     body,
   });
 
@@ -201,9 +201,9 @@ export const voteBrands = async (body: VoteBrandsParams) =>
  * @param {Brand['id']} id - The ID of the brand to fetch.
  * @returns {Promise<Brand>} A promise that resolves to the brand data.
  */
-export const getBrandById = async (id: Brand["id"]): Promise<BrandResponse> => {
+export const getBrandById = async (id: Brand['id']): Promise<BrandResponse> => {
   return await request<BrandResponse>(`${BRAND_SERVICE}/brand/${id}`, {
-    method: "GET",
+    method: 'GET',
   });
 };
 
@@ -223,6 +223,6 @@ export interface ClaimBrandParams {
  */
 export const claimBrand = async (body: ClaimBrandParams) =>
   await request(`${BRAND_SERVICE}/request`, {
-    method: "POST",
+    method: 'POST',
     body,
   });

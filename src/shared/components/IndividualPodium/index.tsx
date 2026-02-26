@@ -1,28 +1,28 @@
-import React, { useMemo } from "react";
-import classNames from "clsx";
-import styles from "./IndividualPodium.module.scss";
-import Typography from "@/shared/components/Typography";
-import Podium1Icon from "@/shared/assets/icons/podium-1.svg?react";
-import Podium2Icon from "@/shared/assets/icons/podium-2.svg?react";
-import Podium3Icon from "@/shared/assets/icons/podium-3.svg?react";
-import { useModal } from "@/shared/hooks/ui/useModal";
-import { ModalsIds } from "@/shared/providers/ModalProvider/types";
-import { PodiumBrand, CollectibleData } from "@/shared/types/collectibles";
-import { useAuth } from "@/shared/hooks/auth";
-import { User } from "@/shared/hooks/user";
-import { useAccount, useConnect } from "wagmi";
-import sdk from "@farcaster/miniapp-sdk";
+import React, { useMemo } from 'react';
+import classNames from 'clsx';
+import styles from './IndividualPodium.module.scss';
+import Typography from '@/shared/components/Typography';
+import Podium1Icon from '@/shared/assets/icons/podium-1.svg?react';
+import Podium2Icon from '@/shared/assets/icons/podium-2.svg?react';
+import Podium3Icon from '@/shared/assets/icons/podium-3.svg?react';
+import { useModal } from '@/shared/hooks/ui/useModal';
+import { ModalsIds } from '@/shared/providers/ModalProvider/types';
+import { PodiumBrand, CollectibleData } from '@/shared/types/collectibles';
+import { useAuth } from '@/shared/hooks/auth';
+import { User } from '@/shared/hooks/user';
+import { useAccount, useConnect } from 'wagmi';
+import sdk from '@farcaster/miniapp-sdk';
 
 // Format time ago display (UTC-based)
 const getTimeAgo = (dateStr: string | undefined): string => {
-  if (!dateStr) return "";
+  if (!dateStr) return '';
 
   const nowUtc = Date.now();
 
   // Normalize date format
-  let normalizedDate = dateStr.replace(" ", "T");
-  if (!normalizedDate.endsWith("Z")) {
-    normalizedDate += "Z";
+  let normalizedDate = dateStr.replace(' ', 'T');
+  if (!normalizedDate.endsWith('Z')) {
+    normalizedDate += 'Z';
   }
 
   const createdUtc = new Date(normalizedDate).getTime();
@@ -32,7 +32,7 @@ const getTimeAgo = (dateStr: string | undefined): string => {
   const CLOCK_SKEW_THRESHOLD = 10 * 60 * 1000;
   if (diffInMs < 0) {
     if (Math.abs(diffInMs) <= CLOCK_SKEW_THRESHOLD) {
-      return "Just now";
+      return 'Just now';
     }
     diffInMs = 0;
   }
@@ -41,41 +41,41 @@ const getTimeAgo = (dateStr: string | undefined): string => {
   const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
   const diffInDays = Math.floor(diffInHours / 24);
 
-  if (diffInMinutes < 1) return "Just now";
+  if (diffInMinutes < 1) return 'Just now';
   if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
   if (diffInHours < 24) {
     return `${diffInHours}h ago`;
   }
-  if (diffInDays === 1) return "Yesterday";
+  if (diffInDays === 1) return 'Yesterday';
   if (diffInDays < 7) return `${diffInDays}d ago`;
 
   const createdDate = new Date(createdUtc);
   return createdDate.toLocaleDateString(undefined, {
-    timeZone: "UTC",
-    year: "numeric",
-    month: "short",
-    day: "numeric",
+    timeZone: 'UTC',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
   });
 };
 
 // Minting step type for contextual messages
 export type MintingStep =
-  | "fetching_signature"
-  | "approving"
-  | "confirming_approval"
-  | "minting"
-  | "buying"
-  | "confirming"
+  | 'fetching_signature'
+  | 'approving'
+  | 'confirming_approval'
+  | 'minting'
+  | 'buying'
+  | 'confirming'
   | null;
 
 // Contextual messages for each minting step
 const MINTING_STEP_MESSAGES: Record<Exclude<MintingStep, null>, string> = {
-  fetching_signature: "Preparing...",
-  approving: "Approve $BRND",
-  confirming_approval: "Approving...",
-  minting: "Confirm mint",
-  buying: "Confirm purchase",
-  confirming: "Confirming...",
+  fetching_signature: 'Preparing...',
+  approving: 'Approve $BRND',
+  confirming_approval: 'Approving...',
+  minting: 'Confirm mint',
+  buying: 'Confirm purchase',
+  confirming: 'Confirming...',
 };
 
 export interface IndividualPodiumProps {
@@ -116,7 +116,7 @@ export interface IndividualPodiumProps {
   isPending?: boolean;
   mintingStep?: MintingStep; // Current step in the minting/buying process
   hasSucceeded?: boolean; // Optimistic update after successful transaction
-  successType?: "mint" | "buy"; // Type of successful transaction
+  successType?: 'mint' | 'buy'; // Type of successful transaction
 }
 
 // Format large numbers (1000000 -> "1M", 1200000 -> "1.2M")
@@ -162,7 +162,7 @@ const IndividualPodium: React.FC<IndividualPodiumProps> = ({
     if (mintingStep && MINTING_STEP_MESSAGES[mintingStep]) {
       return MINTING_STEP_MESSAGES[mintingStep];
     }
-    return "Processing...";
+    return 'Processing...';
   };
 
   // Apply optimistic update if transaction succeeded
@@ -197,12 +197,12 @@ const IndividualPodium: React.FC<IndividualPodiumProps> = ({
     // Pass optimistic collectible data if transaction succeeded
     const optimisticCollectibleData = hasSucceeded
       ? {
-          ...collectibleData,
-          isCollectible: true,
-          ownerFid: userFid,
-          ownerUsername: authData?.username || null,
-          ownerPhotoUrl: authData?.photoUrl || null,
-        }
+        ...collectibleData,
+        isCollectible: true,
+        ownerFid: userFid,
+        ownerUsername: authData?.username || null,
+        ownerPhotoUrl: authData?.photoUrl || null,
+      }
       : collectibleData;
 
     openModal(ModalsIds.PODIUM_DETAIL, {
@@ -238,13 +238,13 @@ const IndividualPodium: React.FC<IndividualPodiumProps> = ({
   const getButtonText = () => {
     // Show success state first if transaction just succeeded
     if (hasSucceeded) {
-      return successType === "buy" ? "Bought!" : "Minted!";
+      return successType === 'buy' ? 'Bought!' : 'Minted!';
     }
-    if (canMint) return `Mint`;
-    if (isOwned) return "Owned";
-    if (isNotMintable) return "N/A";
-    if (canBuy) return `Buy`;
-    return "N/A";
+    if (canMint) return 'Mint';
+    if (isOwned) return 'Owned';
+    if (isNotMintable) return 'N/A';
+    if (canBuy) return 'Buy';
+    return 'N/A';
   };
 
   const getButtonStyle = () => {
@@ -262,9 +262,9 @@ const IndividualPodium: React.FC<IndividualPodiumProps> = ({
   const timeAgo = useMemo(() => getTimeAgo(podium?.date), [podium?.date]);
 
   const podiumBrands = [
-    { brand: brand2, icon: Podium2Icon, place: "second" as const },
-    { brand: brand1, icon: Podium1Icon, place: "first" as const },
-    { brand: brand3, icon: Podium3Icon, place: "third" as const },
+    { brand: brand2, icon: Podium2Icon, place: 'second' as const },
+    { brand: brand1, icon: Podium1Icon, place: 'first' as const },
+    { brand: brand3, icon: Podium3Icon, place: 'third' as const },
   ];
 
   return (

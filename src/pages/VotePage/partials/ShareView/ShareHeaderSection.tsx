@@ -1,7 +1,7 @@
-import Typography from "@/components/Typography";
-import Logo from "@/assets/images/logo.svg";
+import Typography from '@/components/Typography';
+import Logo from '@/assets/images/logo.svg';
 
-import styles from "./ShareView.module.scss";
+import styles from './ShareView.module.scss';
 
 export function ShareHeaderSection() {
   return (
@@ -15,8 +15,8 @@ export function ShareHeaderSection() {
         <Typography
           size={18}
           lineHeight={24}
-          variant={"druk"}
-          weight={"wide"}
+          variant={'druk'}
+          weight={'wide'}
           className={styles.title}
         >
           You just created your podium!

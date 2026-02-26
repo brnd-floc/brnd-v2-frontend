@@ -1,15 +1,15 @@
 // src/shared/layouts/AppLayout/index.tsx
 
-import React from "react";
+import React from 'react';
 
 // Components
-import NavigationBar from "@/components/NavigationBar";
+import NavigationBar from '@/components/NavigationBar';
 
 // StyleSheet
-import styles from "./AppLayout.module.scss";
+import styles from './AppLayout.module.scss';
 
 // Hooks
-import { useAuth } from "@/hooks/auth";
+import { useAuth } from '@/hooks/auth';
 
 interface AppLayoutProps {
   readonly children: React.ReactNode;

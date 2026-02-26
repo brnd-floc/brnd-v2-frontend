@@ -1,5 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
-import { getCycleRankings, getDeploymentInfo } from "@/services/admin";
+import { useQuery } from '@tanstack/react-query';
+import { getCycleRankings, getDeploymentInfo } from '@/services/admin';
 
 export interface CycleRanking {
   position: number;
@@ -29,7 +29,7 @@ export interface CycleRanking {
 }
 
 export interface CycleInfo {
-  period: "week" | "month";
+  period: 'week' | 'month';
   cycleNumber: number;
   startTime: string;
   endTime: string;
@@ -44,7 +44,7 @@ export interface CycleInfo {
 }
 
 export interface CycleRankingsResponse {
-  period: "week" | "month";
+  period: 'week' | 'month';
   rankings: CycleRanking[];
   cycleInfo: CycleInfo;
   metadata: {
@@ -81,11 +81,11 @@ export interface DeploymentInfo {
 
 // Hook to get cycle rankings - following your pattern
 export const useCycleRankings = (
-  period: "week" | "month",
+  period: 'week' | 'month',
   limit: number = 10
 ) => {
   return useQuery({
-    queryKey: ["admin", "cycles", period, "rankings", limit],
+    queryKey: ['admin', 'cycles', period, 'rankings', limit],
     queryFn: () => getCycleRankings(period, limit),
     refetchInterval: 60000, // Refetch every minute for live updates
     staleTime: 30000, // Consider fresh for 30 seconds
@@ -96,7 +96,7 @@ export const useCycleRankings = (
 // Hook to get deployment info - following your pattern
 export const useDeploymentInfo = () => {
   return useQuery({
-    queryKey: ["admin", "deployment-info"],
+    queryKey: ['admin', 'deployment-info'],
     queryFn: () => getDeploymentInfo(),
     staleTime: 5 * 60 * 1000, // Fresh for 5 minutes
     refetchOnWindowFocus: false,

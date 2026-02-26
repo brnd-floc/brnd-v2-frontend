@@ -1,18 +1,18 @@
 let sdkPromise: Promise<
-  (typeof import("@farcaster/miniapp-sdk"))["default"]
+  (typeof import('@farcaster/miniapp-sdk'))['default']
 > | null = null;
 let readySignalInFlight: Promise<boolean> | null = null;
 
 export async function getMiniAppSdk() {
   if (!sdkPromise) {
-    sdkPromise = import("@farcaster/miniapp-sdk").then((module) => module.default);
+    sdkPromise = import('@farcaster/miniapp-sdk').then((module) => module.default);
   }
   return sdkPromise;
 }
 
 export async function withMiniAppSdk<T>(
   operation: (
-    sdk: (typeof import("@farcaster/miniapp-sdk"))["default"]
+    sdk: (typeof import('@farcaster/miniapp-sdk'))['default']
   ) => Promise<T> | T
 ): Promise<T> {
   const sdk = await getMiniAppSdk();
@@ -21,7 +21,7 @@ export async function withMiniAppSdk<T>(
 
 export function withMiniAppSdkSafe(
   operation: (
-    sdk: (typeof import("@farcaster/miniapp-sdk"))["default"]
+    sdk: (typeof import('@farcaster/miniapp-sdk'))['default']
   ) => Promise<unknown> | unknown
 ): void {
   void withMiniAppSdk(operation).catch(() => {

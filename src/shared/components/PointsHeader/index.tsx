@@ -1,24 +1,24 @@
 // src/shared/components/PointsHeader/index.tsx
 
-import React, { useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import classNames from "clsx";
+import React, { useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import classNames from 'clsx';
 
 // StyleSheet
-import styles from "./PointsHeader.module.scss";
+import styles from './PointsHeader.module.scss';
 
 // Components
-import Typography from "@/components/Typography";
-import Button from "@/components/Button";
-import IconButton from "@/components/IconButton";
+import Typography from '@/components/Typography';
+import Button from '@/components/Button';
+import IconButton from '@/components/IconButton';
 
 // Assets
-import PointBIcon from "@/assets/icons/point-b.svg?react";
-import GoBackIcon from "@/assets/icons/go-back-icon.svg?react";
+import PointBIcon from '@/assets/icons/point-b.svg?react';
+import GoBackIcon from '@/assets/icons/go-back-icon.svg?react';
 
 // Hooks
-import { useAuth } from "@/hooks/auth";
-import sdk from "@farcaster/miniapp-sdk";
+import { useAuth } from '@/hooks/auth';
+import sdk from '@farcaster/miniapp-sdk';
 
 export const URL_HOW_IT_WORKS = import.meta.env.VITE_APP_HOW_IT_WORKS;
 
@@ -32,10 +32,10 @@ interface PointsHeaderProps {
 }
 
 const PointsHeader: React.FC<PointsHeaderProps> = ({
-  title = "Total BRND points earned for your contribution",
+  title = 'Total BRND points earned for your contribution',
   showHowItWorks = true,
   showBackButton = true,
-  backButtonPath = "/",
+  backButtonPath = '/',
   className,
   onBackClick,
 }) => {
@@ -44,12 +44,12 @@ const PointsHeader: React.FC<PointsHeaderProps> = ({
 
   const handleClickProfile = useCallback(() => {
     sdk.haptics.selectionChanged();
-    navigate("/profile");
+    navigate('/profile');
   }, [navigate]);
 
   const handleHowItWorks = useCallback(() => {
     sdk.haptics.selectionChanged();
-    navigate("/welcome");
+    navigate('/welcome');
   }, [navigate]);
 
   const handleBackClick = useCallback(() => {

@@ -1,15 +1,15 @@
 // Dependencies
-import React from "react";
-import classNames from "clsx";
+import React from 'react';
+import classNames from 'clsx';
 
 // StyleSheet
-import styles from "./UserProfileGridItem.module.scss";
+import styles from './UserProfileGridItem.module.scss';
 
 // Components
-import Typography from "@/components/Typography";
+import Typography from '@/components/Typography';
 
 interface UserProfileGridItemProps {
-  variant?: "primary" | "green" | "red" | "blue";
+  variant?: 'primary' | 'green' | 'red' | 'blue';
   title: string;
   value?: string | number;
   subtext?: string;
@@ -20,7 +20,7 @@ interface UserProfileGridItemProps {
 }
 
 const UserProfileGridItem: React.FC<UserProfileGridItemProps> = ({
-  variant = "primary",
+  variant = 'primary',
   title,
   value,
   subtext,

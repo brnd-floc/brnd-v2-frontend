@@ -4,7 +4,7 @@ import type {
   StoriesOperation,
   TxCallbackData,
   TxLog,
-} from "./useStoriesInMotion.types";
+} from './useStoriesInMotion.types';
 
 const hasLogTopics = (log: TxLog): boolean => {
   try {
@@ -59,16 +59,16 @@ export const buildFailedOperationHandlers = ({
   clearOperationState: (operation: StoriesOperation) => void;
 }): FailedOperationHandlers => ({
   approve: () => {
-    clearOperationState("approve");
+    clearOperationState('approve');
   },
   vote: () => {
-    clearOperationState("vote");
+    clearOperationState('vote');
   },
   createBrand: () => {
-    clearOperationState("createBrand");
+    clearOperationState('createBrand');
   },
   updateBrand: () => {
-    clearOperationState("updateBrand");
+    clearOperationState('updateBrand');
   },
 });
 
@@ -87,7 +87,7 @@ export const handleWriteError = ({
   setLastOperation: (operation: StoriesOperation | null) => void;
   setError: (message: string | null) => void;
 }) => {
-  logStoriesError("❌ [Transaction] Transaction failed", {
+  logStoriesError('❌ [Transaction] Transaction failed', {
     operation,
     error: errorMessage,
   });

@@ -1,8 +1,8 @@
 // API Dependency
-import { request } from "./api";
+import { request } from './api';
 
 // Configuration
-import { ADMIN_SERVICE, AIRDROP_SERVICE } from "@/config/api";
+import { ADMIN_SERVICE, AIRDROP_SERVICE } from '@/config/api';
 
 /* =======================================
    = = = = = = = = = = = = = = = = = = = =
@@ -39,11 +39,11 @@ export interface BrandFormData {
  * Get cycle rankings (weekly or monthly) for screenshots
  */
 export const getCycleRankings = async (
-  period: "week" | "month",
+  period: 'week' | 'month',
   limit: number = 10
 ): Promise<any> =>
   await request(`${ADMIN_SERVICE}/cycles/${period}/rankings`, {
-    method: "GET",
+    method: 'GET',
     params: { limit: limit.toString() },
   });
 
@@ -52,7 +52,7 @@ export const getCycleRankings = async (
  */
 export const getDeploymentInfo = async (): Promise<any> =>
   await request(`${ADMIN_SERVICE}/deployment-info`, {
-    method: "GET",
+    method: 'GET',
   });
 
 /**
@@ -77,7 +77,7 @@ export const prepareBrandMetadata = async (
   message?: string;
 }> =>
   await request(`${ADMIN_SERVICE}/brands/prepare-metadata`, {
-    method: "POST",
+    method: 'POST',
     body: brandData,
   });
 
@@ -90,7 +90,7 @@ export const prepareBrandMetadata = async (
  */
 export const createBrand = async (brandData: BrandFormData): Promise<any> =>
   await request(`${ADMIN_SERVICE}/brands`, {
-    method: "POST",
+    method: 'POST',
     body: brandData,
   });
 
@@ -110,7 +110,7 @@ export const updateBrand = async (
   brandData: Partial<BrandFormData>
 ): Promise<any> =>
   await request(`${ADMIN_SERVICE}/brands/${brandId}`, {
-    method: "PUT",
+    method: 'PUT',
     body: brandData,
   });
 
@@ -126,22 +126,22 @@ export const updateBrand = async (
  */
 export const deleteBrand = async (brandId: number): Promise<void> =>
   await request(`${ADMIN_SERVICE}/brands/${brandId}`, {
-    method: "DELETE",
+    method: 'DELETE',
   });
 
 export const getCategories = async (): Promise<any> =>
   await request(`${ADMIN_SERVICE}/categories`, {
-    method: "GET",
+    method: 'GET',
   });
 
 export const getBrands = async (): Promise<any> =>
   await request(`${ADMIN_SERVICE}/brands`, {
-    method: "GET",
+    method: 'GET',
   });
 
 export const fixWeeklyScores = async (): Promise<any> =>
   await request(`${ADMIN_SERVICE}/fix-weekly-scores`, {
-    method: "GET",
+    method: 'GET',
   });
 
 /**
@@ -152,7 +152,7 @@ export const fixWeeklyScores = async (): Promise<any> =>
  */
 export const takeAirdropSnapshotAndCreateMerkleRoot = async (): Promise<any> =>
   await request(`${ADMIN_SERVICE}/airdrop-snapshot`, {
-    method: "GET",
+    method: 'GET',
   });
 
 /**
@@ -163,5 +163,5 @@ export const takeAirdropSnapshotAndCreateMerkleRoot = async (): Promise<any> =>
  */
 export const recalculateAllUsers = async (): Promise<any> =>
   await request(`${AIRDROP_SERVICE}/recalculate-all-users`, {
-    method: "GET",
+    method: 'GET',
   });

@@ -1,7 +1,7 @@
-import React, { useState } from "react";
-import { ContextualTransaction } from "@/shared/hooks/user/types";
-import styles from "./TransactionInfo.module.scss";
-import sdk from "@farcaster/miniapp-sdk";
+import React, { useState } from 'react';
+import { ContextualTransaction } from '@/shared/hooks/user/types';
+import styles from './TransactionInfo.module.scss';
+import sdk from '@farcaster/miniapp-sdk';
 
 interface TransactionInfoProps {
   transaction: ContextualTransaction;
@@ -32,7 +32,7 @@ const TransactionInfo: React.FC<TransactionInfoProps> = ({
       setCopiedHash(label);
       setTimeout(() => setCopiedHash(null), 2000);
     } catch (error) {
-      console.error("Failed to copy to clipboard:", error);
+      console.error('Failed to copy to clipboard:', error);
     }
   };
 
@@ -42,11 +42,11 @@ const TransactionInfo: React.FC<TransactionInfoProps> = ({
       <div className={styles.transactionValue}>
         <span
           className={styles.transactionHash}
-          onClick={() => copyToClipboard(transaction.transactionHash!, "vote")}
+          onClick={() => copyToClipboard(transaction.transactionHash!, 'vote')}
           title={`Copy transaction hash: ${transaction.transactionHash}`}
         >
           {formatTransactionHash(transaction.transactionHash!)}
-          {copiedHash === "vote" && (
+          {copiedHash === 'vote' && (
             <span className={styles.copied}>Copied!</span>
           )}
         </span>
@@ -71,12 +71,12 @@ const TransactionInfo: React.FC<TransactionInfoProps> = ({
           <span
             className={styles.transactionHash}
             onClick={() =>
-              copyToClipboard(transaction.transactionHash!, "claim")
+              copyToClipboard(transaction.transactionHash!, 'claim')
             }
             title={`Copy transaction hash: ${transaction.transactionHash}`}
           >
             {formatTransactionHash(transaction.transactionHash!)}
-            {copiedHash === "claim" && (
+            {copiedHash === 'claim' && (
               <span className={styles.copied}>Copied!</span>
             )}
           </span>
@@ -112,10 +112,10 @@ const TransactionInfo: React.FC<TransactionInfoProps> = ({
   );
 
   return (
-    <div className={`${styles.container} ${className || ""}`}>
+    <div className={`${styles.container} ${className || ''}`}>
       <div className={styles.transactionInfo}>
-        {transaction.transactionType === "vote" && renderVoteTransaction()}
-        {transaction.transactionType === "claim" && renderClaimTransaction()}
+        {transaction.transactionType === 'vote' && renderVoteTransaction()}
+        {transaction.transactionType === 'claim' && renderClaimTransaction()}
       </div>
     </div>
   );

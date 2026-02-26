@@ -9,7 +9,7 @@ export const logger = {
       return;
     }
 
-    console.warn("[debug]", ...args);
+    console.warn('[debug]', ...args);
   },
   warn: (...args: LogArg[]) => {
     console.warn(...args);

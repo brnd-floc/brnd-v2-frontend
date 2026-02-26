@@ -10,7 +10,7 @@
  * @returns The shortened number as a string with a unit suffix.
  */
 export function shortenNumber(value: number): string {
-  const units = ["K", "M", "B", "T"];
+  const units = ['K', 'M', 'B', 'T'];
   let unitIndex = -1;
   while (value >= 1000 && unitIndex < units.length - 1) {
     value /= 1000;

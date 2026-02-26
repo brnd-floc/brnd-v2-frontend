@@ -1,6 +1,6 @@
-import type { StoriesOperationToken } from "./useStoriesInMotion.async";
-import { getStoriesErrorMeta } from "./useStoriesInMotion.errors";
-import { ensureVoteAuthData, isVoteAuthResponse } from "./useStoriesInMotion.signatures";
+import type { StoriesOperationToken } from './useStoriesInMotion.async';
+import { getStoriesErrorMeta } from './useStoriesInMotion.errors';
+import { ensureVoteAuthData, isVoteAuthResponse } from './useStoriesInMotion.signatures';
 
 export const resolveRetryAuthData = async ({
   pendingVoteAuthData,
@@ -18,9 +18,9 @@ export const resolveRetryAuthData = async ({
     deadline: number
   ) => Promise<unknown>;
 }): Promise<string> => {
-  let authDataToUse = pendingVoteAuthData || "0x";
+  let authDataToUse = pendingVoteAuthData || '0x';
 
-  if (!isWalletAuthorized && (!authDataToUse || authDataToUse === "0x")) {
+  if (!isWalletAuthorized && (!authDataToUse || authDataToUse === '0x')) {
     if (userFid) {
       const deadline = Math.floor(Date.now() / 1000) + 3600;
       const voteAuth = await getVoteAuthorizationSignature(
@@ -28,7 +28,7 @@ export const resolveRetryAuthData = async ({
         deadline
       );
       if (!isVoteAuthResponse(voteAuth)) {
-        throw new Error("Invalid vote authorization response");
+        throw new Error('Invalid vote authorization response');
       }
       authDataToUse = ensureVoteAuthData(voteAuth);
     }
@@ -139,8 +139,8 @@ export const scheduleApprovedVoteRetry = ({
       if (!isOperationActive(operationToken)) {
         return;
       }
-      logStoriesError("❌ [Approve] Auto-retry vote after approval failed:", error);
-      logStoriesError("❌ [Approve] Error details:", getStoriesErrorMeta(error));
+      logStoriesError('❌ [Approve] Auto-retry vote after approval failed:', error);
+      logStoriesError('❌ [Approve] Error details:', getStoriesErrorMeta(error));
       clearPendingVoteData();
     }
   }, 1000);

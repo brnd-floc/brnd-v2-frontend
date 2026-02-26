@@ -1,13 +1,13 @@
-import React from "react";
-import classNames from "clsx";
-import sdk from "@farcaster/miniapp-sdk";
+import React from 'react';
+import classNames from 'clsx';
+import sdk from '@farcaster/miniapp-sdk';
 
 interface BrandListItemProps {
   name: string;
   photoUrl: string;
   score: number;
   position: number;
-  variation: "up" | "down" | "equal" | "hide";
+  variation: 'up' | 'down' | 'equal' | 'hide';
   onClick: () => void;
   // Optional extended fields
   category?: {
@@ -21,10 +21,10 @@ interface BrandListItemProps {
 }
 
 // StyleSheet
-import styles from "./BrandListItem.module.scss";
+import styles from './BrandListItem.module.scss';
 
 // Components
-import Typography from "../Typography";
+import Typography from '../Typography';
 
 export const BrandListItem: React.FC<BrandListItemProps> = ({
   name,

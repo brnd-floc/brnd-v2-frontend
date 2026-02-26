@@ -1,12 +1,12 @@
 // src/shared/contexts/BlockchainContext.tsx
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { useStoriesInMotion } from "../hooks/contract/useStoriesInMotion";
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useStoriesInMotion } from '../hooks/contract/useStoriesInMotion';
 import {
   useContractWagmi,
   StakeBrndParams,
   WithdrawBrndParams,
-} from "../hooks/contract/useContractWagmi";
-import { useBrandRankings } from "./BrandRankingsContext";
+} from '../hooks/contract/useContractWagmi';
+import { useBrandRankings } from './BrandRankingsContext';
 
 interface BlockchainState {
   // Wallet connection
@@ -74,7 +74,7 @@ const BlockchainContext = createContext<BlockchainContextType | undefined>(
 export const useBlockchain = () => {
   const context = useContext(BlockchainContext);
   if (context === undefined) {
-    throw new Error("useBlockchain must be used within a BlockchainProvider");
+    throw new Error('useBlockchain must be used within a BlockchainProvider');
   }
   return context;
 };
@@ -113,7 +113,7 @@ export const BlockchainProvider: React.FC<BlockchainProviderProps> = ({
       
       // Optimistically update rankings for voted brands
       if (pendingVoteBrandIds) {
-        const periods = ["day", "week", "month", "all"] as const;
+        const periods = ['day', 'week', 'month', 'all'] as const;
         const basePointsPerVote = 100; // Base points awarded per vote
         
         // Update rankings for all voted brands across all periods

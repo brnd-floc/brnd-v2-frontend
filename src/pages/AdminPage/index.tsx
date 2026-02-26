@@ -1,32 +1,32 @@
 // src/pages/AdminPage/index.tsx
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 // StyleSheet
-import styles from "./AdminPage.module.scss";
+import styles from './AdminPage.module.scss';
 
 // Components
-import AppLayout from "@/shared/layouts/AppLayout";
-import Typography from "@/components/Typography";
-import Button from "@/shared/components/Button";
+import AppLayout from '@/shared/layouts/AppLayout';
+import Typography from '@/components/Typography';
+import Button from '@/shared/components/Button';
 
-import { prepareBrandMetadata } from "@/services/admin";
+import { prepareBrandMetadata } from '@/services/admin';
 
 // Hooks
-import { useAuth } from "@/hooks/auth";
-import { Brand, useBrandList } from "@/hooks/brands";
-import { useStoriesInMotion } from "@/shared/hooks/contract/useStoriesInMotion";
-import { useAccount } from "wagmi";
+import { useAuth } from '@/hooks/auth';
+import { Brand, useBrandList } from '@/hooks/brands';
+import { useStoriesInMotion } from '@/shared/hooks/contract/useStoriesInMotion';
+import { useAccount } from 'wagmi';
 
 // Category mapping
 const CATEGORIES = [
-  { id: 1, name: "Infra" },
-  { id: 2, name: "Social" },
-  { id: 3, name: "Community" },
-  { id: 4, name: "Finance" },
-  { id: 5, name: "Game" },
-  { id: 6, name: "AI" },
-  { id: 7, name: "Media" },
+  { id: 1, name: 'Infra' },
+  { id: 2, name: 'Social' },
+  { id: 3, name: 'Community' },
+  { id: 4, name: 'Finance' },
+  { id: 5, name: 'Game' },
+  { id: 6, name: 'AI' },
+  { id: 7, name: 'Media' },
 ] as const;
 
 // Simple Admin Brand List Component
@@ -35,15 +35,15 @@ interface AdminBrandsListProps {
 }
 
 function AdminBrandsList({ onBrandSelect }: AdminBrandsListProps) {
-  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [pageId, setPageId] = useState<number>(1);
 
   const { data, isLoading, isFetching, refetch } = useBrandList(
-    "all",
+    'all',
     searchQuery,
     pageId,
     50,
-    "all"
+    'all'
   );
 
   useEffect(() => {
@@ -122,8 +122,8 @@ function AdminBrandsList({ onBrandSelect }: AdminBrandsListProps) {
                 {brand.url}
               </Typography>
               <Typography size={12} className={styles.brandMeta}>
-                Score: {brand.score} | Type:{" "}
-                {brand.queryType === 0 ? "Channel" : "Profile"}
+                Score: {brand.score} | Type:{' '}
+                {brand.queryType === 0 ? 'Channel' : 'Profile'}
                 {brand.queryType === 0 &&
                   brand.channel &&
                   ` | ${brand.channel}`}
@@ -173,13 +173,13 @@ interface BrandFormData {
   ticker?: string; // Ticker symbol (stored without $ prefix)
 }
 
-type AdminStep = "menu" | "form" | "confirm" | "success";
+type AdminStep = 'menu' | 'form' | 'confirm' | 'success';
 
 function AdminPage(): React.ReactNode {
   const navigate = useNavigate();
   const { data: user } = useAuth();
   const { isConnected } = useAccount();
-  const [currentStep, setCurrentStep] = useState<AdminStep>("menu");
+  const [currentStep, setCurrentStep] = useState<AdminStep>('menu');
   const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null);
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [successBrandId, setSuccessBrandId] = useState<number | null>(null);
@@ -187,8 +187,8 @@ function AdminPage(): React.ReactNode {
   const [validationError, setValidationError] = useState<string | null>(null);
   const [ipfsMetadataHash, setIpfsMetadataHash] = useState<string | null>(null);
   const [currentStepStatus, setCurrentStepStatus] = useState<
-    "idle" | "validating" | "uploading-ipfs" | "ready-for-contract"
-  >("idle");
+    'idle' | 'validating' | 'uploading-ipfs' | 'ready-for-contract'
+  >('idle');
 
   // Use StoriesInMotion hook for on-chain brand creation and updates
   const {
@@ -205,38 +205,38 @@ function AdminPage(): React.ReactNode {
     undefined, // onClaimSuccess
     (txData) => {
       // onBrandCreateSuccess
-      console.log("✅ Brand created on-chain successfully!", txData);
+      console.log('✅ Brand created on-chain successfully!', txData);
       // Extract brandId from transaction if possible
       // For now, we'll show success and let user navigate
-      setCurrentStep("success");
+      setCurrentStep('success');
     },
     (txData) => {
       // onBrandUpdateSuccess
-      console.log("✅ Brand updated on-chain successfully!", txData);
+      console.log('✅ Brand updated on-chain successfully!', txData);
       if (selectedBrand) {
         setSuccessBrandId(selectedBrand.id);
       }
-      setCurrentStep("success");
+      setCurrentStep('success');
     }
   );
 
   const [formData, setFormData] = useState<BrandFormData>({
-    name: "",
-    url: "",
-    description: "",
-    imageUrl: "",
+    name: '',
+    url: '',
+    description: '',
+    imageUrl: '',
     queryType: 0, // 0 = Channel, 1 = Profile
-    channelOrProfile: "",
+    channelOrProfile: '',
     categoryId: 1,
     followerCount: 0,
-    profile: "",
-    channel: "",
-    warpcastUrl: "",
-    handle: "", // Will be derived from channelOrProfile
+    profile: '',
+    channel: '',
+    warpcastUrl: '',
+    handle: '', // Will be derived from channelOrProfile
     fid: user?.fid ? Number(user.fid) : undefined, // Default to current user's FID
-    walletAddress: "", // Default to connected wallet
-    contractAddress: "",
-    ticker: "",
+    walletAddress: '', // Default to connected wallet
+    contractAddress: '',
+    ticker: '',
   });
   const [errors, setErrors] = useState<Record<string, boolean>>({});
 
@@ -255,28 +255,28 @@ function AdminPage(): React.ReactNode {
   const isAdmin = user?.fid && adminFids.includes(Number(user.fid));
 
   if (!isAdmin) {
-    navigate("/profile");
+    navigate('/profile');
     return null;
   }
 
   const resetForm = () => {
     setFormData({
-      name: "",
-      url: "",
-      description: "",
-      imageUrl: "",
+      name: '',
+      url: '',
+      description: '',
+      imageUrl: '',
       queryType: 0,
-      channelOrProfile: "",
+      channelOrProfile: '',
       categoryId: 1,
       followerCount: 0,
-      profile: "",
-      channel: "",
-      warpcastUrl: "",
-      handle: "",
+      profile: '',
+      channel: '',
+      warpcastUrl: '',
+      handle: '',
       fid: user?.fid ? Number(user.fid) : undefined,
-      walletAddress: "",
-      contractAddress: "",
-      ticker: "",
+      walletAddress: '',
+      contractAddress: '',
+      ticker: '',
     });
     setSelectedBrand(null);
     setIsEditing(false);
@@ -284,11 +284,11 @@ function AdminPage(): React.ReactNode {
     setSuccessBrandId(null);
     setValidationError(null);
     setIpfsMetadataHash(null);
-    setCurrentStepStatus("idle");
+    setCurrentStepStatus('idle');
   };
 
   const goToMenu = () => {
-    setCurrentStep("menu");
+    setCurrentStep('menu');
     resetForm();
   };
 
@@ -297,7 +297,7 @@ function AdminPage(): React.ReactNode {
       navigate(`/brand/${successBrandId}`);
     } else {
       alert(
-        "Brand ID not available. Please go back to the admin panel and search for the brand."
+        'Brand ID not available. Please go back to the admin panel and search for the brand.'
       );
     }
   };
@@ -306,7 +306,7 @@ function AdminPage(): React.ReactNode {
   const startAddBrand = () => {
     resetForm();
     setIsEditing(false);
-    setCurrentStep("form");
+    setCurrentStep('form');
   };
 
   // Start editing an existing brand
@@ -316,26 +316,26 @@ function AdminPage(): React.ReactNode {
 
     // Pre-populate fields from the existing brand data
     setFormData({
-      name: brand.name || "",
-      url: brand.url || "",
-      description: brand.description || "",
-      imageUrl: brand.imageUrl || "",
+      name: brand.name || '',
+      url: brand.url || '',
+      description: brand.description || '',
+      imageUrl: brand.imageUrl || '',
       queryType: brand.queryType ?? 0,
       channelOrProfile:
-        brand.queryType === 0 ? brand.channel || "" : brand.profile || "",
+        brand.queryType === 0 ? brand.channel || '' : brand.profile || '',
       categoryId: brand.category?.id || 1,
       followerCount: 0,
-      profile: "",
-      channel: "",
-      warpcastUrl: "",
-      handle: (brand as any).handle || "",
+      profile: '',
+      channel: '',
+      warpcastUrl: '',
+      handle: (brand as any).handle || '',
       fid: (brand as any).fid || (user?.fid ? Number(user.fid) : undefined),
-      walletAddress: (brand as any).walletAddress || "",
-      contractAddress: (brand as any).contractAddress || "",
-      ticker: (brand as any).ticker || "",
+      walletAddress: (brand as any).walletAddress || '',
+      contractAddress: (brand as any).contractAddress || '',
+      ticker: (brand as any).ticker || '',
     });
     setErrors({});
-    setCurrentStep("form");
+    setCurrentStep('form');
   };
 
   const handleInputChange = (
@@ -348,15 +348,15 @@ function AdminPage(): React.ReactNode {
       const updated = {
         ...prev,
         [name]:
-          name === "queryType" || name === "fid" || name === "categoryId"
+          name === 'queryType' || name === 'fid' || name === 'categoryId'
             ? parseInt(value) || 0
-            : name === "ticker"
-            ? value.replace(/^\$/, "").trim() // Remove $ prefix if user types it
-            : value,
+            : name === 'ticker'
+              ? value.replace(/^\$/, '').trim() // Remove $ prefix if user types it
+              : value,
       };
 
       // Auto-update handle when channelOrProfile changes
-      if (name === "channelOrProfile") {
+      if (name === 'channelOrProfile') {
         updated.handle = value.trim().toLowerCase();
       }
 
@@ -378,13 +378,13 @@ function AdminPage(): React.ReactNode {
   };
 
   const validateForm = () => {
-    console.log("🔍 [Admin] Starting form validation", { isEditing });
+    console.log('🔍 [Admin] Starting form validation', { isEditing });
     const newErrors: Record<string, boolean> = {};
 
     // Basic required fields (always required)
     if (!formData.name.trim()) {
       newErrors.name = true;
-      console.log("❌ [Admin] Validation failed: name is required");
+      console.log('❌ [Admin] Validation failed: name is required');
     }
     // if (!formData.url.trim()) {
     //   newErrors.url = true;
@@ -396,14 +396,14 @@ function AdminPage(): React.ReactNode {
     // }
     if (!formData.channelOrProfile.trim()) {
       newErrors.channelOrProfile = true;
-      console.log("❌ [Admin] Validation failed: channelOrProfile is required");
+      console.log('❌ [Admin] Validation failed: channelOrProfile is required');
     }
 
     // Wallet address validation - required for both create and edit
     if (!formData.walletAddress?.match(/^0x[a-fA-F0-9]{40}$/)) {
       newErrors.walletAddress = true;
       console.log(
-        "❌ [Admin] Validation failed: walletAddress format is invalid"
+        '❌ [Admin] Validation failed: walletAddress format is invalid'
       );
     }
 
@@ -418,14 +418,14 @@ function AdminPage(): React.ReactNode {
       if (!formData.handle || !formData.handle.trim()) {
         newErrors.handle = true;
         console.log(
-          "❌ [Admin] Validation failed: handle is required for new brands"
+          '❌ [Admin] Validation failed: handle is required for new brands'
         );
       }
     }
 
     setErrors(newErrors);
     const isValid = Object.keys(newErrors).length === 0;
-    console.log("✅ [Admin] Form validation complete", {
+    console.log('✅ [Admin] Form validation complete', {
       isValid,
       errors: newErrors,
     });
@@ -433,34 +433,34 @@ function AdminPage(): React.ReactNode {
   };
 
   const proceedToConfirm = async () => {
-    console.log("🚀 [Admin] proceedToConfirm called", {
+    console.log('🚀 [Admin] proceedToConfirm called', {
       isEditing,
       selectedBrand,
     });
 
     // First validate form fields
-    console.log("📋 [Admin] Validating form fields...");
+    console.log('📋 [Admin] Validating form fields...');
     if (!validateForm()) {
-      console.log("❌ [Admin] Form validation failed");
+      console.log('❌ [Admin] Form validation failed');
       // Scroll to first error
       const firstErrorField = Object.keys(errors)[0];
       if (firstErrorField) {
         const element = document.querySelector(`[name="${firstErrorField}"]`);
-        element?.scrollIntoView({ behavior: "smooth", block: "center" });
+        element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
-      setCurrentStepStatus("idle");
+      setCurrentStepStatus('idle');
       return;
     }
 
     console.log(
-      "✅ [Admin] Form validation passed, proceeding to backend validation and IPFS upload"
+      '✅ [Admin] Form validation passed, proceeding to backend validation and IPFS upload'
     );
 
     // Call prepare-metadata which now does validation AND IPFS upload
     // This applies to both creating new brands AND editing existing brands
     setIsValidating(true);
     setValidationError(null);
-    setCurrentStepStatus("validating");
+    setCurrentStepStatus('validating');
 
     try {
       const submitData = {
@@ -478,95 +478,95 @@ function AdminPage(): React.ReactNode {
         handle:
           formData.handle || formData.channelOrProfile.trim().toLowerCase(),
         fid: formData.fid || (user?.fid ? Number(user.fid) : 0),
-        walletAddress: formData.walletAddress || "",
+        walletAddress: formData.walletAddress || '',
         contractAddress: formData.contractAddress,
         ticker: formData.ticker,
         isEditing: isEditing,
         ...(isEditing && selectedBrand ? { brandId: selectedBrand.id } : {}),
       };
 
-      console.log("📤 [Admin] Submitting data to prepare-metadata endpoint", {
+      console.log('📤 [Admin] Submitting data to prepare-metadata endpoint', {
         isEditing,
         brandId: isEditing && selectedBrand ? selectedBrand.id : undefined,
         submitData,
       });
 
       // Step 1: Backend validation
-      console.log("🔍 [Admin] Step 1: Backend validation...");
-      setCurrentStepStatus("validating");
+      console.log('🔍 [Admin] Step 1: Backend validation...');
+      setCurrentStepStatus('validating');
 
       // Step 2: IPFS upload (happens in the same API call)
-      console.log("☁️ [Admin] Step 2: Uploading to IPFS...");
-      setCurrentStepStatus("uploading-ipfs");
+      console.log('☁️ [Admin] Step 2: Uploading to IPFS...');
+      setCurrentStepStatus('uploading-ipfs');
 
       // This now does validation AND IPFS upload in one call
       const result = await prepareBrandMetadata(submitData);
 
-      console.log("📥 [Admin] Received response from prepare-metadata", result);
+      console.log('📥 [Admin] Received response from prepare-metadata', result);
 
       if (!result.valid) {
         // Handle validation errors - show them to user
         const errorMessage =
           result.message ||
           (result.conflicts && result.conflicts.length > 0
-            ? `Conflicts found: ${result.conflicts.join(", ")}`
-            : "Brand validation failed. Please check for conflicts or duplicates.");
-        console.error("❌ [Admin] Backend validation failed", {
+            ? `Conflicts found: ${result.conflicts.join(', ')}`
+            : 'Brand validation failed. Please check for conflicts or duplicates.');
+        console.error('❌ [Admin] Backend validation failed', {
           errorMessage,
           result,
         });
         setValidationError(errorMessage);
-        setCurrentStepStatus("idle");
+        setCurrentStepStatus('idle');
         return;
       }
 
       // Success! Store the IPFS hash for contract creation
       if (result.metadataHash) {
-        console.log("✅ [Admin] IPFS upload successful", {
+        console.log('✅ [Admin] IPFS upload successful', {
           metadataHash: result.metadataHash,
         });
         setIpfsMetadataHash(result.metadataHash);
-        setCurrentStepStatus("ready-for-contract");
+        setCurrentStepStatus('ready-for-contract');
 
         // Proceed to confirmation step
         console.log(
-          "✅ [Admin] All validation and IPFS upload complete, proceeding to confirmation"
+          '✅ [Admin] All validation and IPFS upload complete, proceeding to confirmation'
         );
-        setCurrentStep("confirm");
+        setCurrentStep('confirm');
       } else {
-        throw new Error("IPFS metadata hash not returned from backend");
+        throw new Error('IPFS metadata hash not returned from backend');
       }
     } catch (error: any) {
-      console.error("❌ [Admin] Validation/IPFS error:", error);
-      console.error("❌ [Admin] Error details:", {
+      console.error('❌ [Admin] Validation/IPFS error:', error);
+      console.error('❌ [Admin] Error details:', {
         message: error.message,
         stack: error.stack,
         response: error.response,
       });
       setValidationError(
-        error.message || "Failed to prepare brand metadata. Please try again."
+        error.message || 'Failed to prepare brand metadata. Please try again.'
       );
-      setCurrentStepStatus("idle");
+      setCurrentStepStatus('idle');
     } finally {
       setIsValidating(false);
     }
   };
 
   const handleFinalSubmit = async () => {
-    console.log("🚀 [Admin] handleFinalSubmit called", {
+    console.log('🚀 [Admin] handleFinalSubmit called', {
       isEditing,
       isConnected,
       ipfsMetadataHash,
     });
 
     if (!isConnected) {
-      alert("Please connect your wallet to create a brand on-chain.");
+      alert('Please connect your wallet to create a brand on-chain.');
       return;
     }
 
     if (!ipfsMetadataHash) {
-      console.error("❌ [Admin] IPFS metadata hash not found");
-      alert("IPFS metadata hash not found. Please go back and try again.");
+      console.error('❌ [Admin] IPFS metadata hash not found');
+      alert('IPFS metadata hash not found. Please go back and try again.');
       return;
     }
 
@@ -576,7 +576,7 @@ function AdminPage(): React.ReactNode {
         const fid = formData.fid || (user?.fid ? Number(user.fid) : 0);
         const brandWalletAddress = formData.walletAddress;
 
-        console.log("📤 [Admin] Updating brand on-chain...", {
+        console.log('📤 [Admin] Updating brand on-chain...', {
           brandId: selectedBrand.id,
           metadataHash: ipfsMetadataHash,
           fid,
@@ -584,15 +584,15 @@ function AdminPage(): React.ReactNode {
         });
 
         if (!brandWalletAddress) {
-          throw new Error("Wallet address is required");
+          throw new Error('Wallet address is required');
         }
 
         if (!fid || fid <= 0) {
-          throw new Error("Valid FID is required");
+          throw new Error('Valid FID is required');
         }
 
-        console.log("📝 [Admin] Calling updateBrandOnChain contract function");
-        setCurrentStepStatus("ready-for-contract");
+        console.log('📝 [Admin] Calling updateBrandOnChain contract function');
+        setCurrentStepStatus('ready-for-contract');
 
         // Update brand on-chain with the IPFS hash we already have
         await updateBrandOnChain(
@@ -602,7 +602,7 @@ function AdminPage(): React.ReactNode {
           brandWalletAddress
         );
 
-        console.log("✅ [Admin] updateBrandOnChain transaction submitted");
+        console.log('✅ [Admin] updateBrandOnChain transaction submitted');
         // Success will be handled by onBrandUpdateSuccess callback
         // which will set currentStep to "success"
       } else {
@@ -611,7 +611,7 @@ function AdminPage(): React.ReactNode {
         const fid = formData.fid || (user?.fid ? Number(user.fid) : 0);
         const brandWalletAddress = formData.walletAddress;
 
-        console.log("📤 [Admin] Creating brand on-chain...", {
+        console.log('📤 [Admin] Creating brand on-chain...', {
           handle,
           metadataHash: ipfsMetadataHash,
           fid,
@@ -619,19 +619,19 @@ function AdminPage(): React.ReactNode {
         });
 
         if (!brandWalletAddress) {
-          throw new Error("Wallet address is required");
+          throw new Error('Wallet address is required');
         }
 
         if (!fid || fid <= 0) {
-          throw new Error("Valid FID is required");
+          throw new Error('Valid FID is required');
         }
 
-        if (!handle || handle.trim() === "") {
-          throw new Error("Brand handle is required");
+        if (!handle || handle.trim() === '') {
+          throw new Error('Brand handle is required');
         }
 
-        console.log("📝 [Admin] Calling createBrandOnChain contract function");
-        setCurrentStepStatus("ready-for-contract");
+        console.log('📝 [Admin] Calling createBrandOnChain contract function');
+        setCurrentStepStatus('ready-for-contract');
 
         // Create brand on-chain with the IPFS hash we already have
         await createBrandOnChain(
@@ -641,23 +641,23 @@ function AdminPage(): React.ReactNode {
           brandWalletAddress
         );
 
-        console.log("✅ [Admin] createBrandOnChain transaction submitted");
+        console.log('✅ [Admin] createBrandOnChain transaction submitted');
         // Success will be handled by onBrandCreateSuccess callback
         // which will set currentStep to "success"
       }
     } catch (error: any) {
-      console.error("❌ [Admin] Error in handleFinalSubmit:", error);
-      console.error("❌ [Admin] Error details:", {
+      console.error('❌ [Admin] Error in handleFinalSubmit:', error);
+      console.error('❌ [Admin] Error details:', {
         message: error.message,
         stack: error.stack,
       });
-      setCurrentStepStatus("idle");
-      alert(error.message || "Something went wrong. Please try again.");
+      setCurrentStepStatus('idle');
+      alert(error.message || 'Something went wrong. Please try again.');
     }
   };
 
   // MENU SCREEN
-  if (currentStep === "menu") {
+  if (currentStep === 'menu') {
     return (
       <AppLayout>
         <div className={styles.screen}>
@@ -668,7 +668,7 @@ function AdminPage(): React.ReactNode {
             <Button
               caption="← Profile"
               variant="secondary"
-              onClick={() => navigate("/profile")}
+              onClick={() => navigate('/profile')}
             />
           </div>
 
@@ -704,14 +704,14 @@ function AdminPage(): React.ReactNode {
   }
 
   // FORM MODAL (Add or Edit)
-  if (currentStep === "form") {
+  if (currentStep === 'form') {
     return (
       <AppLayout>
         <div className={styles.modal}>
           <div className={styles.modalContent}>
             <div className={styles.modalHeader}>
               <Typography size={20} weight="bold">
-                {isEditing ? `Edit: ${selectedBrand?.name}` : "Add New Brand"}
+                {isEditing ? `Edit: ${selectedBrand?.name}` : 'Add New Brand'}
               </Typography>
               <Button
                 caption="✕ Cancel"
@@ -732,7 +732,7 @@ function AdminPage(): React.ReactNode {
                   onChange={handleInputChange}
                   placeholder="e.g., Nike"
                   className={`${styles.input} ${
-                    errors.name ? styles.inputError : ""
+                    errors.name ? styles.inputError : ''
                   }`}
                   required
                 />
@@ -754,7 +754,7 @@ function AdminPage(): React.ReactNode {
                   onChange={handleInputChange}
                   placeholder="https://example.com"
                   className={`${styles.input} ${
-                    errors.url ? styles.inputError : ""
+                    errors.url ? styles.inputError : ''
                   }`}
                   required
                 />
@@ -775,7 +775,7 @@ function AdminPage(): React.ReactNode {
                   onChange={handleInputChange}
                   placeholder="Brief description of what this brand does..."
                   className={`${styles.textarea} ${
-                    errors.description ? styles.inputError : ""
+                    errors.description ? styles.inputError : ''
                   }`}
                   rows={3}
                   required
@@ -808,7 +808,7 @@ function AdminPage(): React.ReactNode {
                       src={formData.imageUrl}
                       alt="Brand logo preview"
                       onError={(e) => {
-                        e.currentTarget.style.display = "none";
+                        e.currentTarget.style.display = 'none';
                       }}
                     />
                   </div>
@@ -822,7 +822,7 @@ function AdminPage(): React.ReactNode {
                 <input
                   type="text"
                   name="contractAddress"
-                  value={formData.contractAddress || ""}
+                  value={formData.contractAddress || ''}
                   onChange={handleInputChange}
                   placeholder="0x..."
                   className={styles.input}
@@ -836,17 +836,17 @@ function AdminPage(): React.ReactNode {
                 <Typography size={16} weight="medium">
                   Ticker
                 </Typography>
-                <div style={{ position: "relative" }}>
+                <div style={{ position: 'relative' }}>
                   <span
                     style={{
-                      position: "absolute",
-                      left: "12px",
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                      fontSize: "16px",
+                      position: 'absolute',
+                      left: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      fontSize: '16px',
                       fontWeight: 500,
-                      color: "#666",
-                      pointerEvents: "none",
+                      color: '#666',
+                      pointerEvents: 'none',
                     }}
                   >
                     $
@@ -854,11 +854,11 @@ function AdminPage(): React.ReactNode {
                   <input
                     type="text"
                     name="ticker"
-                    value={formData.ticker || ""}
+                    value={formData.ticker || ''}
                     onChange={handleInputChange}
                     placeholder="e.g., BRND"
                     className={styles.input}
-                    style={{ paddingLeft: "28px" }}
+                    style={{ paddingLeft: '28px' }}
                   />
                 </div>
                 <Typography size={12} className={styles.helpText}>
@@ -902,8 +902,8 @@ function AdminPage(): React.ReactNode {
               <div className={styles.field}>
                 <Typography size={16} weight="medium">
                   {formData.queryType === 0
-                    ? "Channel Name"
-                    : "Profile Username"}
+                    ? 'Channel Name'
+                    : 'Profile Username'}
                 </Typography>
                 <input
                   type="text"
@@ -911,16 +911,16 @@ function AdminPage(): React.ReactNode {
                   value={formData.channelOrProfile}
                   onChange={handleInputChange}
                   placeholder={
-                    formData.queryType === 0 ? "e.g., founders" : "e.g., dwr"
+                    formData.queryType === 0 ? 'e.g., founders' : 'e.g., dwr'
                   }
                   className={`${styles.input} ${
-                    errors.channelOrProfile ? styles.inputError : ""
+                    errors.channelOrProfile ? styles.inputError : ''
                   }`}
                 />
                 <Typography size={12} className={styles.helpText}>
                   {formData.queryType === 0
-                    ? "The Farcaster channel name (without /)"
-                    : "The Farcaster username (without @)"}
+                    ? 'The Farcaster channel name (without /)'
+                    : 'The Farcaster username (without @)'}
                 </Typography>
                 {errors.channelOrProfile && (
                   <Typography size={12} className={styles.errorText}>
@@ -931,7 +931,7 @@ function AdminPage(): React.ReactNode {
 
               <div className={styles.field}>
                 <Typography size={16} weight="medium">
-                  Brand Handle {!isEditing && "*"}
+                  Brand Handle {!isEditing && '*'}
                 </Typography>
                 <input
                   type="text"
@@ -944,13 +944,13 @@ function AdminPage(): React.ReactNode {
                   placeholder="e.g., founders"
                   disabled={isEditing}
                   className={`${styles.input} ${
-                    errors.handle ? styles.inputError : ""
+                    errors.handle ? styles.inputError : ''
                   }`}
                 />
                 <Typography size={12} className={styles.helpText}>
                   {isEditing
-                    ? "Handle cannot be changed (immutable on-chain)"
-                    : "Unique handle for the brand (auto-filled from channel/profile)"}
+                    ? 'Handle cannot be changed (immutable on-chain)'
+                    : 'Unique handle for the brand (auto-filled from channel/profile)'}
                 </Typography>
                 {errors.handle && (
                   <Typography size={12} className={styles.errorText}>
@@ -961,16 +961,16 @@ function AdminPage(): React.ReactNode {
 
               <div className={styles.field}>
                 <Typography size={16} weight="medium">
-                  Brand Owner FID {!isEditing && "*"}
+                  Brand Owner FID {!isEditing && '*'}
                 </Typography>
                 <input
                   type="number"
                   name="fid"
-                  value={formData.fid || ""}
+                  value={formData.fid || ''}
                   onChange={handleInputChange}
-                  placeholder={"e.g., 12345"}
+                  placeholder={'e.g., 12345'}
                   className={`${styles.input} ${
-                    errors.fid ? styles.inputError : ""
+                    errors.fid ? styles.inputError : ''
                   }`}
                 />
                 <Typography size={12} className={styles.helpText}>
@@ -985,16 +985,16 @@ function AdminPage(): React.ReactNode {
 
               <div className={styles.field}>
                 <Typography size={16} weight="medium">
-                  Brand Owner Wallet Address {!isEditing && "*"}
+                  Brand Owner Wallet Address {!isEditing && '*'}
                 </Typography>
                 <input
                   type="text"
                   name="walletAddress"
-                  value={formData.walletAddress || ""}
+                  value={formData.walletAddress || ''}
                   onChange={handleInputChange}
                   placeholder="0x..."
                   className={`${styles.input} ${
-                    errors.walletAddress ? styles.inputError : ""
+                    errors.walletAddress ? styles.inputError : ''
                   }`}
                 />
                 <Typography size={12} className={styles.helpText}>
@@ -1034,14 +1034,14 @@ function AdminPage(): React.ReactNode {
                 <Button
                   caption={
                     isValidating
-                      ? currentStepStatus === "validating"
-                        ? "⏳ Validating..."
-                        : currentStepStatus === "uploading-ipfs"
-                        ? "☁️ Uploading to IPFS..."
-                        : "⏳ Processing..."
+                      ? currentStepStatus === 'validating'
+                        ? '⏳ Validating...'
+                        : currentStepStatus === 'uploading-ipfs'
+                          ? '☁️ Uploading to IPFS...'
+                          : '⏳ Processing...'
                       : isEditing
-                      ? "Continue →"
-                      : "Continue →"
+                        ? 'Continue →'
+                        : 'Continue →'
                   }
                   variant="primary"
                   onClick={proceedToConfirm}
@@ -1049,11 +1049,11 @@ function AdminPage(): React.ReactNode {
                 />
                 {isValidating && (
                   <Typography size={12} className={styles.helpText}>
-                    {currentStepStatus === "validating"
-                      ? "Validating brand data with backend..."
-                      : currentStepStatus === "uploading-ipfs"
-                      ? "Uploading metadata to IPFS..."
-                      : "Processing..."}
+                    {currentStepStatus === 'validating'
+                      ? 'Validating brand data with backend...'
+                      : currentStepStatus === 'uploading-ipfs'
+                        ? 'Uploading metadata to IPFS...'
+                        : 'Processing...'}
                   </Typography>
                 )}
                 {!isConnected && !isEditing && !isValidating && (
@@ -1070,14 +1070,14 @@ function AdminPage(): React.ReactNode {
   }
 
   // CONFIRMATION MODAL
-  if (currentStep === "confirm") {
+  if (currentStep === 'confirm') {
     return (
       <AppLayout>
         <div className={styles.modal}>
           <div className={styles.modalContent}>
             <div className={styles.modalHeader}>
               <Typography size={20} weight="bold">
-                {isEditing ? "Confirm Changes" : "Confirm New Brand"}
+                {isEditing ? 'Confirm Changes' : 'Confirm New Brand'}
               </Typography>
             </div>
 
@@ -1108,13 +1108,13 @@ function AdminPage(): React.ReactNode {
                     {formData.description}
                   </Typography>
                   <Typography size={12} className={styles.reviewMeta}>
-                    {formData.queryType === 0 ? "Channel" : "Profile"}:{" "}
-                    {formData.channelOrProfile || "Not specified"}
+                    {formData.queryType === 0 ? 'Channel' : 'Profile'}:{' '}
+                    {formData.channelOrProfile || 'Not specified'}
                   </Typography>
                   <Typography size={12} className={styles.reviewMeta}>
-                    Category:{" "}
+                    Category:{' '}
                     {CATEGORIES.find((c) => c.id === formData.categoryId)
-                      ?.name || "Not specified"}
+                      ?.name || 'Not specified'}
                   </Typography>
                   {formData.contractAddress && (
                     <Typography size={12} className={styles.reviewMeta}>
@@ -1149,7 +1149,7 @@ function AdminPage(): React.ReactNode {
               <Button
                 caption="← Edit"
                 variant="secondary"
-                onClick={() => setCurrentStep("form")}
+                onClick={() => setCurrentStep('form')}
               />
               <Button
                 caption={
@@ -1158,11 +1158,11 @@ function AdminPage(): React.ReactNode {
                   isPending ||
                   isConfirming
                     ? isEditing
-                      ? "⏳ Updating on-chain..."
-                      : "⏳ Creating on-chain..."
+                      ? '⏳ Updating on-chain...'
+                      : '⏳ Creating on-chain...'
                     : isEditing
-                    ? "Update Brand"
-                    : "✓ Create Brand"
+                      ? 'Update Brand'
+                      : '✓ Create Brand'
                 }
                 variant="primary"
                 onClick={handleFinalSubmit}
@@ -1205,7 +1205,7 @@ function AdminPage(): React.ReactNode {
   }
 
   // SUCCESS MODAL
-  if (currentStep === "success") {
+  if (currentStep === 'success') {
     return (
       <AppLayout>
         <div className={styles.modal}>
@@ -1222,7 +1222,7 @@ function AdminPage(): React.ReactNode {
                 weight="medium"
                 className={styles.successMessage}
               >
-                Brand successfully {isEditing ? "updated" : "added"}!
+                Brand successfully {isEditing ? 'updated' : 'added'}!
               </Typography>
 
               <div className={styles.successActions}>

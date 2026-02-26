@@ -1,4 +1,4 @@
-import { withMiniAppSdk, withMiniAppSdkSafe } from "./farcasterSdk";
+import { withMiniAppSdk, withMiniAppSdkSafe } from './farcasterSdk';
 
 type MiniAppEmbeds = [] | [string] | [string, string];
 

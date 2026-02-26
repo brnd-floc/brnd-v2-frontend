@@ -1,24 +1,24 @@
 // Dependencies
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter } from 'react-router-dom';
 
 // Pages
-import NotFoundPage from "../pages/NotFoundPage";
-import VotePage from "../pages/VotePage";
-import HomePage from "../pages/HomePage";
-import WelcomePage from "../pages/WelcomePage";
-import ProfilePage from "../pages/ProfilePage";
-import BrandPage from "../pages/BrandPage";
-import ClaimedPage from "../pages/ClaimedPage";
+import NotFoundPage from '../pages/NotFoundPage';
+import VotePage from '../pages/VotePage';
+import HomePage from '../pages/HomePage';
+import WelcomePage from '../pages/WelcomePage';
+import ProfilePage from '../pages/ProfilePage';
+import BrandPage from '../pages/BrandPage';
+import ClaimedPage from '../pages/ClaimedPage';
 
 // Providers  
-import { AppProvider } from "../shared/providers/AppProvider";
-import PodiumPage from "@/pages/PodiumPage";
-import LeaderboardPage from "@/pages/LeaderboardPage";
-import RankingPage from "@/pages/RankingPage";
-import LoginPage from "@/pages/LoginPage";
-import AdminPage from "@/pages/AdminPage";
-import AirdropPage from "@/pages/AirdropPage";
-import StakePage from "@/pages/StakePage";
+import { AppProvider } from '../shared/providers/AppProvider';
+import PodiumPage from '@/pages/PodiumPage';
+import LeaderboardPage from '@/pages/LeaderboardPage';
+import RankingPage from '@/pages/RankingPage';
+import LoginPage from '@/pages/LoginPage';
+import AdminPage from '@/pages/AdminPage';
+import AirdropPage from '@/pages/AirdropPage';
+import StakePage from '@/pages/StakePage';
 
 /**
  * Router configuration for Farcaster miniapp.
@@ -29,61 +29,61 @@ import StakePage from "@/pages/StakePage";
  */
 export const router = createBrowserRouter([
   {
-    path: "/",
+    path: '/',
     element: <AppProvider />,
     children: [
       {
-        path: "/",
+        path: '/',
         element: <HomePage />,
         children: [
-          { path: "top", element: <HomePage /> },
-          { path: "new", element: <HomePage /> },
-          { path: "all", element: <HomePage /> },
+          { path: 'top', element: <HomePage /> },
+          { path: 'new', element: <HomePage /> },
+          { path: 'all', element: <HomePage /> },
         ],
       },
       {
-        path: "/profile",
+        path: '/profile',
         element: <ProfilePage />,
         children: [
-          { path: "", element: <ProfilePage /> },
-          { path: "power", element: <ProfilePage /> },
-          { path: "ranks", element: <ProfilePage /> },
-          { path: "podiums", element: <ProfilePage /> },
+          { path: '', element: <ProfilePage /> },
+          { path: 'power', element: <ProfilePage /> },
+          { path: 'ranks', element: <ProfilePage /> },
+          { path: 'podiums', element: <ProfilePage /> },
         ],
       },
       {
-        path: "/brand/:id",
+        path: '/brand/:id',
         element: <BrandPage />,
       },
-      { path: "/welcome", element: <WelcomePage /> },
-      { path: "/vote/:unixDate?", element: <VotePage /> },
-      { path: "/podium", element: <PodiumPage /> },
-      { path: "/claimed", element: <ClaimedPage /> },
+      { path: '/welcome', element: <WelcomePage /> },
+      { path: '/vote/:unixDate?', element: <VotePage /> },
+      { path: '/podium', element: <PodiumPage /> },
+      { path: '/claimed', element: <ClaimedPage /> },
       {
-        path: "/leaderboard",
+        path: '/leaderboard',
         element: <LeaderboardPage />,
         children: [
-          { path: "", element: <LeaderboardPage /> },
-          { path: "s1", element: <LeaderboardPage /> },
-          { path: "s2", element: <LeaderboardPage /> },
+          { path: '', element: <LeaderboardPage /> },
+          { path: 's1', element: <LeaderboardPage /> },
+          { path: 's2', element: <LeaderboardPage /> },
         ],
       },
       {
-        path: "/ranking",
+        path: '/ranking',
         element: <RankingPage />,
         children: [
-          { path: "", element: <RankingPage /> },
-          { path: "new", element: <RankingPage /> },
-          { path: "all", element: <RankingPage /> },
+          { path: '', element: <RankingPage /> },
+          { path: 'new', element: <RankingPage /> },
+          { path: 'all', element: <RankingPage /> },
         ],
       },
-      { path: "/login", element: <LoginPage /> },
-      { path: "/airdrop", element: <AirdropPage /> },
-      { path: "/airdrop/:fid", element: <AirdropPage /> },
-      { path: "/claim-airdrop", element: <AirdropPage /> },
-      { path: "/stake", element: <StakePage /> },
-      { path: "*", element: <NotFoundPage /> },
-      { path: "/admin", element: <AdminPage /> },
+      { path: '/login', element: <LoginPage /> },
+      { path: '/airdrop', element: <AirdropPage /> },
+      { path: '/airdrop/:fid', element: <AirdropPage /> },
+      { path: '/claim-airdrop', element: <AirdropPage /> },
+      { path: '/stake', element: <StakePage /> },
+      { path: '*', element: <NotFoundPage /> },
+      { path: '/admin', element: <AdminPage /> },
     ],
   },
 ]);

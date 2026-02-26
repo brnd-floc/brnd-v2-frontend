@@ -1,4 +1,4 @@
-import { ShareFeedback } from "./ShareFeedback";
+import { ShareFeedback } from './ShareFeedback';
 
 type ShareStatusPanelProps = {
   isFarcasterClient: boolean | null;

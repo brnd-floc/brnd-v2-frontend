@@ -1,8 +1,8 @@
 // Components
-import BrandsList from "@/components/BrandsList";
+import BrandsList from '@/components/BrandsList';
 
 // StyleSheet
-import styles from "./NewRankings.module.scss";
+import styles from './NewRankings.module.scss';
 
 function NewRankings() {
   return (
@@ -10,7 +10,7 @@ function NewRankings() {
       <BrandsList
         isFinderEnabled={false}
         config={{
-          order: "new",
+          order: 'new',
           limit: 50,
         }}
       />

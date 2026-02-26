@@ -1,34 +1,34 @@
-import { useCallback, useState, useEffect, useRef } from "react";
+import { useCallback, useState, useEffect, useRef } from 'react';
 
 // Components
-import Podium from "@/components/Podium";
-import Typography from "@/components/Typography";
+import Podium from '@/components/Podium';
+import Typography from '@/components/Typography';
 
-import { useAccount, useReadContract } from "wagmi";
+import { useAccount, useReadContract } from 'wagmi';
 import {
   BRND_SEASON_2_CONFIG,
   BRND_SEASON_2_CONFIG_ABI,
-} from "@/config/contracts";
+} from '@/config/contracts';
 
 // Hooks
-import { useStoriesInMotion } from "@/shared/hooks/contract/useStoriesInMotion";
-import { useAuth } from "@/shared/hooks/auth";
+import { useStoriesInMotion } from '@/shared/hooks/contract/useStoriesInMotion';
+import { useAuth } from '@/shared/hooks/auth';
 
 // Types
-import { VotingViewProps } from "../../types";
+import { VotingViewProps } from '../../types';
 
 // StyleSheet
-import styles from "./AlreadySharedView.module.scss";
+import styles from './AlreadySharedView.module.scss';
 
 // Assets
-import Logo from "@/assets/images/logo.svg";
-import { getMiniAppClientFid } from "@/shared/utils/farcasterActions";
-import { triggerNotificationHaptic } from "@/shared/utils/haptics";
-import { logFeatureError } from "@/shared/utils/logger";
+import Logo from '@/assets/images/logo.svg';
+import { getMiniAppClientFid } from '@/shared/utils/farcasterActions';
+import { triggerNotificationHaptic } from '@/shared/utils/haptics';
+import { logFeatureError } from '@/shared/utils/logger';
 import {
   isAbortLikeError,
   isSupersededOperationError,
-} from "@/shared/hooks/contract/useStoriesInMotion.public";
+} from '@/shared/hooks/contract/useStoriesInMotion.public';
 import {
   getAlreadySharedClaimState,
   getAlreadySharedErrorMessage,
@@ -36,10 +36,10 @@ import {
   getAlreadySharedHasClaimed,
   getAlreadySharedVisibilityState,
   shouldRenderAlreadySharedLoadingState,
-} from "./viewModel";
-import { AlreadySharedStatusPanel } from "./AlreadySharedStatusPanel";
-import { AlreadySharedClaimAction } from "./AlreadySharedClaimAction";
-import { AlreadySharedWalletInfo } from "./AlreadySharedWalletInfo";
+} from './viewModel';
+import { AlreadySharedStatusPanel } from './AlreadySharedStatusPanel';
+import { AlreadySharedClaimAction } from './AlreadySharedClaimAction';
+import { AlreadySharedWalletInfo } from './AlreadySharedWalletInfo';
 
 interface AlreadySharedViewProps extends VotingViewProps {}
 
@@ -57,7 +57,7 @@ export default function AlreadySharedView({
   const { data: authorizedWallets } = useReadContract({
     address: BRND_SEASON_2_CONFIG.CONTRACT,
     abi: BRND_SEASON_2_CONFIG_ABI,
-    functionName: "getUserWallets",
+    functionName: 'getUserWallets',
     args: userFid ? [userFid] : undefined,
     query: {
       enabled: !!userFid,
@@ -80,14 +80,14 @@ export default function AlreadySharedView({
     undefined, // onVoteSuccess
     // onClaimSuccess
     async (txData) => {
-      triggerNotificationHaptic("success");
+      triggerNotificationHaptic('success');
 
       const claimTxHash = txData?.txHash;
       if (!claimTxHash) {
         logFeatureError({
-          feature: "already_shared_view",
-          action: "claim_success",
-          error: "No transaction hash in claim success data",
+          feature: 'already_shared_view',
+          action: 'claim_success',
+          error: 'No transaction hash in claim success data',
         });
         setIsClaiming(false);
         setIsLoadingClaimData(false);
@@ -123,7 +123,7 @@ export default function AlreadySharedView({
         },
         contextualTransaction: {
           transactionHash: claimTxHash,
-          transactionType: "claim",
+          transactionType: 'claim',
           rewardAmount: rewardAmount,
           castHash:
             castHash || authData?.todaysVoteStatus?.castHash || undefined,
@@ -236,11 +236,11 @@ export default function AlreadySharedView({
         }
         const errorMessage = getAlreadySharedErrorMessage(
           error,
-          "Failed to claim reward. Please try again."
+          'Failed to claim reward. Please try again.'
         );
         logFeatureError({
-          feature: "already_shared_view",
-          action: "claim_reward",
+          feature: 'already_shared_view',
+          action: 'claim_reward',
           error,
         });
         applyClaimErrorIfActive(operationId, errorMessage);
@@ -250,7 +250,7 @@ export default function AlreadySharedView({
 
     // Otherwise, fetch claim signature first
     if (!currentVoteId) {
-      setClaimError("Vote ID is required");
+      setClaimError('Vote ID is required');
       return;
     }
 
@@ -262,7 +262,7 @@ export default function AlreadySharedView({
 
       const result = await getClaimSignatureForSharedVote(
         currentVoteId,
-        transactionHash || "",
+        transactionHash || '',
         rewardRecipient,
         clientFid
       );
@@ -272,12 +272,12 @@ export default function AlreadySharedView({
           return;
         }
         const recipient = rewardRecipient || connectedWallet!;
-          const newClaimData = {
-            castHash: result.castHash || "",
-            claimSignature: result.claimSignature,
-            day: result.day,
-            recipientAddress: recipient,
-          };
+        const newClaimData = {
+          castHash: result.castHash || '',
+          claimSignature: result.claimSignature,
+          day: result.day,
+          recipientAddress: recipient,
+        };
         setClaimData(newClaimData);
         setIsLoadingClaimData(false);
 
@@ -290,7 +290,7 @@ export default function AlreadySharedView({
           newClaimData.recipientAddress
         );
       } else {
-        throw new Error("Cannot claim - already claimed or not eligible");
+        throw new Error('Cannot claim - already claimed or not eligible');
       }
     } catch (error: unknown) {
       if (isAbortLikeError(error) || isSupersededOperationError(error)) {
@@ -299,11 +299,11 @@ export default function AlreadySharedView({
       }
       const errorMessage = getAlreadySharedErrorMessage(
         error,
-        "Failed to get claim signature. Please try again."
+        'Failed to get claim signature. Please try again.'
       );
       logFeatureError({
-        feature: "already_shared_view",
-        action: "get_claim_signature",
+        feature: 'already_shared_view',
+        action: 'get_claim_signature',
         error,
       });
       applyClaimErrorIfActive(operationId, errorMessage);
@@ -375,8 +375,8 @@ export default function AlreadySharedView({
         <Typography
           size={18}
           lineHeight={24}
-          variant={"druk"}
-          weight={"wide"}
+          variant={'druk'}
+          weight={'wide'}
           className={styles.title}
         >
           Already voted and shared!
@@ -389,7 +389,7 @@ export default function AlreadySharedView({
         <div className={styles.podium}>
           <Podium
             isAnimated={false}
-            variant={"readonly"}
+            variant={'readonly'}
             initial={currentBrands}
           />
 

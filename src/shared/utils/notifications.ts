@@ -1,6 +1,6 @@
-import { NotificationSettings } from "@/shared/components/NotificationPrompt/types";
+import { NotificationSettings } from '@/shared/components/NotificationPrompt/types';
 
-const STORAGE_KEY_PREFIX = "brnd_notification_";
+const STORAGE_KEY_PREFIX = 'brnd_notification_';
 const PROMPT_COOLDOWN_DAYS = 3; // Don't prompt again for 3 days if dismissed
 
 /**
@@ -14,17 +14,17 @@ export const getNotificationSettings = (
     if (!stored) {
       return {
         hasBeenPrompted: false,
-        lastPromptDate: "",
+        lastPromptDate: '',
         isEnabled: false,
       };
     }
 
     return JSON.parse(stored);
   } catch (error) {
-    console.error("Error reading notification settings:", error);
+    console.error('Error reading notification settings:', error);
     return {
       hasBeenPrompted: false,
-      lastPromptDate: "",
+      lastPromptDate: '',
       isEnabled: false,
     };
   }
@@ -43,7 +43,7 @@ export const saveNotificationSettings = (
       JSON.stringify(settings)
     );
   } catch (error) {
-    console.error("Error saving notification settings:", error);
+    console.error('Error saving notification settings:', error);
   }
 };
 

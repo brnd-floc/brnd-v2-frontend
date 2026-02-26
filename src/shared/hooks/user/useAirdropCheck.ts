@@ -1,7 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery } from '@tanstack/react-query';
 
 // Services
-import { checkUserAirdrop, AirdropCheckResponse } from "@/services/user";
+import { checkUserAirdrop, AirdropCheckResponse } from '@/services/user';
 
 interface UseAirdropCheckOptions {
   enabled?: boolean;
@@ -18,7 +18,7 @@ export const useAirdropCheck = (options: UseAirdropCheckOptions = {}) => {
   const { enabled = true } = options;
 
   return useQuery<AirdropCheckResponse, Error>({
-    queryKey: ["airdrop", "check"],
+    queryKey: ['airdrop', 'check'],
     queryFn: checkUserAirdrop,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 15 * 60 * 1000, // 15 minutes

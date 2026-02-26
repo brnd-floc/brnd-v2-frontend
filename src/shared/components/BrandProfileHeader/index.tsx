@@ -1,21 +1,21 @@
 // src/shared/components/BrandProfileHeader/index.tsx
 
-import React, { useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import sdk from "@farcaster/miniapp-sdk";
+import React, { useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import sdk from '@farcaster/miniapp-sdk';
 
 // StyleSheet
-import styles from "./BrandProfileHeader.module.scss";
+import styles from './BrandProfileHeader.module.scss';
 
 // Components
-import Typography from "@/components/Typography";
-import IconButton from "@/components/IconButton";
+import Typography from '@/components/Typography';
+import IconButton from '@/components/IconButton';
 
 // Assets
-import ExportIcon from "@/assets/icons/export-icon.svg?react";
+import ExportIcon from '@/assets/icons/export-icon.svg?react';
 
 // Utils
-import { shortenNumber } from "@/utils/number";
+import { shortenNumber } from '@/utils/number';
 
 interface BrandProfileHeaderProps {
   brand: {
@@ -53,13 +53,13 @@ const BrandProfileHeader: React.FC<BrandProfileHeaderProps> = ({
       if (brand?.profile) {
         const profile = brand.profile;
         // If profile starts with "@", remove it; otherwise add it
-        return profile.startsWith("@") ? profile : `@${profile}`;
+        return profile.startsWith('@') ? profile : `@${profile}`;
       }
 
       if (brand?.channel) {
         const channel = brand.channel;
         // If channel starts with "/", keep it; otherwise add it
-        return channel.startsWith("/") ? channel : `/${channel}`;
+        return channel.startsWith('/') ? channel : `/${channel}`;
       }
 
       return brand?.name;
@@ -177,16 +177,16 @@ const BrandProfileHeader: React.FC<BrandProfileHeaderProps> = ({
               lineHeight={12}
               className={styles.trendText}
             >
-              7d{" "}
+              7d{' '}
               {voteTrend7d > 0
                 ? `+${shortenNumber(voteTrend7d)}`
                 : voteTrend7d < 0
                   ? shortenNumber(voteTrend7d)
-                  : "0"}
+                  : '0'}
             </Typography>
             <span
               className={`${styles.trendArrow} ${
-                voteTrend7d > 0 ? styles.arrowUp : ""
+                voteTrend7d > 0 ? styles.arrowUp : ''
               }`}
             >
               <svg

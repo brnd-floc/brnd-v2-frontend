@@ -1,15 +1,15 @@
 // Dependencies
-import React, { createContext, useContext, useCallback, useMemo } from "react";
-import { useQueries, useQueryClient } from "@tanstack/react-query";
+import React, { createContext, useContext, useCallback, useMemo } from 'react';
+import { useQueries, useQueryClient } from '@tanstack/react-query';
 
 // Services
-import { getBrandList, BrandTimePeriod } from "@/services/brands";
+import { getBrandList, BrandTimePeriod } from '@/services/brands';
 
 // Types
-import { Brand } from "@/shared/hooks/brands/types";
+import { Brand } from '@/shared/hooks/brands/types';
 
 // Hooks
-import { useAuth } from "@/shared/hooks/auth/useAuth";
+import { useAuth } from '@/shared/hooks/auth/useAuth';
 
 interface BrandRankingsData {
   day: Brand[];
@@ -38,13 +38,13 @@ export function BrandRankingsProvider({ children }: { children: React.ReactNode 
   const queryClient = useQueryClient();
   const { isReady } = useAuth();
 
-  const periods: BrandTimePeriod[] = ["day", "week", "month", "all"];
+  const periods: BrandTimePeriod[] = ['day', 'week', 'month', 'all'];
 
   // Use useQueries to fetch all periods simultaneously with proper loading states
   const queries = useQueries({
     queries: periods.map((period) => ({
-      queryKey: ["brands", "", 1, 50, "top", period],
-      queryFn: () => getBrandList("", "1", "50", "top", period),
+      queryKey: ['brands', '', 1, 50, 'top', period],
+      queryFn: () => getBrandList('', '1', '50', 'top', period),
       enabled: isReady,
       staleTime: 24 * 60 * 60 * 1000, // 24 hours - only fetch once per day
       gcTime: 24 * 60 * 60 * 1000, // Keep in cache for 24 hours
@@ -70,7 +70,7 @@ export function BrandRankingsProvider({ children }: { children: React.ReactNode 
   // Optimistically update brand rankings when user votes
   const updateBrandOptimistically = useCallback(
     (brandId: number, period: BrandTimePeriod, pointsToAdd: number) => {
-      const queryKey = ["brands", "", 1, 50, "top", period];
+      const queryKey = ['brands', '', 1, 50, 'top', period];
       
       queryClient.setQueryData(queryKey, (oldData: { brands: Brand[]; count: number } | undefined) => {
         if (!oldData) return oldData;
@@ -81,16 +81,16 @@ export function BrandRankingsProvider({ children }: { children: React.ReactNode 
             const updates: Partial<Brand> = { ...brand };
             
             switch (period) {
-              case "day":
+              case 'day':
                 updates.scoreDay = brand.scoreDay + pointsToAdd;
                 break;
-              case "week":
+              case 'week':
                 updates.scoreWeek = brand.scoreWeek + pointsToAdd;
                 break;
-              case "month":
+              case 'month':
                 updates.scoreMonth = brand.scoreMonth + pointsToAdd;
                 break;
-              case "all":
+              case 'all':
                 updates.score = brand.score + pointsToAdd;
                 break;
             }
@@ -103,13 +103,13 @@ export function BrandRankingsProvider({ children }: { children: React.ReactNode 
         // Re-sort by the appropriate score field
         updatedBrands.sort((a, b) => {
           switch (period) {
-            case "day":
+            case 'day':
               return b.scoreDay - a.scoreDay;
-            case "week":
+            case 'week':
               return b.scoreWeek - a.scoreWeek;
-            case "month":
+            case 'month':
               return b.scoreMonth - a.scoreMonth;
-            case "all":
+            case 'all':
               return b.score - a.score;
             default:
               return b.score - a.score;
@@ -129,7 +129,7 @@ export function BrandRankingsProvider({ children }: { children: React.ReactNode 
   const refreshData = useCallback(() => {
     periods.forEach((period) => {
       queryClient.invalidateQueries({
-        queryKey: ["brands", "", 1, 50, "top", period],
+        queryKey: ['brands', '', 1, 50, 'top', period],
       });
     });
   }, [queryClient, periods]);

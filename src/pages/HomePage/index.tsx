@@ -1,23 +1,23 @@
 // Dependencies
-import React, { useState } from "react";
+import React, { useState } from 'react';
 
 // StyleSheet
-import styles from "./HomePage.module.scss";
+import styles from './HomePage.module.scss';
 
 // Components
-import AppLayout from "../../shared/layouts/AppLayout";
-import AirdropBanner from "@/components/AirdropBanner";
+import AppLayout from '../../shared/layouts/AppLayout';
+import AirdropBanner from '@/components/AirdropBanner';
 
 // Hocs
-import withProtectionRoute from "@/hocs/withProtectionRoute";
-import BrandHeader from "@/shared/components/BrandHeader";
-import { BrandTimePeriod } from "@/shared/components/TimePeriodFilter";
-import BrandOfTheDay from "./partials/BrandOfTheDay";
-import PeriodBasedBrandsList from "./partials/PeriodBasedBrandsList";
-import CustomLinksFrame from "@/shared/components/CustomLinksFrame";
+import withProtectionRoute from '@/hocs/withProtectionRoute';
+import BrandHeader from '@/shared/components/BrandHeader';
+import { BrandTimePeriod } from '@/shared/components/TimePeriodFilter';
+import BrandOfTheDay from './partials/BrandOfTheDay';
+import PeriodBasedBrandsList from './partials/PeriodBasedBrandsList';
+import CustomLinksFrame from '@/shared/components/CustomLinksFrame';
 
 function HomePage(): React.ReactNode {
-  const [selectedPeriod, setSelectedPeriod] = useState<BrandTimePeriod>("all");
+  const [selectedPeriod, setSelectedPeriod] = useState<BrandTimePeriod>('all');
 
   return (
     <AppLayout>
@@ -47,4 +47,4 @@ function HomePage(): React.ReactNode {
   );
 }
 
-export default withProtectionRoute(HomePage, "only-connected");
+export default withProtectionRoute(HomePage, 'only-connected');

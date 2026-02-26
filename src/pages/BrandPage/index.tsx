@@ -1,31 +1,31 @@
 // Dependencies
-import { useCallback, useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useCallback, useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 
 // StyleSheet
-import styles from "./BrandPage.module.scss";
+import styles from './BrandPage.module.scss';
 
 // Components
-import AppLayout from "@/shared/layouts/AppLayout";
-import Typography from "@/components/Typography";
-import Button from "@/components/Button";
-import LoaderIndicator from "@/components/LoaderIndicator";
-import UserProfileGridItem from "@/shared/components/UserProfileGridItem";
-import BrandProfileHeader from "@/shared/components/BrandProfileHeader";
+import AppLayout from '@/shared/layouts/AppLayout';
+import Typography from '@/components/Typography';
+import Button from '@/components/Button';
+import LoaderIndicator from '@/components/LoaderIndicator';
+import UserProfileGridItem from '@/shared/components/UserProfileGridItem';
+import BrandProfileHeader from '@/shared/components/BrandProfileHeader';
 
 // Assets
-import FavoriteIcon from "@/assets/icons/favorite-icon.svg?react";
+import FavoriteIcon from '@/assets/icons/favorite-icon.svg?react';
 
 // Hocs
-import withProtectionRoute from "@/hocs/withProtectionRoute";
+import withProtectionRoute from '@/hocs/withProtectionRoute';
 
 // Hooks
-import { useBrand } from "@/hooks/brands";
-import { useAuth } from "@/hooks/auth";
+import { useBrand } from '@/hooks/brands';
+import { useAuth } from '@/hooks/auth';
 
 // Utils
-import { shortenNumber } from "@/utils/number";
-import { RiCheckLine, RiClipboardLine } from "react-icons/ri";
+import { shortenNumber } from '@/utils/number';
+import { RiCheckLine, RiClipboardLine } from 'react-icons/ri';
 
 function BrandPage() {
   const navigate = useNavigate();
@@ -74,10 +74,10 @@ function BrandPage() {
   }, [data?.brand?.contractAddress]);
 
   const guardianHandle = data?.brand?.guardianHandle
-    ? data.brand.guardianHandle.startsWith("@")
+    ? data.brand.guardianHandle.startsWith('@')
       ? data.brand.guardianHandle
       : `@${data.brand.guardianHandle}`
-    : "";
+    : '';
   const guardianFid = data?.brand?.guardianFid ?? data?.brand?.onChainFid;
 
   return (
@@ -85,7 +85,7 @@ function BrandPage() {
       <div className={styles.body}>
         {isLoading || !data || !data.brand?.name ? (
           <div className={styles.loadingContainer}>
-            <LoaderIndicator variant={"fullscreen"} />
+            <LoaderIndicator variant={'fullscreen'} />
           </div>
         ) : (
           <>
@@ -108,7 +108,7 @@ function BrandPage() {
 
                 {/* Profile or Channel */}
                 <UserProfileGridItem
-                  title={data.brand.profile ? "PROFILE" : "CHANNEL"}
+                  title={data.brand.profile ? 'PROFILE' : 'CHANNEL'}
                 >
                   <div className={styles.channelContent}>
                     <Typography
@@ -120,14 +120,14 @@ function BrandPage() {
                       {data.brand.profile ? (
                         <a
                           href={`https://warpcast.com/${
-                            data.brand.profile.startsWith("@")
+                            data.brand.profile.startsWith('@')
                               ? data.brand.profile.slice(1)
                               : data.brand.profile
                           }`}
                           target="_blank"
                           className={styles.channelLink}
                         >
-                          {data.brand.profile.startsWith("@")
+                          {data.brand.profile.startsWith('@')
                             ? data.brand.profile
                             : `@${data.brand.profile}`}
                         </a>
@@ -139,7 +139,7 @@ function BrandPage() {
                           target="_blank"
                           className={styles.channelLink}
                         >
-                          {data.brand.channel || "/no-channel"}
+                          {data.brand.channel || '/no-channel'}
                         </a>
                       )}
                     </Typography>
@@ -149,7 +149,7 @@ function BrandPage() {
                 {/* Ranking */}
                 <UserProfileGridItem
                   title="RANKING"
-                  value={`#${data.brand.currentRanking || "N/A"}`}
+                  value={`#${data.brand.currentRanking || 'N/A'}`}
                   subtext="GLOBAL"
                 />
 
@@ -158,7 +158,7 @@ function BrandPage() {
                   <UserProfileGridItem
                     title="CATEGORY"
                     subtext={
-                      data.brand.category?.name?.toUpperCase() || "TOKEN"
+                      data.brand.category?.name?.toUpperCase() || 'TOKEN'
                     }
                     // value={data.brand.category?.name || "No category"}
                   />
@@ -170,7 +170,7 @@ function BrandPage() {
                     onClick={() => {
                       window.open(
                         `https://warpcast.com/~/profiles/${guardianFid}`,
-                        "_blank",
+                        '_blank',
                       );
                     }}
                     variant="primary"
@@ -253,7 +253,7 @@ function BrandPage() {
                         lineHeight={20}
                         className={styles.tickerValue}
                       >
-                        {data.brand.ticker || "NO TICKER"}
+                        {data.brand.ticker || 'NO TICKER'}
                       </Typography>
                     </div>
                   </UserProfileGridItem>
@@ -275,7 +275,7 @@ function BrandPage() {
                       lineHeight={18}
                       className={styles.descriptionText}
                     >
-                      {data.brand.description || "No description available."}
+                      {data.brand.description || 'No description available.'}
                     </Typography>
                     {data.brand.url && (
                       <Typography
@@ -290,7 +290,7 @@ function BrandPage() {
                           target="_blank"
                           rel="noopener noreferrer"
                         >
-                          {data.brand.url.replace(/^https?:\/\//, "")}
+                          {data.brand.url.replace(/^https?:\/\//, '')}
                         </a>
                       </Typography>
                     )}
@@ -306,11 +306,11 @@ function BrandPage() {
         {isFooterVisible && (
           <div className={styles.footer}>
             <Button
-              caption={"Add To Podium"}
+              caption={'Add To Podium'}
               variant="primary"
               iconLeft={<FavoriteIcon />}
               onClick={() =>
-                navigate("/vote", {
+                navigate('/vote', {
                   state: { preselectedBrand: data?.brand },
                 })
               }
@@ -328,4 +328,4 @@ function BrandPage() {
   );
 }
 
-export default withProtectionRoute(BrandPage, "always");
+export default withProtectionRoute(BrandPage, 'always');

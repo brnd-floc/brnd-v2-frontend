@@ -1,26 +1,26 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from 'react';
 
 // Components
-import Typography from "@/components/Typography";
-import FeedIndividualPodium from "@/shared/components/FeedIndividualPodium";
-import LoaderIndicator from "@/shared/components/LoaderIndicator";
+import Typography from '@/components/Typography';
+import FeedIndividualPodium from '@/shared/components/FeedIndividualPodium';
+import LoaderIndicator from '@/shared/components/LoaderIndicator';
 
 // StyleSheet
-import styles from "./PublicPodiumsFeed.module.scss";
+import styles from './PublicPodiumsFeed.module.scss';
 
 // Hooks
-import { useRecentPodiums } from "@/hooks/brands";
-import { usePodiumCollectibles } from "@/shared/hooks/contract/usePodiumCollectibles";
-import { useAuth } from "@/shared/hooks/auth";
-import { useModal } from "@/shared/hooks/ui/useModal";
-import { ModalsIds } from "@/shared/providers/ModalProvider/types";
+import { useRecentPodiums } from '@/hooks/brands';
+import { usePodiumCollectibles } from '@/shared/hooks/contract/usePodiumCollectibles';
+import { useAuth } from '@/shared/hooks/auth';
+import { useModal } from '@/shared/hooks/ui/useModal';
+import { ModalsIds } from '@/shared/providers/ModalProvider/types';
 
 // Utils
-import { sdk } from "@farcaster/miniapp-sdk";
+import { sdk } from '@farcaster/miniapp-sdk';
 
 // Types
-import { CollectibleData } from "@/shared/types/collectibles";
-import { MintingStep } from "@/shared/components/IndividualPodium";
+import { CollectibleData } from '@/shared/types/collectibles';
+import { MintingStep } from '@/shared/components/IndividualPodium';
 
 function PublicPodiumsFeed() {
   const { openModal } = useModal();
@@ -33,7 +33,7 @@ function PublicPodiumsFeed() {
   );
   // Track optimistic updates for successful transactions with their type
   const [successfulPodiums, setSuccessfulPodiums] = useState<
-    Map<string, "mint" | "buy">
+    Map<string, 'mint' | 'buy'>
   >(new Map());
   const limit = 20;
 
@@ -61,13 +61,13 @@ function PublicPodiumsFeed() {
   } = usePodiumCollectibles(
     (txData) => {
       // Claim success callback
-      console.log("✅ Podium claimed successfully!", txData);
+      console.log('✅ Podium claimed successfully!', txData);
       // Provide haptic feedback for success
-      sdk.haptics.notificationOccurred("success");
+      sdk.haptics.notificationOccurred('success');
       // Optimistically mark this podium as minted
       if (processingPodiumId) {
         setSuccessfulPodiums((prev) =>
-          new Map(prev).set(processingPodiumId, "mint"),
+          new Map(prev).set(processingPodiumId, 'mint'),
         );
       }
       setProcessingPodiumId(null);
@@ -76,13 +76,13 @@ function PublicPodiumsFeed() {
     },
     (txData) => {
       // Buy success callback
-      console.log("✅ Podium bought successfully!", txData);
+      console.log('✅ Podium bought successfully!', txData);
       // Provide haptic feedback for success
-      sdk.haptics.notificationOccurred("success");
+      sdk.haptics.notificationOccurred('success');
       // Optimistically mark this podium as bought
       if (processingPodiumId) {
         setSuccessfulPodiums((prev) =>
-          new Map(prev).set(processingPodiumId, "buy"),
+          new Map(prev).set(processingPodiumId, 'buy'),
         );
       }
       setProcessingPodiumId(null);
@@ -121,12 +121,12 @@ function PublicPodiumsFeed() {
 
   // Calculate current minting step based on hook states
   const getCurrentMintingStep = (): MintingStep => {
-    if (isFetchingSignature) return "fetching_signature";
-    if (isApproving && !isConfirming) return "approving";
-    if (isApproving && isConfirming) return "confirming_approval";
-    if (isClaimingPodium && !isConfirming) return "minting";
-    if (isBuyingPodium && !isConfirming) return "buying";
-    if (isConfirming) return "confirming";
+    if (isFetchingSignature) return 'fetching_signature';
+    if (isApproving && !isConfirming) return 'approving';
+    if (isApproving && isConfirming) return 'confirming_approval';
+    if (isClaimingPodium && !isConfirming) return 'minting';
+    if (isBuyingPodium && !isConfirming) return 'buying';
+    if (isConfirming) return 'confirming';
     return null;
   };
 
@@ -135,12 +135,12 @@ function PublicPodiumsFeed() {
   // Show error modal when contract error occurs
   useEffect(() => {
     if (contractError) {
-      sdk.haptics.notificationOccurred("error");
+      sdk.haptics.notificationOccurred('error');
       openModal(ModalsIds.TRANSACTION_ERROR, {
         error: contractError,
         route: window.location.pathname,
         timestamp: new Date().toISOString(),
-        transactionType: "Podium Transaction (Feed)",
+        transactionType: 'Podium Transaction (Feed)',
       });
       setProcessingPodiumId(null);
     }
@@ -159,7 +159,7 @@ function PublicPodiumsFeed() {
         // For mint: clear when isCollectible becomes true
         // For buy: clear when the owner matches the current user
         const shouldClear =
-          successType === "mint"
+          successType === 'mint'
             ? podium.isCollectible
             : podium.collectibleOwnerFid === userFid;
 
@@ -239,7 +239,7 @@ function PublicPodiumsFeed() {
         setProcessingPodiumId(podiumId);
         await claimPodium(brandIds);
       } catch (error) {
-        console.error("Failed to mint podium:", error);
+        console.error('Failed to mint podium:', error);
         setProcessingPodiumId(null);
       }
     },
@@ -253,7 +253,7 @@ function PublicPodiumsFeed() {
         setProcessingPodiumId(podiumId);
         await buyPodium(tokenId);
       } catch (error) {
-        console.error("Failed to buy podium:", error);
+        console.error('Failed to buy podium:', error);
         setProcessingPodiumId(null);
       }
     },
@@ -265,14 +265,14 @@ function PublicPodiumsFeed() {
     return {
       isCollectible: podium.isCollectible ?? false,
       tokenId: podium.collectibleTokenId ?? null,
-      price: podium.collectiblePrice || "1000000000000000000000000", // 1M BRND default
+      price: podium.collectiblePrice || '1000000000000000000000000', // 1M BRND default
       claimCount: podium.collectibleClaimCount ?? 0,
       genesisCreatorFid: podium.collectibleGenesisCreatorFid ?? null,
       genesisCreatorUsername: podium.collectibleGenesisCreatorUsername ?? null,
       ownerFid: podium.collectibleOwnerFid ?? null,
       ownerUsername: podium.collectibleOwnerUsername ?? null,
       ownerPhotoUrl: podium.collectibleOwner?.photoUrl ?? null,
-      totalFeesEarned: podium.collectibleTotalFeesEarned ?? "0",
+      totalFeesEarned: podium.collectibleTotalFeesEarned ?? '0',
     };
   }, []);
 
@@ -286,10 +286,10 @@ function PublicPodiumsFeed() {
   }, [data?.data]);
 
   useEffect(() => {
-    document.body.style.overflow = "hidden";
+    document.body.style.overflow = 'hidden';
 
     return () => {
-      document.body.style.overflow = "auto";
+      document.body.style.overflow = 'auto';
     };
   }, []);
 
@@ -300,7 +300,7 @@ function PublicPodiumsFeed() {
   if (isLoading && !isInitialized) {
     return (
       <div className={styles.layout}>
-        <LoaderIndicator size={30} variant={"fullscreen"} />
+        <LoaderIndicator size={30} variant={'fullscreen'} />
       </div>
     );
   }

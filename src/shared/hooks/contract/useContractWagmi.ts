@@ -1,18 +1,18 @@
 // src/shared/hooks/contract/useContractWagmi.ts
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useState, useEffect } from 'react';
 import {
   useAccount,
   useWriteContract,
   useWaitForTransactionReceipt,
   useReadContract,
-} from "wagmi";
-import { parseUnits, formatUnits } from "viem";
+} from 'wagmi';
+import { parseUnits, formatUnits } from 'viem';
 
 import {
   BRND_STAKING_CONFIG,
   ERC20_ABI,
   ERC4626_ABI,
-} from "@/config/contracts";
+} from '@/config/contracts';
 
 // BRND Staking parameters
 export interface StakeBrndParams {
@@ -64,7 +64,7 @@ export const useContractWagmi = (
     bigint | null
   >(null);
   const [lastOperation, setLastOperation] = useState<
-    "approve" | "deposit" | "withdraw" | null
+    'approve' | 'deposit' | 'withdraw' | null
   >(null);
 
   // BRND wallet balance
@@ -75,7 +75,7 @@ export const useContractWagmi = (
   } = useReadContract({
     address: BRND_STAKING_CONFIG.BRND_TOKEN,
     abi: ERC20_ABI,
-    functionName: "balanceOf",
+    functionName: 'balanceOf',
     args: userAddress ? [userAddress] : undefined,
     query: {
       enabled: !!userAddress,
@@ -94,7 +94,7 @@ export const useContractWagmi = (
   } = useReadContract({
     address: BRND_STAKING_CONFIG.TELLER_VAULT,
     abi: ERC4626_ABI,
-    functionName: "balanceOf",
+    functionName: 'balanceOf',
     args: userAddress ? [userAddress] : undefined,
     query: {
       enabled: !!userAddress,
@@ -113,7 +113,7 @@ export const useContractWagmi = (
   } = useReadContract({
     address: BRND_STAKING_CONFIG.TELLER_VAULT,
     abi: ERC4626_ABI,
-    functionName: "convertToAssets",
+    functionName: 'convertToAssets',
     args: vaultShares ? [vaultShares as bigint] : undefined,
     query: {
       enabled: !!vaultShares,
@@ -132,7 +132,7 @@ export const useContractWagmi = (
   } = useReadContract({
     address: BRND_STAKING_CONFIG.TELLER_VAULT,
     abi: ERC4626_ABI,
-    functionName: "withdrawDelayTimeSeconds",
+    functionName: 'withdrawDelayTimeSeconds',
     query: {
       enabled: !!userAddress,
       refetchInterval: false,
@@ -150,7 +150,7 @@ export const useContractWagmi = (
   } = useReadContract({
     address: BRND_STAKING_CONFIG.TELLER_VAULT,
     abi: ERC4626_ABI,
-    functionName: "getSharesLastTransferredAt",
+    functionName: 'getSharesLastTransferredAt',
     args: userAddress ? [userAddress] : undefined,
     query: {
       enabled: !!userAddress,
@@ -169,7 +169,7 @@ export const useContractWagmi = (
   } = useReadContract({
     address: BRND_STAKING_CONFIG.TELLER_VAULT,
     abi: ERC4626_ABI,
-    functionName: "maxRedeem",
+    functionName: 'maxRedeem',
     args: userAddress ? [userAddress] : undefined,
     query: {
       enabled: !!userAddress,
@@ -211,7 +211,7 @@ export const useContractWagmi = (
     {
       address: BRND_STAKING_CONFIG.BRND_TOKEN,
       abi: ERC20_ABI,
-      functionName: "allowance",
+      functionName: 'allowance',
       args: userAddress
         ? [userAddress, BRND_STAKING_CONFIG.TELLER_VAULT]
         : undefined,
@@ -229,7 +229,7 @@ export const useContractWagmi = (
   const { data: vaultAsset } = useReadContract({
     address: BRND_STAKING_CONFIG.TELLER_VAULT,
     abi: ERC4626_ABI,
-    functionName: "asset",
+    functionName: 'asset',
     query: {
       enabled: !!userAddress,
       refetchInterval: false,
@@ -272,7 +272,7 @@ export const useContractWagmi = (
   }, [getSecondsUntilWithdrawable]);
 
   const formatTimeRemaining = useCallback((seconds: number): string => {
-    if (seconds <= 0) return "";
+    if (seconds <= 0) return '';
     
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
@@ -286,45 +286,45 @@ export const useContractWagmi = (
   // Enhanced error handling
   const parseContractError = (error: any): string => {
     const errorMessage =
-      error?.message || error?.shortMessage || "Unknown error";
+      error?.message || error?.shortMessage || 'Unknown error';
 
     // Parse contract error for user-friendly message
 
     // Check for specific Teller contract errors
-    if (errorMessage.includes("P")) {
-      return "Pool is paused. Please try again later.";
+    if (errorMessage.includes('P')) {
+      return 'Pool is paused. Please try again later.';
     }
-    if (errorMessage.includes("MMCT")) {
-      return "Mismatched collateral token. Wrong token type.";
+    if (errorMessage.includes('MMCT')) {
+      return 'Mismatched collateral token. Wrong token type.';
     }
-    if (errorMessage.includes("LMP")) {
-      return "Liquidity limit exceeded. Pool doesn't have enough liquidity.";
+    if (errorMessage.includes('LMP')) {
+      return 'Liquidity limit exceeded. Pool doesn\'t have enough liquidity.';
     }
-    if (errorMessage.includes("FD")) {
-      return "First deposit restriction. Only owner can make first deposit.";
+    if (errorMessage.includes('FD')) {
+      return 'First deposit restriction. Only owner can make first deposit.';
     }
-    if (errorMessage.includes("IS")) {
-      return "Insufficient shares. Pool activation requirements not met.";
+    if (errorMessage.includes('IS')) {
+      return 'Insufficient shares. Pool activation requirements not met.';
     }
-    if (errorMessage.includes("TB")) {
-      return "Token balance mismatch. Transfer verification failed.";
+    if (errorMessage.includes('TB')) {
+      return 'Token balance mismatch. Transfer verification failed.';
     }
 
     // Generic wallet/transaction errors
     if (
-      errorMessage.includes("User rejected") ||
-      errorMessage.includes("user rejected")
+      errorMessage.includes('User rejected') ||
+      errorMessage.includes('user rejected')
     ) {
-      return "Transaction was cancelled by user.";
+      return 'Transaction was cancelled by user.';
     }
-    if (errorMessage.includes("insufficient funds")) {
-      return "Insufficient funds for transaction gas fees.";
+    if (errorMessage.includes('insufficient funds')) {
+      return 'Insufficient funds for transaction gas fees.';
     }
-    if (errorMessage.includes("exceeds balance")) {
-      return "Insufficient token balance for this transaction.";
+    if (errorMessage.includes('exceeds balance')) {
+      return 'Insufficient token balance for this transaction.';
     }
-    if (errorMessage.includes("execution reverted")) {
-      return "Contract execution failed. The transaction was reverted by the smart contract. Check your inputs and try again.";
+    if (errorMessage.includes('execution reverted')) {
+      return 'Contract execution failed. The transaction was reverted by the smart contract. Check your inputs and try again.';
     }
 
     return `Transaction failed: ${errorMessage}`;
@@ -347,10 +347,10 @@ export const useContractWagmi = (
   useEffect(() => {
     if (writeError) {
       const errorMessage =
-        (writeError as any)?.message || (writeError as any)?.shortMessage || "";
+        (writeError as any)?.message || (writeError as any)?.shortMessage || '';
       if (
-        errorMessage.includes("rejected") ||
-        errorMessage.includes("User rejected")
+        errorMessage.includes('rejected') ||
+        errorMessage.includes('User rejected')
       ) {
         // User rejected transaction - clear operation state
         setLastOperation(null);
@@ -375,12 +375,12 @@ export const useContractWagmi = (
       setError(null);
 
       if (!userAddress) {
-        setError("Wallet not connected");
+        setError('Wallet not connected');
         return;
       }
 
       if (!params.amount || parseFloat(params.amount) <= 0) {
-        setError("Invalid amount");
+        setError('Invalid amount');
         return;
       }
 
@@ -414,12 +414,12 @@ export const useContractWagmi = (
           setLastStakeParams(params);
           setPendingDepositAmount(amountBigInt);
           setNeedsDeposit(true);
-          setLastOperation("approve");
+          setLastOperation('approve');
 
           writeContract({
             address: BRND_STAKING_CONFIG.BRND_TOKEN,
             abi: ERC20_ABI,
-            functionName: "approve",
+            functionName: 'approve',
             args: [BRND_STAKING_CONFIG.TELLER_VAULT, amountBigInt],
             chainId: 8453,
           });
@@ -427,12 +427,12 @@ export const useContractWagmi = (
           // Already approved, deposit directly
 
           setLastStakeParams(params);
-          setLastOperation("deposit");
+          setLastOperation('deposit');
 
           writeContract({
             address: BRND_STAKING_CONFIG.TELLER_VAULT,
             abi: ERC4626_ABI,
-            functionName: "deposit",
+            functionName: 'deposit',
             args: [amountBigInt, userAddress],
             chainId: 8453,
           });
@@ -455,12 +455,12 @@ export const useContractWagmi = (
       setError(null);
 
       if (!userAddress) {
-        setError("Wallet not connected");
+        setError('Wallet not connected');
         return;
       }
 
       if (!params.shares || parseFloat(params.shares) <= 0) {
-        setError("Invalid withdrawal amount");
+        setError('Invalid withdrawal amount');
         return;
       }
 
@@ -482,12 +482,12 @@ export const useContractWagmi = (
         const sharesBigInt = convertBrndToShares(params.shares);
 
         setLastWithdrawParams(params);
-        setLastOperation("withdraw");
+        setLastOperation('withdraw');
 
         writeContract({
           address: BRND_STAKING_CONFIG.TELLER_VAULT,
           abi: ERC4626_ABI,
-          functionName: "redeem",
+          functionName: 'redeem',
           args: [sharesBigInt, userAddress, userAddress],
           chainId: 8453,
         });
@@ -511,7 +511,7 @@ export const useContractWagmi = (
         !needsDeposit ||
         !pendingDepositAmount ||
         !userAddress ||
-        lastOperation !== "approve"
+        lastOperation !== 'approve'
       ) {
         return;
       }
@@ -521,19 +521,19 @@ export const useContractWagmi = (
 
         // Approval confirmed, now deposit
         setNeedsDeposit(false);
-        setLastOperation("deposit");
+        setLastOperation('deposit');
 
         writeContract({
           address: BRND_STAKING_CONFIG.TELLER_VAULT,
           abi: ERC4626_ABI,
-          functionName: "deposit",
+          functionName: 'deposit',
           args: [pendingDepositAmount, userAddress],
           chainId: 8453,
         });
 
         setPendingDepositAmount(null);
       } catch (error: any) {
-        setError("Failed to deposit after approval");
+        setError('Failed to deposit after approval');
         setNeedsDeposit(false);
         setPendingDepositAmount(null);
         setLastOperation(null);
@@ -562,15 +562,15 @@ export const useContractWagmi = (
         !receipt ||
         !lastStakeParams ||
         needsDeposit ||
-        lastOperation !== "deposit"
+        lastOperation !== 'deposit'
       ) {
         return;
       }
 
       try {
         // Store current balances BEFORE refetch for optimistic updates
-        const currentBrndBalance = brndBalance ? formatUnits(brndBalance as bigint, 18) : "0";
-        const currentStakedAmount = stakedBrndAmount ? formatUnits(stakedBrndAmount as bigint, 18) : "0";
+        const currentBrndBalance = brndBalance ? formatUnits(brndBalance as bigint, 18) : '0';
+        const currentStakedAmount = stakedBrndAmount ? formatUnits(stakedBrndAmount as bigint, 18) : '0';
 
         // Trigger callback FIRST with old balances for optimistic updates
         if (onStakeSuccess) {
@@ -620,15 +620,15 @@ export const useContractWagmi = (
         !isConfirmed ||
         !receipt ||
         !lastWithdrawParams ||
-        lastOperation !== "withdraw"
+        lastOperation !== 'withdraw'
       ) {
         return;
       }
 
       try {
         // Store current balances BEFORE refetch for optimistic updates
-        const currentBrndBalance = brndBalance ? formatUnits(brndBalance as bigint, 18) : "0";
-        const currentStakedAmount = stakedBrndAmount ? formatUnits(stakedBrndAmount as bigint, 18) : "0";
+        const currentBrndBalance = brndBalance ? formatUnits(brndBalance as bigint, 18) : '0';
+        const currentStakedAmount = stakedBrndAmount ? formatUnits(stakedBrndAmount as bigint, 18) : '0';
 
         // Trigger callback FIRST with old balances for optimistic updates
         if (onWithdrawSuccess) {
@@ -683,11 +683,11 @@ export const useContractWagmi = (
     withdrawBrnd,
 
     // BRND Balances
-    brndBalance: brndBalance ? formatUnits(brndBalance as bigint, 18) : "0",
-    vaultShares: vaultShares ? formatUnits(vaultShares as bigint, 18) : "0",
+    brndBalance: brndBalance ? formatUnits(brndBalance as bigint, 18) : '0',
+    vaultShares: vaultShares ? formatUnits(vaultShares as bigint, 18) : '0',
     stakedBrndAmount: stakedBrndAmount
       ? formatUnits(stakedBrndAmount as bigint, 18)
-      : "0",
+      : '0',
 
     // BRND Loading states
     isLoadingBrndBalances:
@@ -713,7 +713,7 @@ export const useContractWagmi = (
       : 0,
     maxRedeemableShares: maxRedeemableShares 
       ? formatUnits(maxRedeemableShares as bigint, 18) 
-      : "0",
+      : '0',
     getWithdrawAvailableAt,
     getSecondsUntilWithdrawable,
     isWithdrawAvailable,

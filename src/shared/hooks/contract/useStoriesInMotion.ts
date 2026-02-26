@@ -1,23 +1,23 @@
 // src/shared/hooks/contract/useStoriesInMotion.ts
-import { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import {
   useAccount,
   useWriteContract,
   useWaitForTransactionReceipt,
   useReadContract,
   useSwitchChain,
-} from "wagmi";
-import { readContract } from "wagmi/actions";
-import { config } from "@/shared/config/wagmi";
-import { parseUnits, formatUnits } from "viem";
+} from 'wagmi';
+import { readContract } from 'wagmi/actions';
+import { config } from '@/shared/config/wagmi';
+import { parseUnits, formatUnits } from 'viem';
 
 import {
   BRND_SEASON_2_CONFIG,
   BRND_SEASON_2_CONFIG_ABI,
   ERC20_ABI,
-} from "@/config/contracts";
-import { useAuth } from "@/shared/hooks/auth";
-import { logFeatureError } from "@/shared/utils/logger";
+} from '@/config/contracts';
+import { useAuth } from '@/shared/hooks/auth';
+import { logFeatureError } from '@/shared/utils/logger';
 import {
   requestAuthorizationSignature,
   requestClaimRewardSignature,
@@ -27,34 +27,34 @@ import {
   requestStakeInfo,
   requestVoteAuthorizationSignature,
   StoriesApiResult,
-} from "./useStoriesInMotion.api";
+} from './useStoriesInMotion.api';
 import {
   retryAsync,
   StoriesOperationToken,
   withTimeout,
-} from "./useStoriesInMotion.async";
+} from './useStoriesInMotion.async';
 import {
   STORIES_BACKEND_TIMEOUT_MS,
   STORIES_TRANSIENT_RETRY_POLICY,
-} from "./useStoriesInMotion.constants";
+} from './useStoriesInMotion.constants';
 import {
   isAbortLikeError,
   isSupersededOperationError,
   getStoriesErrorMessage,
   getStoriesErrorMeta,
-} from "./useStoriesInMotion.errors";
+} from './useStoriesInMotion.errors';
 import {
   getEncodedAuthData,
-} from "./useStoriesInMotion.signatures";
+} from './useStoriesInMotion.signatures';
 import {
   buildTxCallbackData,
   deriveWalletAuthorizedState,
   getStoriesOperationFlags,
   shouldHandleStoriesTxSuccess,
-} from "./useStoriesInMotion.txState";
+} from './useStoriesInMotion.txState';
 import {
   validateWalletAuthorizedInput,
-} from "./useStoriesInMotion.validation";
+} from './useStoriesInMotion.validation';
 import {
   type ClaimSignatureRequest,
   type ConfirmOperationHandlers,
@@ -67,27 +67,27 @@ import {
   STORIES_FALLBACK_ERRORS,
   type TxCallbackData,
   type UserInfo,
-} from "./useStoriesInMotion.types";
+} from './useStoriesInMotion.types';
 import {
   buildVoteWriters,
   createOnchainWriteRunner,
   runBrandMutationOperation,
   runClaimExecutionOperation,
   runVoteOperation,
-} from "./useStoriesInMotion.operations";
+} from './useStoriesInMotion.operations';
 import {
   buildConfirmedOperationHandlers,
   buildFailedOperationHandlers,
   findFirstTopicLog,
   handleWriteError,
-} from "./useStoriesInMotion.handlers";
+} from './useStoriesInMotion.handlers';
 import {
   getClaimSignatureForSharedVoteCoordinator,
   resolveClaimSignatureRequest,
   runLegacyClaimRewardFlow,
   verifyShareAndGetClaimSignatureCoordinator,
-} from "./useStoriesInMotion.claim";
-import { scheduleApprovedVoteRetry } from "./useStoriesInMotion.voteRetry";
+} from './useStoriesInMotion.claim';
+import { scheduleApprovedVoteRetry } from './useStoriesInMotion.voteRetry';
 
 export type {
   AuthorizeWalletParams,
@@ -97,7 +97,7 @@ export type {
   StakeInfo,
   UserInfo,
   VoteParams,
-} from "./useStoriesInMotion.types";
+} from './useStoriesInMotion.types';
 
 export const useStoriesInMotion = (
   onLevelUpSuccess?: (txData: TxCallbackData) => void,
@@ -117,8 +117,8 @@ export const useStoriesInMotion = (
     if (args.length === 0) return;
     const [error, ...rest] = args;
     logFeatureError({
-      feature: "stories_in_motion",
-      action: "runtime",
+      feature: 'stories_in_motion',
+      action: 'runtime',
       error,
       meta: rest.length > 0 ? { details: rest } : undefined,
     });
@@ -191,14 +191,14 @@ export const useStoriesInMotion = (
   const clearOperationState = useCallback(
     (operation: StoriesOperation) => {
       switch (operation) {
-        case "approve":
-        case "vote":
+        case 'approve':
+        case 'vote':
           clearPendingVoteData();
           break;
-        case "createBrand":
+        case 'createBrand':
           setPendingBrandCreateData(null);
           break;
-        case "updateBrand":
+        case 'updateBrand':
           setPendingBrandUpdateData(null);
           break;
         default:
@@ -252,8 +252,8 @@ export const useStoriesInMotion = (
 
   const ensureConnectedWalletForBrandMutation = useCallback(() => {
     if (!userAddress) {
-      setError("Wallet not connected");
-      throw new Error("Wallet not connected");
+      setError('Wallet not connected');
+      throw new Error('Wallet not connected');
     }
   }, [userAddress]);
 
@@ -311,7 +311,7 @@ export const useStoriesInMotion = (
   } = useReadContract({
     address: BRND_SEASON_2_CONFIG.CONTRACT,
     abi: BRND_SEASON_2_CONFIG_ABI,
-    functionName: "getUserInfo",
+    functionName: 'getUserInfo',
     args: userFid ? [BigInt(userFid)] : undefined,
   });
 
@@ -323,7 +323,7 @@ export const useStoriesInMotion = (
   } = useReadContract({
     address: BRND_SEASON_2_CONFIG.BRND_TOKEN,
     abi: ERC20_ABI,
-    functionName: "balanceOf",
+    functionName: 'balanceOf',
     args: userAddress ? [userAddress] : undefined,
     query: {
       enabled: !!userAddress && isCorrectNetwork,
@@ -361,7 +361,7 @@ export const useStoriesInMotion = (
   const { data: brndAllowance, refetch: refetchAllowance } = useReadContract({
     address: BRND_SEASON_2_CONFIG.BRND_TOKEN,
     abi: ERC20_ABI,
-    functionName: "allowance",
+    functionName: 'allowance',
     args: userAddress
       ? [userAddress, BRND_SEASON_2_CONFIG.CONTRACT]
       : undefined,
@@ -374,7 +374,7 @@ export const useStoriesInMotion = (
   const { data: hasVotedToday, refetch: refetchVotedToday } = useReadContract({
     address: BRND_SEASON_2_CONFIG.CONTRACT,
     abi: BRND_SEASON_2_CONFIG_ABI,
-    functionName: "hasVotedToday",
+    functionName: 'hasVotedToday',
     args: userFid ? [userFid, Math.floor(Date.now() / 86400000)] : undefined,
     query: {
       enabled: !!userFid && isCorrectNetwork,
@@ -391,8 +391,8 @@ export const useStoriesInMotion = (
   // Get vote cost based on power level (V5 contract logic)
   const getVoteCost = useCallback((powerLevel?: number): bigint => {
     if (powerLevel === undefined || powerLevel === null) return 0n;
-    if (powerLevel === 0) return parseUnits("100", 18); // BASE_VOTE_COST
-    if (powerLevel === 1) return parseUnits("150", 18); // LEVEL_1_VOTE_COST
+    if (powerLevel === 0) return parseUnits('100', 18); // BASE_VOTE_COST
+    if (powerLevel === 1) return parseUnits('150', 18); // LEVEL_1_VOTE_COST
     return parseUnits((powerLevel * 100).toString(), 18);
   }, []);
 
@@ -401,7 +401,7 @@ export const useStoriesInMotion = (
     useReadContract({
       address: BRND_SEASON_2_CONFIG.CONTRACT,
       abi: BRND_SEASON_2_CONFIG_ABI,
-      functionName: "authorizedFidOf",
+      functionName: 'authorizedFidOf',
       args: userAddress ? [userAddress] : undefined,
       query: {
         enabled: !!userAddress && isCorrectNetwork,
@@ -414,8 +414,8 @@ export const useStoriesInMotion = (
       try {
         await switchChain({ chainId: BRND_SEASON_2_CONFIG.CHAIN_ID });
       } catch (error) {
-        logStoriesError("Failed to switch network:", error);
-        setError("Please switch to Base network");
+        logStoriesError('Failed to switch network:', error);
+        setError('Please switch to Base network');
         throw error;
       }
     }
@@ -489,7 +489,7 @@ export const useStoriesInMotion = (
     (deadline: number) =>
       runStoriesApiRequest({
         request: () => requestAuthorizationSignature({ userAddress, deadline }),
-        timeoutLabel: "authorize-wallet",
+        timeoutLabel: 'authorize-wallet',
       }),
     [runStoriesApiRequest, userAddress]
   );
@@ -499,7 +499,7 @@ export const useStoriesInMotion = (
       runStoriesApiRequest({
         request: () =>
           requestLevelUpSignature({ userAddress, newLevel, deadline }),
-        timeoutLabel: "level-up-signature",
+        timeoutLabel: 'level-up-signature',
       }),
     [runStoriesApiRequest, userAddress]
   );
@@ -514,7 +514,7 @@ export const useStoriesInMotion = (
             deadline,
           }),
         timeoutMs: STORIES_TRANSIENT_RETRY_POLICY.timeoutMs,
-        timeoutLabel: "authorize-vote",
+        timeoutLabel: 'authorize-vote',
         useTransientRetry: true,
       }),
     [runStoriesApiRequest, userAddress]
@@ -539,7 +539,7 @@ export const useStoriesInMotion = (
             castedFrom,
           }),
         timeoutMs: STORIES_TRANSIENT_RETRY_POLICY.timeoutMs,
-        timeoutLabel: "verify-share",
+        timeoutLabel: 'verify-share',
         useTransientRetry: true,
       }),
     [runStoriesApiRequest, userAddress]
@@ -562,7 +562,7 @@ export const useStoriesInMotion = (
             castedFrom,
           }),
         timeoutMs: STORIES_TRANSIENT_RETRY_POLICY.timeoutMs,
-        timeoutLabel: "verify-share-shared-vote",
+        timeoutLabel: 'verify-share-shared-vote',
         useTransientRetry: true,
       }),
     [runStoriesApiRequest, userAddress]
@@ -572,7 +572,7 @@ export const useStoriesInMotion = (
     (fid: number): Promise<PowerLevelInfo> =>
       runStoriesApiRequest({
         request: () => requestPowerLevelInfo(fid),
-        timeoutLabel: "power-level-info",
+        timeoutLabel: 'power-level-info',
       }),
     [runStoriesApiRequest]
   );
@@ -581,7 +581,7 @@ export const useStoriesInMotion = (
     (fid: number): Promise<StakeInfo> =>
       runStoriesApiRequest({
         request: () => requestStakeInfo(fid),
-        timeoutLabel: "stake-info",
+        timeoutLabel: 'stake-info',
       }),
     [runStoriesApiRequest]
   );
@@ -593,8 +593,8 @@ export const useStoriesInMotion = (
   const levelUpBrndPower = useCallback(
     async (targetLevel: number) => {
       await runOnchainWriteOperation({
-        operation: "levelup",
-        action: "LevelUp",
+        operation: 'levelup',
+        action: 'LevelUp',
         fallbackMessage: STORIES_FALLBACK_ERRORS.LEVEL_UP,
         requireAuthorizedUserFid: true,
         run: async ({ currentUserFid }) => {
@@ -604,7 +604,7 @@ export const useStoriesInMotion = (
           if (!levelUpData.validation.eligible) {
             throw new Error(
               `Cannot level up: ${
-                levelUpData.validation.reason || "Requirements not met"
+                levelUpData.validation.reason || 'Requirements not met'
               }`
             );
           }
@@ -616,7 +616,7 @@ export const useStoriesInMotion = (
           await writeContract({
             address: BRND_SEASON_2_CONFIG.CONTRACT,
             abi: BRND_SEASON_2_CONFIG_ABI,
-            functionName: "levelUpBrndPower",
+            functionName: 'levelUpBrndPower',
             args: [
               currentUserFid as number,
               targetLevel,
@@ -703,13 +703,13 @@ export const useStoriesInMotion = (
         const rewardAmount = await readContract(config, {
           address: BRND_SEASON_2_CONFIG.CONTRACT,
           abi: BRND_SEASON_2_CONFIG_ABI,
-          functionName: "getRewardAmount",
+          functionName: 'getRewardAmount',
           args: [powerLevel],
         });
         return formatUnits(rewardAmount as bigint, 18);
       } catch (error) {
-        logStoriesError("Failed to get reward amount:", error);
-        return "0";
+        logStoriesError('Failed to get reward amount:', error);
+        return '0';
       }
     },
     [logStoriesError]
@@ -721,12 +721,12 @@ export const useStoriesInMotion = (
       const brandInfo = await readContract(config, {
         address: BRND_SEASON_2_CONFIG.CONTRACT,
         abi: BRND_SEASON_2_CONFIG_ABI,
-        functionName: "getBrand",
+        functionName: 'getBrand',
         args: [brandId],
       });
       return brandInfo;
     } catch (error) {
-      logStoriesError("Failed to get brand info:", error);
+      logStoriesError('Failed to get brand info:', error);
       return null;
     }
   }, [logStoriesError]);
@@ -740,7 +740,7 @@ export const useStoriesInMotion = (
       walletAddress: string
     ) =>
       runBrandMutationOperation({
-        operation: "createBrand",
+        operation: 'createBrand',
         input: { handle, metadataHash, fid, walletAddress },
         setPendingData: () =>
           setPendingBrandCreateData({
@@ -754,12 +754,12 @@ export const useStoriesInMotion = (
           writeContract({
             address: BRND_SEASON_2_CONFIG.CONTRACT as `0x${string}`,
             abi: BRND_SEASON_2_CONFIG_ABI,
-            functionName: "createBrand",
+            functionName: 'createBrand',
             args: [handle, metadataHash, BigInt(fid), walletAddress as `0x${string}`],
             chainId: BRND_SEASON_2_CONFIG.CHAIN_ID,
           }),
-        fallbackErrorMessage: "Brand creation failed",
-        featureAction: "CreateBrand",
+        fallbackErrorMessage: 'Brand creation failed',
+        featureAction: 'CreateBrand',
         setError,
         switchToBase,
         ensureConnectedWalletForBrandMutation,
@@ -784,7 +784,7 @@ export const useStoriesInMotion = (
       walletAddress: string
     ) =>
       runBrandMutationOperation({
-        operation: "updateBrand",
+        operation: 'updateBrand',
         input: { brandId, metadataHash, fid, walletAddress },
         setPendingData: () =>
           setPendingBrandUpdateData({
@@ -798,7 +798,7 @@ export const useStoriesInMotion = (
           writeContract({
             address: BRND_SEASON_2_CONFIG.CONTRACT as `0x${string}`,
             abi: BRND_SEASON_2_CONFIG_ABI,
-            functionName: "updateBrand",
+            functionName: 'updateBrand',
             args: [
               brandId as number,
               metadataHash,
@@ -807,8 +807,8 @@ export const useStoriesInMotion = (
             ],
             chainId: BRND_SEASON_2_CONFIG.CHAIN_ID,
           }),
-        fallbackErrorMessage: "Brand update failed",
-        featureAction: "UpdateBrand",
+        fallbackErrorMessage: 'Brand update failed',
+        featureAction: 'UpdateBrand',
         setError,
         switchToBase,
         ensureConnectedWalletForBrandMutation,
@@ -1054,7 +1054,7 @@ export const useStoriesInMotion = (
     if (writeError && lastOperation) {
       handleOperationWriteError(
         lastOperation,
-        writeError.message || "Transaction failed"
+        writeError.message || 'Transaction failed'
       );
     }
   }, [writeError, lastOperation, handleOperationWriteError]);
@@ -1129,10 +1129,10 @@ export const useStoriesInMotion = (
 
     // Contract state
     userInfo: parsedUserInfo,
-    brndBalance: brndBalance ? formatUnits(brndBalance as bigint, 18) : "0",
+    brndBalance: brndBalance ? formatUnits(brndBalance as bigint, 18) : '0',
     brndAllowance: brndAllowance
       ? formatUnits(brndAllowance as bigint, 18)
-      : "0",
+      : '0',
     hasVotedToday: Boolean(hasVotedToday),
 
     // Transaction state

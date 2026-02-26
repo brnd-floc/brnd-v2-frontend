@@ -1,10 +1,10 @@
 // Dependencies
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 
 // StyleSheet
-import styles from "./CustomLinksFrame.module.scss";
-import Typography from "../Typography";
-import sdk from "@farcaster/miniapp-sdk";
+import styles from './CustomLinksFrame.module.scss';
+import Typography from '../Typography';
+import sdk from '@farcaster/miniapp-sdk';
 //import { useNavigate } from "react-router-dom";
 
 function CustomLinksFrame(): React.ReactNode {
@@ -16,14 +16,14 @@ function CustomLinksFrame(): React.ReactNode {
   const linksData = [
     {
       id: 1,
-      text: "BRND on Brand3",
+      text: 'BRND on Brand3',
       action: () => {
-        sdk.actions.openUrl({ url: "https://paragraph.com/@brand3/brnd-v2" });
+        sdk.actions.openUrl({ url: 'https://paragraph.com/@brand3/brnd-v2' });
       },
     },
     {
       id: 2,
-      text: "Follow @BRND",
+      text: 'Follow @BRND',
       action: () => {
         sdk.actions.viewProfile({
           fid: 1108951,
@@ -32,14 +32,14 @@ function CustomLinksFrame(): React.ReactNode {
     },
     {
       id: 3,
-      text: "Buy $BRND",
+      text: 'Buy $BRND',
       action: () => {
         sdk.actions.swapToken({
           sellToken:
-            "eip155:8453/erc20:0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+            'eip155:8453/erc20:0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
           buyToken:
-            "eip155:8453/erc20:0x41Ed0311640A5e489A90940b1c33433501a21B07",
-          sellAmount: "1000000",
+            'eip155:8453/erc20:0x41Ed0311640A5e489A90940b1c33433501a21B07',
+          sellAmount: '1000000',
         });
       },
     },
@@ -76,7 +76,7 @@ function CustomLinksFrame(): React.ReactNode {
           <div
             key={index}
             className={`${styles.dot} ${
-              index === currentIndex ? styles.activeDot : ""
+              index === currentIndex ? styles.activeDot : ''
             }`}
           />
         ))}

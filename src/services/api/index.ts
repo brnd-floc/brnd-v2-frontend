@@ -1,17 +1,17 @@
 // Types
-import { RequestProps } from "./types";
-import axios, { AxiosResponse } from "axios";
+import { RequestProps } from './types';
+import axios, { AxiosResponse } from 'axios';
 
 // Config
-import { API_URL } from "@/config/api";
-import { getFarcasterToken } from "@/shared/utils/auth";
+import { API_URL } from '@/config/api';
+import { getFarcasterToken } from '@/shared/utils/auth';
 
 /**
  * Default headers for the requests.
  */
 export const DEFAULT_HEADERS = {
-  "Content-Type": "application/json",
-  Accept: "application/json",
+  'Content-Type': 'application/json',
+  Accept: 'application/json',
 };
 
 /**
@@ -20,11 +20,11 @@ export const DEFAULT_HEADERS = {
 function parseJSONWithBigInt(text: string): any {
   return JSON.parse(text, (_key, value) => {
     // If the value is a string that looks like a large integer, keep it as string
-    if (typeof value === "string" && /^\d{19,}$/.test(value)) {
+    if (typeof value === 'string' && /^\d{19,}$/.test(value)) {
       return value; // Keep as string
     }
     // If it's a number that's too large, convert back to string
-    if (typeof value === "number" && !Number.isSafeInteger(value)) {
+    if (typeof value === 'number' && !Number.isSafeInteger(value)) {
       return value.toString();
     }
     return value;
@@ -68,7 +68,7 @@ export async function request<T>(
       // Add the Farcaster token if it exists
       ...(farcasterToken && { Authorization: `Bearer ${farcasterToken}` }),
     },
-    credentials: "include",
+    credentials: 'include',
     ...(body && {
       body: JSON.stringify(body),
     }),
@@ -99,7 +99,7 @@ export async function request<T>(
  * @returns {Promise<R>} - The response from the server.
  */
 export async function requestWithFile<T, R>(
-  method: RequestProps["method"],
+  method: RequestProps['method'],
   path: string,
   formData: T
 ): Promise<R> {
@@ -108,7 +108,7 @@ export async function requestWithFile<T, R>(
     url: API_URL + path,
     data: formData,
     headers: {
-      "Content-Type": "multipart/form-data",
+      'Content-Type': 'multipart/form-data',
     },
     withCredentials: true,
   });
@@ -137,11 +137,11 @@ export async function downloadBuffer(
         ...DEFAULT_HEADERS,
         ...headers,
       },
-      responseType: "arraybuffer",
+      responseType: 'arraybuffer',
       withCredentials: true,
     });
 
-    const contentType = response.headers["content-type"];
+    const contentType = response.headers['content-type'];
 
     return {
       file: response.data,

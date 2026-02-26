@@ -1,40 +1,40 @@
 // Dependencies
-import { useCallback, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { useCallback, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 
 // StyleSheet
-import styles from "./Podium.module.scss";
+import styles from './Podium.module.scss';
 
 // Components
-import PodiumColumn from "./partials/PodiumColumn";
-import BrandsList from "../BrandsList";
-import Button from "../Button";
+import PodiumColumn from './partials/PodiumColumn';
+import BrandsList from '../BrandsList';
+import Button from '../Button';
 
 // Hooks
-import useBottomSheet from "@/hooks/ui/useBottomSheet";
-import { Brand } from "@/hooks/brands";
+import useBottomSheet from '@/hooks/ui/useBottomSheet';
+import { Brand } from '@/hooks/brands';
 
 // Assets
-import sdk from "@farcaster/miniapp-sdk";
+import sdk from '@farcaster/miniapp-sdk';
 
 interface PodiumProps {
-  variant?: "readonly" | "selection";
+  variant?: 'readonly' | 'selection';
   onVote?: (selected: Brand[]) => void;
   initial?: (Brand | undefined)[];
   isAnimated?: boolean;
   buttonLabel?: string;
   buttonDisabled?: boolean;
-  buttonVariant?: "primary" | "secondary" | "tertiary";
+  buttonVariant?: 'primary' | 'secondary' | 'tertiary';
 }
 
 function Podium({
   isAnimated = true,
   initial = [],
   onVote,
-  variant = "selection",
-  buttonLabel = "Let's go!",
+  variant = 'selection',
+  buttonLabel = 'Let\'s go!',
   buttonDisabled = false,
-  buttonVariant = "primary",
+  buttonVariant = 'primary',
 }: PodiumProps) {
   const [selected, setSelected] = useState<(Brand | undefined)[]>(initial);
   const { open, close } = useBottomSheet();
@@ -84,51 +84,51 @@ function Podium({
           transition={
             isAnimated
               ? {
-                  duration: 0.1,
-                  delay: animDelays[i] || 0,
-                  type: "spring",
-                  stiffness: 100,
-                }
+                duration: 0.1,
+                delay: animDelays[i] || 0,
+                type: 'spring',
+                stiffness: 100,
+              }
               : {}
           }
         >
           <PodiumColumn
-            variant={"secondary"}
+            variant={'secondary'}
             selected={selected[i]}
             position={i === 0 ? 2 : i === 1 ? 1 : 3}
-            {...(variant === "selection"
+            {...(variant === 'selection'
               ? {
-                  onClick: () => {
-                    sdk.haptics.selectionChanged();
-                    open(
-                      <div className={styles.selector}>
-                        <BrandsList
-                          value={selected
-                            .filter((b): b is Brand => b !== undefined)
-                            .map((brand) => brand.id)}
-                          isSelectable={true}
-                          isFinderEnabled={true}
-                          config={{
-                            limit: 27,
-                            order: "all",
-                          }}
-                          positionBeingChanged={i === 0 ? 2 : i === 1 ? 1 : 3}
-                          className={styles.list}
-                          onSelect={(brand) => {
-                            sdk.haptics.selectionChanged();
-                            handleSelectBrand(brand, i);
-                          }}
-                        />
-                      </div>
-                    );
-                  },
-                }
+                onClick: () => {
+                  sdk.haptics.selectionChanged();
+                  open(
+                    <div className={styles.selector}>
+                      <BrandsList
+                        value={selected
+                          .filter((b): b is Brand => b !== undefined)
+                          .map((brand) => brand.id)}
+                        isSelectable={true}
+                        isFinderEnabled={true}
+                        config={{
+                          limit: 27,
+                          order: 'all',
+                        }}
+                        positionBeingChanged={i === 0 ? 2 : i === 1 ? 1 : 3}
+                        className={styles.list}
+                        onSelect={(brand) => {
+                          sdk.haptics.selectionChanged();
+                          handleSelectBrand(brand, i);
+                        }}
+                      />
+                    </div>
+                  );
+                },
+              }
               : {})}
           />
         </motion.div>
       ))}
 
-      {variant === "selection" && (
+      {variant === 'selection' && (
         <AnimatePresence>
           {allBrandsSelected && (
             <motion.div
@@ -136,16 +136,16 @@ function Podium({
               initial={{ y: 300 }}
               animate={{ y: 0 }}
               exit={{ y: 300 }}
-              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
             >
               <Button
                 caption={buttonLabel}
                 variant={
                   buttonVariant as
-                    | "primary"
-                    | "secondary"
-                    | "outline"
-                    | "underline"
+                    | 'primary'
+                    | 'secondary'
+                    | 'outline'
+                    | 'underline'
                 }
                 disabled={buttonDisabled}
                 onClick={() => {

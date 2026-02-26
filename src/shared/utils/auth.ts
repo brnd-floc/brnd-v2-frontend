@@ -1,4 +1,4 @@
-const FARCASTER_TOKEN_KEY = "farcaster_token";
+const FARCASTER_TOKEN_KEY = 'farcaster_token';
 
 export const setFarcasterToken = (token: string) => {
   localStorage.setItem(FARCASTER_TOKEN_KEY, token);

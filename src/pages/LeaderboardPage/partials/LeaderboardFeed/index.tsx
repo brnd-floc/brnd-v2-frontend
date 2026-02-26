@@ -1,22 +1,22 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 
 // StyleSheet
-import styles from "./LeaderboardFeed.module.scss";
+import styles from './LeaderboardFeed.module.scss';
 
 // Components
-import Typography from "@/components/Typography";
-import UserListItem from "@/shared/components/UserListItem";
-import LoaderIndicator from "@/shared/components/LoaderIndicator";
+import Typography from '@/components/Typography';
+import UserListItem from '@/shared/components/UserListItem';
+import LoaderIndicator from '@/shared/components/LoaderIndicator';
 
 // Hooks
-import { useUserLeaderboard } from "@/shared/hooks/user/useUserLeaderboard";
-import { useAuth } from "@/hooks/auth";
+import { useUserLeaderboard } from '@/shared/hooks/user/useUserLeaderboard';
+import { useAuth } from '@/hooks/auth';
 
 // Icons
-import BPointIcon from "@/assets/icons/point-b.svg?react";
+import BPointIcon from '@/assets/icons/point-b.svg?react';
 
 // Types
-import type { LeaderboardSeason } from "../../index";
+import type { LeaderboardSeason } from '../../index';
 
 interface LeaderboardFeedProps {
   season: LeaderboardSeason;
@@ -96,8 +96,8 @@ function LeaderboardFeed({ season }: LeaderboardFeedProps) {
       }
     };
 
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, [isFetching, isLoadingMore, data?.pagination.hasNextPage]);
 
   // Check if we have data to show
@@ -115,7 +115,7 @@ function LeaderboardFeed({ season }: LeaderboardFeedProps) {
           {authData?.photoUrl ? (
             <img
               src={authData.photoUrl}
-              alt={authData.username || "User"}
+              alt={authData.username || 'User'}
               className={styles.userRankAvatar}
             />
           ) : (
@@ -188,7 +188,7 @@ function LeaderboardFeed({ season }: LeaderboardFeedProps) {
                 {data.currentUser.user?.photoUrl && (
                   <img
                     src={data.currentUser.user.photoUrl}
-                    alt={data.currentUser.user.username || "User"}
+                    alt={data.currentUser.user.username || 'User'}
                     className={styles.userRankAvatar}
                   />
                 )}

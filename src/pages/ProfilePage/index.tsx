@@ -1,21 +1,21 @@
 // src/pages/ProfilePage/index.tsx
-import React from "react";
-import { Routes, Route } from "react-router-dom";
+import React from 'react';
+import { Routes, Route } from 'react-router-dom';
 
 // StyleSheet
-import styles from "./ProfilePage.module.scss";
+import styles from './ProfilePage.module.scss';
 
 // Components
-import AppLayout from "@/shared/layouts/AppLayout";
-import MyPodium from "./partials/MyPodium";
-import UserProfile from "./partials/UserProfile";
-import Power from "./partials/Power";
-import ProfileTabNavigator from "@/shared/components/ProfileTabNavigator";
-import UserProfileHeader from "@/shared/components/UserProfileHeader";
+import AppLayout from '@/shared/layouts/AppLayout';
+import MyPodium from './partials/MyPodium';
+import UserProfile from './partials/UserProfile';
+import Power from './partials/Power';
+import ProfileTabNavigator from '@/shared/components/ProfileTabNavigator';
+import UserProfileHeader from '@/shared/components/UserProfileHeader';
 
 // Hocs
-import withProtectionRoute from "@/hocs/withProtectionRoute";
-import MyBrands from "./partials/MyBrands";
+import withProtectionRoute from '@/hocs/withProtectionRoute';
+import MyBrands from './partials/MyBrands';
 
 function ProfilePage(): React.ReactNode {
   return (
@@ -28,20 +28,20 @@ function ProfilePage(): React.ReactNode {
           <ProfileTabNavigator
             tabs={[
               {
-                label: "Profile",
-                path: "/profile",
+                label: 'Profile',
+                path: '/profile',
               },
               {
-                label: "Power",
-                path: "/profile/power",
+                label: 'Power',
+                path: '/profile/power',
               },
               {
-                label: "Rank",
-                path: "/profile/ranks",
+                label: 'Rank',
+                path: '/profile/ranks',
               },
               {
-                label: "Podiums",
-                path: "/profile/podiums",
+                label: 'Podiums',
+                path: '/profile/podiums',
               },
             ]}
           />
@@ -57,4 +57,4 @@ function ProfilePage(): React.ReactNode {
   );
 }
 
-export default withProtectionRoute(ProfilePage, "only-connected");
+export default withProtectionRoute(ProfilePage, 'only-connected');

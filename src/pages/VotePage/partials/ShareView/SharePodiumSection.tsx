@@ -1,10 +1,10 @@
-import Podium from "@/components/Podium";
+import Podium from '@/components/Podium';
 
-import { SharePrimaryAction } from "./SharePrimaryAction";
-import { ShareRetryPanel } from "./ShareRetryPanel";
+import { SharePrimaryAction } from './SharePrimaryAction';
+import { ShareRetryPanel } from './ShareRetryPanel';
 
-import styles from "./ShareView.module.scss";
-import { Brand } from "@/hooks/brands";
+import styles from './ShareView.module.scss';
+import { Brand } from '@/hooks/brands';
 
 interface SharePodiumSectionProps {
   currentBrands: Brand[];
@@ -36,7 +36,7 @@ export function SharePodiumSection({
   return (
     <div className={styles.box}>
       <div className={styles.podium}>
-        <Podium isAnimated={false} variant={"readonly"} initial={currentBrands} />
+        <Podium isAnimated={false} variant={'readonly'} initial={currentBrands} />
 
         <div className={styles.action}>
           <SharePrimaryAction

@@ -1,25 +1,25 @@
-import { useEffect, useState } from "react";
-import { LayoutDashboard, Rocket } from "lucide-react";
-import { useTranslations } from "@/i18n/useTranslations";
-import classNames from "clsx";
-import styles from "./Header.module.scss";
-import Logo from "@/assets/images/logo.svg";
+import { useEffect, useState } from 'react';
+import { LayoutDashboard, Rocket } from 'lucide-react';
+import { useTranslations } from '@/i18n/useTranslations';
+import classNames from 'clsx';
+import styles from './Header.module.scss';
+import Logo from '@/assets/images/logo.svg';
 
 export function Header() {
-  const t = useTranslations("landing.hero");
+  const t = useTranslations('landing.hero');
   const [isScrolled, setIsScrolled] = useState(false);
 
-  const dashboardUrl = import.meta.env.VITE_DASHBOARD_URL || "https://brnd.land";
+  const dashboardUrl = import.meta.env.VITE_DASHBOARD_URL || 'https://brnd.land';
   const miniappUrl =
-    import.meta.env.VITE_MINIAPP_URL || "https://miniapp.brndland.com";
+    import.meta.env.VITE_MINIAPP_URL || 'https://miniapp.brndland.com';
 
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
     };
 
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   return (
@@ -36,7 +36,7 @@ export function Header() {
       >
         <a href={dashboardUrl} className={styles.dashboardLink}>
           <LayoutDashboard className={styles.icon} />
-          <span>{t("goToDashboard")}</span>
+          <span>{t('goToDashboard')}</span>
         </a>
       </div>
 
@@ -65,7 +65,7 @@ export function Header() {
       >
         <span className={styles.rightButtonInner}>
           <Rocket className={styles.icon} />
-          <span>{t("openMiniapp")}</span>
+          <span>{t('openMiniapp')}</span>
         </span>
       </a>
     </header>

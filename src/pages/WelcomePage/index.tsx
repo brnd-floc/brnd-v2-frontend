@@ -1,29 +1,29 @@
 // Dependencies
-import React, { useCallback, useMemo, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
-import classNames from "clsx";
+import React, { useCallback, useMemo, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import classNames from 'clsx';
 
 // StyleSheet
-import styles from "./WelcomePage.module.scss";
+import styles from './WelcomePage.module.scss';
 
 // Assets
-import Logo from "@/assets/images/logo.svg";
-import WelcomeImage1 from "@/assets/images/welcome-image-1.png";
-import WelcomeImage2 from "@/assets/images/welcome-image-2.png";
-import WelcomeImage3 from "@/assets/images/welcome-image-3.png";
+import Logo from '@/assets/images/logo.svg';
+import WelcomeImage1 from '@/assets/images/welcome-image-1.png';
+import WelcomeImage2 from '@/assets/images/welcome-image-2.png';
+import WelcomeImage3 from '@/assets/images/welcome-image-3.png';
 
 // Components
-import Typography from "@/components/Typography";
-import Button from "@/shared/components/Button";
-import IconButton from "@/components/IconButton";
+import Typography from '@/components/Typography';
+import Button from '@/shared/components/Button';
+import IconButton from '@/components/IconButton';
 
 // Assets
-import ArrowRightIcon from "@/assets/icons/arrow-right.svg?react";
+import ArrowRightIcon from '@/assets/icons/arrow-right.svg?react';
 
 // Hocs
-import withProtectionRoute from "@/hocs/withProtectionRoute";
-import sdk from "@farcaster/miniapp-sdk";
+import withProtectionRoute from '@/hocs/withProtectionRoute';
+import sdk from '@farcaster/miniapp-sdk';
 
 /**
  * An array of steps for the welcome page tutorial.
@@ -34,34 +34,34 @@ import sdk from "@farcaster/miniapp-sdk";
  */
 const steps: Array<[string[], string, React.ReactNode]> = [
   [
-    ["Score", "your favourite brands"],
-    "Build your daily podiums to rank and discover the Farcaster ecosystem brands.",
+    ['Score', 'your favourite brands'],
+    'Build your daily podiums to rank and discover the Farcaster ecosystem brands.',
     <img
       key={0}
       src={WelcomeImage1}
-      alt={"Welcome slider 1"}
+      alt={'Welcome slider 1'}
       width={248}
       height={248}
     />,
   ],
   [
-    ["Earn", "brnd points"],
-    "Boost your top brands and win with them",
+    ['Earn', 'brnd points'],
+    'Boost your top brands and win with them',
     <img
       key={0}
       src={WelcomeImage2}
-      alt={"Welcome slider 2"}
+      alt={'Welcome slider 2'}
       width={248}
       height={248}
     />,
   ],
   [
-    ["Share", "on miniapp"],
-    "Engage your close community by sharing your favorite brands from the ecosystem",
+    ['Share', 'on miniapp'],
+    'Engage your close community by sharing your favorite brands from the ecosystem',
     <img
       key={0}
       src={WelcomeImage3}
-      alt={"Welcome slider 3"}
+      alt={'Welcome slider 3'}
       width={248}
       height={248}
     />,
@@ -78,7 +78,7 @@ function WelcomePage(): React.ReactNode {
    * @returns {void}
    */
   const handleClickSkipTutorial = useCallback((): void => {
-    navigate("/vote");
+    navigate('/vote');
   }, []);
 
   /**
@@ -92,7 +92,7 @@ function WelcomePage(): React.ReactNode {
     if (stepId < steps.length - 1) {
       setStepId(stepId + 1);
     } else {
-      navigate("/vote");
+      navigate('/vote');
     }
   }, [stepId, navigate]);
 
@@ -111,11 +111,11 @@ function WelcomePage(): React.ReactNode {
       component: React.ReactNode
     ): JSX.Element => (
       <div className={styles.field}>
-        <Typography variant={"druk"} size={28} lineHeight={34} weight={"wide"}>
-          <span className={styles.title}>{text[0]}</span>{" "}
-          {text.slice(1).join(" ")}
+        <Typography variant={'druk'} size={28} lineHeight={34} weight={'wide'}>
+          <span className={styles.title}>{text[0]}</span>{' '}
+          {text.slice(1).join(' ')}
         </Typography>
-        <Typography weight={"regular"} size={18} className={styles.grey}>
+        <Typography weight={'regular'} size={18} className={styles.grey}>
           {description}
         </Typography>
         <div className={styles.image}>{component}</div>
@@ -155,16 +155,16 @@ function WelcomePage(): React.ReactNode {
             <AnimatePresence mode="popLayout">
               <motion.div
                 key={stepId}
-                initial={{ x: "100%", opacity: 0 }}
+                initial={{ x: '100%', opacity: 0 }}
                 animate={{
                   x: 0,
                   opacity: 1,
-                  transition: { type: "spring", stiffness: 100, damping: 20 },
+                  transition: { type: 'spring', stiffness: 100, damping: 20 },
                 }}
                 exit={{
-                  x: "-100%",
+                  x: '-100%',
                   opacity: 0,
-                  transition: { type: "spring", stiffness: 100, damping: 20 },
+                  transition: { type: 'spring', stiffness: 100, damping: 20 },
                 }}
               >
                 {renderSlideRow(...steps[stepId])}
@@ -173,13 +173,13 @@ function WelcomePage(): React.ReactNode {
           </div>
           <div className={styles.actions}>
             <Button
-              variant={"underline"}
-              caption={"Skip"}
+              variant={'underline'}
+              caption={'Skip'}
               onClick={handleClickSkipTutorial}
             />
             {renderStepIndicator}
             <IconButton
-              variant={"solid"}
+              variant={'solid'}
               icon={<ArrowRightIcon />}
               onClick={handleClickNext}
             />
@@ -190,4 +190,4 @@ function WelcomePage(): React.ReactNode {
   );
 }
 
-export default withProtectionRoute(WelcomePage, "only-connected");
+export default withProtectionRoute(WelcomePage, 'only-connected');

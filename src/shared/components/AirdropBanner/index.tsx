@@ -1,11 +1,11 @@
 // Dependencies
-import React from "react";
-import { useNavigate } from "react-router-dom";
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 // StyleSheet
-import styles from "./AirdropBanner.module.scss";
-import BrndPowerTextSvg from "@/shared/assets/images/brnd-power-text.svg?react";
-import sdk from "@farcaster/miniapp-sdk";
+import styles from './AirdropBanner.module.scss';
+import BrndPowerTextSvg from '@/shared/assets/images/brnd-power-text.svg?react';
+import sdk from '@farcaster/miniapp-sdk';
 
 function AirdropBanner(): React.ReactNode {
   const navigate = useNavigate();
@@ -14,7 +14,7 @@ function AirdropBanner(): React.ReactNode {
     sdk.haptics.selectionChanged();
 
     // Navigate to Power page on user's profile
-    navigate("/profile/power");
+    navigate('/profile/power');
   };
 
   return (

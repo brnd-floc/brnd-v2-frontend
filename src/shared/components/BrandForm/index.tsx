@@ -1,14 +1,14 @@
 // src/pages/AdminPage/components/BrandForm.tsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 
 // Components
-import Button from "@/shared/components/Button";
+import Button from '@/shared/components/Button';
 
 // Hooks
-import { Brand } from "@/hooks/brands";
+import { Brand } from '@/hooks/brands';
 
 // StyleSheet
-import styles from "./BrandForm.module.scss";
+import styles from './BrandForm.module.scss';
 
 // Types
 interface BrandFormProps {
@@ -32,17 +32,17 @@ interface BrandFormData {
 
 // Simple API calls using your existing request structure
 const createBrandAPI = async (data: BrandFormData) => {
-  const response = await fetch("/admin/brands", {
-    method: "POST",
+  const response = await fetch('/admin/brands', {
+    method: 'POST',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
       // Add your auth headers here
     },
     body: JSON.stringify(data),
   });
 
   if (!response.ok) {
-    throw new Error("Failed to create brand");
+    throw new Error('Failed to create brand');
   }
 
   return response.json();
@@ -50,16 +50,16 @@ const createBrandAPI = async (data: BrandFormData) => {
 
 const updateBrandAPI = async (id: number, data: Partial<BrandFormData>) => {
   const response = await fetch(`/admin/brands/${id}`, {
-    method: "PUT",
+    method: 'PUT',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
       // Add your auth headers here
     },
     body: JSON.stringify(data),
   });
 
   if (!response.ok) {
-    throw new Error("Failed to update brand");
+    throw new Error('Failed to update brand');
   }
 
   return response.json();
@@ -72,15 +72,15 @@ function BrandForm({
 }: BrandFormProps): React.ReactNode {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<BrandFormData>({
-    name: "",
-    url: "",
-    warpcastUrl: "",
-    description: "",
+    name: '',
+    url: '',
+    warpcastUrl: '',
+    description: '',
     categoryId: 1, // Default category
     followerCount: 0,
-    imageUrl: "",
-    profile: "",
-    channel: "",
+    imageUrl: '',
+    profile: '',
+    channel: '',
     queryType: 0, // Default to Channel
   });
 
@@ -88,15 +88,15 @@ function BrandForm({
   useEffect(() => {
     if (brand) {
       setFormData({
-        name: brand.name || "",
-        url: brand.url || "",
-        warpcastUrl: brand.warpcastUrl || "",
-        description: brand.description || "",
+        name: brand.name || '',
+        url: brand.url || '',
+        warpcastUrl: brand.warpcastUrl || '',
+        description: brand.description || '',
         categoryId: brand.category?.id || 1,
         followerCount: brand.followerCount || 0,
-        imageUrl: brand.imageUrl || "",
-        profile: brand.profile || "",
-        channel: brand.channel || "",
+        imageUrl: brand.imageUrl || '',
+        profile: brand.profile || '',
+        channel: brand.channel || '',
         queryType: brand.queryType || 0,
       });
     }
@@ -111,9 +111,9 @@ function BrandForm({
     setFormData((prev) => ({
       ...prev,
       [name]:
-        name === "categoryId" ||
-        name === "followerCount" ||
-        name === "queryType"
+        name === 'categoryId' ||
+        name === 'followerCount' ||
+        name === 'queryType'
           ? parseInt(value) || 0
           : value,
     }));
@@ -131,8 +131,8 @@ function BrandForm({
 
       onSuccess();
     } catch (error) {
-      console.error("Error saving brand:", error);
-      alert("Error saving brand. Please try again.");
+      console.error('Error saving brand:', error);
+      alert('Error saving brand. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -227,18 +227,18 @@ function BrandForm({
           <label className={styles.label}>Channel/Profile Handle</label>
           <input
             type="text"
-            name={formData.queryType === 0 ? "channel" : "profile"}
+            name={formData.queryType === 0 ? 'channel' : 'profile'}
             value={
               formData.queryType === 0 ? formData.channel : formData.profile
             }
             onChange={handleInputChange}
             className={styles.input}
-            placeholder={formData.queryType === 0 ? "channel-name" : "username"}
+            placeholder={formData.queryType === 0 ? 'channel-name' : 'username'}
           />
           <small className={styles.helpText}>
             {formData.queryType === 0
-              ? "Farcaster channel name"
-              : "Farcaster username"}
+              ? 'Farcaster channel name'
+              : 'Farcaster username'}
           </small>
         </div>
 
@@ -259,7 +259,7 @@ function BrandForm({
         <Button caption="Cancel" variant="secondary" onClick={onClose} />
         <Button
           caption={
-            isSubmitting ? "Saving..." : brand ? "Update Brand" : "Create Brand"
+            isSubmitting ? 'Saving...' : brand ? 'Update Brand' : 'Create Brand'
           }
           variant="primary"
           disabled={isSubmitting}

@@ -1,8 +1,8 @@
-import Typography from "@/components/Typography";
-import { formatUnits } from "viem";
-import VoteHashIcon from "@/shared/assets/icons/vote-hash.svg";
-import ExternalLinkIconShare from "@/shared/assets/icons/external-link-icon-share.svg";
-import styles from "./AlreadySharedView.module.scss";
+import Typography from '@/components/Typography';
+import { formatUnits } from 'viem';
+import VoteHashIcon from '@/shared/assets/icons/vote-hash.svg';
+import ExternalLinkIconShare from '@/shared/assets/icons/external-link-icon-share.svg';
+import styles from './AlreadySharedView.module.scss';
 
 interface AlreadySharedStatusProps {
   transactionHash?: string;
@@ -23,11 +23,11 @@ export function AlreadySharedStatus({
     <>
       <div className={styles.shareMessage}>
         <Typography
-          variant={"geist"}
-          weight={"medium"}
+          variant={'geist'}
+          weight={'medium'}
           size={12}
           lineHeight={16}
-          textAlign={"center"}
+          textAlign={'center'}
         >
           Claim your daily $BRND rewards
         </Typography>
@@ -61,14 +61,14 @@ export function AlreadySharedStatus({
       {showReady && claimAmountWei && (
         <div className={styles.verificationMessage}>
           <Typography
-            variant={"geist"}
-            weight={"medium"}
+            variant={'geist'}
+            weight={'medium'}
             size={14}
             lineHeight={18}
-            textAlign={"center"}
+            textAlign={'center'}
           >
-            ✅ Ready to claim{" "}
-            {parseFloat(formatUnits(BigInt(claimAmountWei), 18)).toFixed(0)}{" "}
+            ✅ Ready to claim{' '}
+            {parseFloat(formatUnits(BigInt(claimAmountWei), 18)).toFixed(0)}{' '}
             $BRND
           </Typography>
         </div>
@@ -77,11 +77,11 @@ export function AlreadySharedStatus({
       {(claimError || contractError) && (
         <div className={styles.errorMessage}>
           <Typography
-            variant={"geist"}
-            weight={"medium"}
+            variant={'geist'}
+            weight={'medium'}
             size={14}
             lineHeight={18}
-            textAlign={"center"}
+            textAlign={'center'}
           >
             {claimError || contractError}
           </Typography>

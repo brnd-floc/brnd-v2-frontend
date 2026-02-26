@@ -23,10 +23,10 @@ export const shouldHandleStoriesTxSuccess = ({
 }) => isConfirmed && hasReceipt && Boolean(lastOperation);
 
 export const getStoriesOperationFlags = (lastOperation: string | null) => ({
-  isApproving: lastOperation === "approve",
-  isVoting: lastOperation === "vote",
-  isCreatingBrand: lastOperation === "createBrand",
-  isUpdatingBrand: lastOperation === "updateBrand",
+  isApproving: lastOperation === 'approve',
+  isVoting: lastOperation === 'vote',
+  isCreatingBrand: lastOperation === 'createBrand',
+  isUpdatingBrand: lastOperation === 'updateBrand',
 });
 
 export const deriveWalletAuthorizedState = ({

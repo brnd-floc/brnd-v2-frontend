@@ -1,9 +1,9 @@
-import { useRef } from "react";
-import { PodiumCard } from "./PodiumCard";
-import styles from "./PodiumCarouselGSAP.module.scss";
-import { useLivePodiumsData } from "./useLivePodiumsData";
-import { usePodiumStackAnimation } from "./usePodiumStackAnimation";
-import type { LivePodium } from "./livePodiums.types";
+import { useRef } from 'react';
+import { PodiumCard } from './PodiumCard';
+import styles from './PodiumCarouselGSAP.module.scss';
+import { useLivePodiumsData } from './useLivePodiumsData';
+import { usePodiumStackAnimation } from './usePodiumStackAnimation';
+import type { LivePodium } from './livePodiums.types';
 
 const VISIBLE_CARDS = 4;
 

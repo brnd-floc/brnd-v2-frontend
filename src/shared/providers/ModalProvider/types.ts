@@ -1,19 +1,19 @@
-import { User } from "@/shared/hooks/user";
-import { Brand } from "../../hooks/brands";
-import { CollectibleData, PodiumBrand } from "../../types/collectibles";
-import { IndividualPodiumProps } from "@/shared/components/IndividualPodium";
+import { User } from '@/shared/hooks/user';
+import { Brand } from '../../hooks/brands';
+import { CollectibleData, PodiumBrand } from '../../types/collectibles';
+import { IndividualPodiumProps } from '@/shared/components/IndividualPodium';
 
 /**
  * Enum representing the different types of modal identifiers.
  */
 export enum ModalsIds {
-  ERROR = "ERROR",
-  BOTTOM_ALERT = "BOTTOM_ALERT",
-  SHARE_BRAND = "SHARE_BRAND",
-  PERKS = "PERKS",
-  PODIUM_DETAIL = "PODIUM_DETAIL",
-  FEED_PODIUM_DETAIL = "FEED_PODIUM_DETAIL",
-  TRANSACTION_ERROR = "TRANSACTION_ERROR",
+  ERROR = 'ERROR',
+  BOTTOM_ALERT = 'BOTTOM_ALERT',
+  SHARE_BRAND = 'SHARE_BRAND',
+  PERKS = 'PERKS',
+  PODIUM_DETAIL = 'PODIUM_DETAIL',
+  FEED_PODIUM_DETAIL = 'FEED_PODIUM_DETAIL',
+  TRANSACTION_ERROR = 'TRANSACTION_ERROR',
 }
 
 /**
@@ -67,7 +67,7 @@ export type ErrorModalData = {
  * @property {string} id - The unique identifier for the brand to be shared.
  */
 export type ShareBrandModalData = {
-  id: Brand["id"];
+  id: Brand['id'];
 };
 
 /**

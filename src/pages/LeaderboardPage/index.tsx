@@ -1,20 +1,20 @@
-import React from "react";
-import { Routes, Route } from "react-router-dom";
+import React from 'react';
+import { Routes, Route } from 'react-router-dom';
 
 // StyleSheet
-import styles from "./LeaderboardPage.module.scss";
+import styles from './LeaderboardPage.module.scss';
 
 // Components
-import AppLayout from "../../shared/layouts/AppLayout";
-import TabNavigator from "@/components/TabNavigator";
-import LeaderboardFeed from "./partials/LeaderboardFeed";
+import AppLayout from '../../shared/layouts/AppLayout';
+import TabNavigator from '@/components/TabNavigator';
+import LeaderboardFeed from './partials/LeaderboardFeed';
 
 // Hocs
-import withProtectionRoute from "@/hocs/withProtectionRoute";
-import BrandHeader from "@/shared/components/BrandHeader";
-import Typography from "@/shared/components/Typography";
+import withProtectionRoute from '@/hocs/withProtectionRoute';
+import BrandHeader from '@/shared/components/BrandHeader';
+import Typography from '@/shared/components/Typography';
 
-export type LeaderboardSeason = "all" | "s1" | "s2";
+export type LeaderboardSeason = 'all' | 's1' | 's2';
 
 function LeaderboardPage(): React.ReactNode {
   return (
@@ -34,16 +34,16 @@ function LeaderboardPage(): React.ReactNode {
             <TabNavigator
               tabs={[
                 {
-                  label: "All Time",
-                  path: "/leaderboard",
+                  label: 'All Time',
+                  path: '/leaderboard',
                 },
                 {
-                  label: "S1",
-                  path: "/leaderboard/s1",
+                  label: 'S1',
+                  path: '/leaderboard/s1',
                 },
                 {
-                  label: "S2",
-                  path: "/leaderboard/s2",
+                  label: 'S2',
+                  path: '/leaderboard/s2',
                 },
               ]}
             />
@@ -59,4 +59,4 @@ function LeaderboardPage(): React.ReactNode {
   );
 }
 
-export default withProtectionRoute(LeaderboardPage, "only-connected");
+export default withProtectionRoute(LeaderboardPage, 'only-connected');

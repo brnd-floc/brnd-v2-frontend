@@ -1,4 +1,4 @@
-import type { StoriesOperationToken } from "./useStoriesInMotion.async";
+import type { StoriesOperationToken } from './useStoriesInMotion.async';
 
 export interface AuthorizeWalletParams {
   fid: number;
@@ -82,12 +82,12 @@ export interface TxCallbackData {
 export type ContractUserInfoTuple = readonly [bigint, bigint, bigint, bigint];
 export type TxLog = { topics?: readonly string[] };
 export type StoriesOperation =
-  | "levelup"
-  | "approve"
-  | "vote"
-  | "claimReward"
-  | "createBrand"
-  | "updateBrand";
+  | 'levelup'
+  | 'approve'
+  | 'vote'
+  | 'claimReward'
+  | 'createBrand'
+  | 'updateBrand';
 export type ClaimSignatureRequest = (
   voteId: string,
   recipientAddress: string,
@@ -138,9 +138,9 @@ export type BrandMutationInput = {
 };
 
 export const STORIES_FALLBACK_ERRORS = {
-  LEVEL_UP: "Level up failed",
-  VOTE: "Vote failed",
-  CLAIM_REWARD: "Claim reward failed",
+  LEVEL_UP: 'Level up failed',
+  VOTE: 'Vote failed',
+  CLAIM_REWARD: 'Claim reward failed',
 } as const;
 
 export type OnchainOperationFailure = {

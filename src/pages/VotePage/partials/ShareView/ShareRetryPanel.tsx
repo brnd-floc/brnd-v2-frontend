@@ -1,5 +1,5 @@
-import Typography from "@/components/Typography";
-import styles from "./ShareView.module.scss";
+import Typography from '@/components/Typography';
+import styles from './ShareView.module.scss';
 
 type ShareRetryPanelProps = {
   showWalletWarning: boolean;
@@ -17,13 +17,13 @@ export function ShareRetryPanel({
   return (
     <div className={styles.walletWarning}>
       <Typography
-        variant={"geist"}
-        weight={"medium"}
+        variant={'geist'}
+        weight={'medium'}
         size={12}
         lineHeight={16}
-        textAlign={"center"}
+        textAlign={'center'}
       >
-        ⚠️ Rewards will be sent to your registered wallet:{" "}
+        ⚠️ Rewards will be sent to your registered wallet:{' '}
         {`${rewardRecipient.slice(0, 6)}...${rewardRecipient.slice(-4)}`}
       </Typography>
     </div>

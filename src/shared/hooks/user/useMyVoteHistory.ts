@@ -1,7 +1,7 @@
-import { useRef } from "react";
-import { UserVoteHistory } from "./types";
-import { getMyVoteHistory } from "@/services/user";
-import { useQuery } from "@tanstack/react-query";
+import { useRef } from 'react';
+import { UserVoteHistory } from './types';
+import { getMyVoteHistory } from '@/services/user';
+import { useQuery } from '@tanstack/react-query';
 
 export interface VoteHistoryResponse {
   count: number;
@@ -18,7 +18,7 @@ export const useMyVoteHistory = (pageId: number = 1, limit: number = 15) => {
   const countRef = useRef<number>(0);
 
   const result = useQuery({
-    queryKey: ["myVoteHistory", pageId, limit],
+    queryKey: ['myVoteHistory', pageId, limit],
     queryFn: () => getMyVoteHistory(pageId, limit),
     retry: 1,
     staleTime: 2 * 60 * 1000, // Consider data fresh for 2 minutes

@@ -1,8 +1,8 @@
 // API Dependency
-import { request } from "./api";
+import { request } from './api';
 
 // Configuration
-import { BRAND_SERVICE, USER_SERVICE, AIRDROP_SERVICE } from "@/config/api";
+import { BRAND_SERVICE, USER_SERVICE, AIRDROP_SERVICE } from '@/config/api';
 
 // Types
 import {
@@ -10,7 +10,7 @@ import {
   UserVoteHistory,
   UserVote,
   UserBrand,
-} from "../shared/hooks/user";
+} from '../shared/hooks/user';
 
 export interface ShareVerificationData {
   castHash: string;
@@ -31,11 +31,11 @@ export interface ShareVerificationResponse {
  * @param pageId - The page number for paginated vote history.
  * @returns A promise that resolves with an object containing the count of votes and the user's vote history data.
  */
-export const getUserVotesHistory = async (id: User["fid"], pageId: number) =>
+export const getUserVotesHistory = async (id: User['fid'], pageId: number) =>
   await request<{ count: number; data: Record<string, UserVoteHistory> }>(
     `${USER_SERVICE}/user/${id}/vote-history`,
     {
-      method: "GET",
+      method: 'GET',
       params: {
         pageId: String(pageId),
         limit: String(3 * 10),
@@ -58,7 +58,7 @@ export const getMyVoteHistory = async (
   await request<{ count: number; data: Record<string, UserVoteHistory> }>(
     `${USER_SERVICE}/my-vote-history`,
     {
-      method: "GET",
+      method: 'GET',
       params: {
         pageId: String(pageId),
         limit: String(limit),
@@ -82,14 +82,14 @@ export interface LeaderboardApiResponse {
   currentUser?: {
     position: number;
     points: number;
-    user: Pick<User, "fid" | "username" | "photoUrl">;
+    user: Pick<User, 'fid' | 'username' | 'photoUrl'>;
   };
 }
 
 /**
  * Season filter type for leaderboard
  */
-export type LeaderboardSeason = "all" | "s1" | "s2";
+export type LeaderboardSeason = 'all' | 's1' | 's2';
 
 /**
  * Retrieves the user leaderboard with ranking and pagination.
@@ -103,10 +103,10 @@ export type LeaderboardSeason = "all" | "s1" | "s2";
 export const getUserLeaderboard = async (
   page: number = 1,
   limit: number = 50,
-  season: LeaderboardSeason = "all"
+  season: LeaderboardSeason = 'all'
 ): Promise<LeaderboardApiResponse> =>
   await request<LeaderboardApiResponse>(`${USER_SERVICE}/leaderboard`, {
-    method: "GET",
+    method: 'GET',
     params: {
       page: String(page),
       limit: String(limit),
@@ -122,17 +122,17 @@ export const getUserLeaderboard = async (
  */
 export const getUserVotes = async (unixDate: number) =>
   await request<UserVote>(`${USER_SERVICE}/votes/${unixDate}`, {
-    method: "GET",
+    method: 'GET',
   });
 
 export const getUserBrands = async () =>
   await request<UserBrand[]>(`${USER_SERVICE}/brands`, {
-    method: "GET",
+    method: 'GET',
   });
 
 export const shareFrame = async (): Promise<boolean> =>
   await request(`${USER_SERVICE}/share-frame`, {
-    method: "POST",
+    method: 'POST',
   });
 
 /**
@@ -145,10 +145,10 @@ export const verifyShare = async (
   data: ShareVerificationData
 ): Promise<ShareVerificationResponse> =>
   await request<ShareVerificationResponse>(`${BRAND_SERVICE}/verify-share`, {
-    method: "POST",
+    method: 'POST',
     body: data,
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
   });
 
@@ -198,7 +198,7 @@ export const checkUserAirdrop = async (): Promise<AirdropCheckResponse> => {
     const response = await request<AirdropCheckResponse>(
       `${AIRDROP_SERVICE}/check-user`,
       {
-        method: "GET",
+        method: 'GET',
       }
     );
     return response;
@@ -269,7 +269,7 @@ export const getAirdropLeaderboard = async (
   limit: number = 100
 ): Promise<AirdropLeaderboardResponse> =>
   await request<AirdropLeaderboardResponse>(`${AIRDROP_SERVICE}/leaderboard`, {
-    method: "GET",
+    method: 'GET',
     params: {
       limit: String(limit),
     },
@@ -283,5 +283,5 @@ export const getAirdropLeaderboard = async (
  */
 export const getUserProfile = async (): Promise<UserProfileData> =>
   await request<UserProfileData>(`${USER_SERVICE}/profile`, {
-    method: "GET",
+    method: 'GET',
   });

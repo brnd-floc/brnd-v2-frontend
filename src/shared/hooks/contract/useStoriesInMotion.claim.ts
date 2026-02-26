@@ -1,12 +1,12 @@
-import type { StoriesOperationToken } from "./useStoriesInMotion.async";
-import { asHexAddress } from "./useStoriesInMotion.signatures";
-import { validateClaimVerificationInput, validateWalletAuthorizedInput } from "./useStoriesInMotion.validation";
+import type { StoriesOperationToken } from './useStoriesInMotion.async';
+import { asHexAddress } from './useStoriesInMotion.signatures';
+import { validateClaimVerificationInput, validateWalletAuthorizedInput } from './useStoriesInMotion.validation';
 import type {
   ClaimSignatureRequest,
   ClaimSignatureRequestResult,
-} from "./useStoriesInMotion.types";
+} from './useStoriesInMotion.types';
 
-type ClaimSignatureShape = ClaimSignatureRequestResult["claimSignature"];
+type ClaimSignatureShape = ClaimSignatureRequestResult['claimSignature'];
 
 export const validateClaimSignatureContext = ({
   userAddress,
@@ -95,7 +95,7 @@ export const resolveClaimSignatureRequest = async ({
 
   if (!verifyData.claimSignature) {
     throw new Error(
-      "Claim signature not available. Please ensure the vote was shared and verified."
+      'Claim signature not available. Please ensure the vote was shared and verified.'
     );
   }
 
@@ -103,7 +103,7 @@ export const resolveClaimSignatureRequest = async ({
     claimSignature: verifyData.claimSignature,
     day: verifyData.day,
     amount: verifyData.claimSignature.amount,
-    castHash: verifyData.castHash || "",
+    castHash: verifyData.castHash || '',
   };
 };
 
@@ -169,8 +169,8 @@ export const verifyShareAndGetClaimSignatureCoordinator = async ({
     transactionHash,
     recipientOverride,
     castedFrom,
-    supersededMessage: "Verification request superseded by newer operation",
-    verificationMessage: "Share verification failed",
+    supersededMessage: 'Verification request superseded by newer operation',
+    verificationMessage: 'Share verification failed',
   });
 };
 
@@ -208,7 +208,7 @@ export const getClaimSignatureForSharedVoteCoordinator = async ({
     transactionHash,
     recipientOverride,
     castedFrom,
-    supersededMessage: "Claim signature request superseded by newer operation",
+    supersededMessage: 'Claim signature request superseded by newer operation',
   });
 };
 
@@ -258,8 +258,8 @@ export const runLegacyClaimRewardFlow = async ({
     );
     await executeClaimReward(castHash, claimSignature, day, recipient || userAddress!);
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : "Claim reward failed";
-    logStoriesError("❌ [ClaimReward] Claim reward failed:", error);
+    const errorMessage = error instanceof Error ? error.message : 'Claim reward failed';
+    logStoriesError('❌ [ClaimReward] Claim reward failed:', error);
     if (!shouldIgnoreOperationError(error)) {
       setError(errorMessage);
     }

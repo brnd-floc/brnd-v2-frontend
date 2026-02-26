@@ -1,5 +1,5 @@
 // Dependencies
-import { request } from "./api";
+import { request } from './api';
 
 // Types
 export interface AirdropClaimStatusResponse {
@@ -58,9 +58,9 @@ export const checkClaimStatus =
   async (): Promise<AirdropClaimStatusResponse> => {
     try {
       const response = await request<AirdropClaimStatusResponse>(
-        "/airdrop-service/claim-status",
+        '/airdrop-service/claim-status',
         {
-          method: "GET",
+          method: 'GET',
         }
       );
 
@@ -79,9 +79,9 @@ export const getClaimSignature = async (
 ): Promise<AirdropSignatureResponse> => {
   try {
     const response = await request<AirdropSignatureResponse>(
-      "/airdrop-service/claim-signature",
+      '/airdrop-service/claim-signature',
       {
-        method: "POST",
+        method: 'POST',
         body: {
           walletAddress,
           ...(snapshotId && { snapshotId }),
@@ -92,13 +92,13 @@ export const getClaimSignature = async (
     // Handle case where response might be the data directly or wrapped
     if ((response as any).success === false) {
       const errorResponse = response as unknown as AirdropErrorResponse;
-      throw new Error(errorResponse.error || "Failed to get claim signature");
+      throw new Error(errorResponse.error || 'Failed to get claim signature');
     }
 
     // Check if response has the expected structure
     if (!(response as any).data && !(response as any).fid) {
       throw new Error(
-        "Invalid response structure from claim signature endpoint"
+        'Invalid response structure from claim signature endpoint'
       );
     }
 

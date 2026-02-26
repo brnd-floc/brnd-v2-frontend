@@ -1,19 +1,19 @@
 // API Dependency
-import { request } from "./api";
+import { request } from './api';
 
 // Configuration
-import { AUTH_SERVICE } from "@/config/api";
+import { AUTH_SERVICE } from '@/config/api';
 
 // Types
-import { User } from "../shared/hooks/user";
+import { User } from '../shared/hooks/user';
 
-import { config } from "@/shared/config/wagmi";
+import { config } from '@/shared/config/wagmi';
 import {
   BRND_SEASON_2_CONFIG,
   BRND_SEASON_2_CONFIG_ABI,
-} from "@/config/contracts";
+} from '@/config/contracts';
 
-import { readContract } from "wagmi/actions";
+import { readContract } from 'wagmi/actions';
 
 /**
  * Retrieves the current user's information from the authentication service.
@@ -37,23 +37,23 @@ export const getOnchainUser = async (fid: number): Promise<{ user: any }> => {
     readContract(config, {
       address: BRND_SEASON_2_CONFIG.CONTRACT as `0x${string}`,
       abi: BRND_SEASON_2_CONFIG_ABI,
-      functionName: "getUserInfo",
+      functionName: 'getUserInfo',
       args: [BigInt(fid)],
     }),
     readContract(config, {
       address: BRND_SEASON_2_CONFIG.CONTRACT as `0x${string}`,
       abi: BRND_SEASON_2_CONFIG_ABI,
-      functionName: "hasVotedToday",
+      functionName: 'hasVotedToday',
       args: [BigInt(fid), BigInt(day)],
     }),
     readContract(config, {
       address: BRND_SEASON_2_CONFIG.CONTRACT as `0x${string}`,
       abi: BRND_SEASON_2_CONFIG_ABI,
-      functionName: "getCurrentDay",
+      functionName: 'getCurrentDay',
     }),
   ]);
   if (Number(currentDay) !== day) {
-    console.log("SOMEHOW THE DAYS DONT MATCH, CONTACT JP");
+    console.log('SOMEHOW THE DAYS DONT MATCH, CONTACT JP');
   }
 
   return {
@@ -75,7 +75,7 @@ export const getMe = async (): Promise<
   const response = await request<
     User & { hasVotedToday: boolean; isNewUser: boolean }
   >(`${AUTH_SERVICE}/me`, {
-    method: "GET",
+    method: 'GET',
   });
   const onchainUserData = await getOnchainUser(response.fid);
   response.brndPowerLevel = onchainUserData.user.brndPowerLevel;
@@ -99,7 +99,7 @@ export const updateProfile = async (profileData: {
   await request<User & { hasVotedToday: boolean; isNewUser: boolean }>(
     `${AUTH_SERVICE}/me`,
     {
-      method: "GET",
+      method: 'GET',
       body: profileData,
     }
   );

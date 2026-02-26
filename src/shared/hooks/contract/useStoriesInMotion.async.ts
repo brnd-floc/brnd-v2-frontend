@@ -1,4 +1,4 @@
-import { isAbortLikeError } from "./useStoriesInMotion.errors";
+import { isAbortLikeError } from './useStoriesInMotion.errors';
 
 export interface StoriesOperationToken {
   id: number;
@@ -33,7 +33,7 @@ const sleep = (ms: number) =>
   });
 
 const getErrorStatus = (error: unknown) => {
-  if (typeof error === "object" && error !== null && "status" in error) {
+  if (typeof error === 'object' && error !== null && 'status' in error) {
     return (error as { status?: number }).status;
   }
   return undefined;

@@ -1,5 +1,5 @@
-import Typography from "@/components/Typography";
-import styles from "./AlreadySharedView.module.scss";
+import Typography from '@/components/Typography';
+import styles from './AlreadySharedView.module.scss';
 
 type AlreadySharedWalletInfoProps = {
   isWalletMismatch: boolean;
@@ -17,14 +17,14 @@ export function AlreadySharedWalletInfo({
   return (
     <div className={styles.walletWarning}>
       <Typography
-        variant={"geist"}
-        weight={"medium"}
+        variant={'geist'}
+        weight={'medium'}
         size={12}
         lineHeight={16}
-        textAlign={"center"}
+        textAlign={'center'}
       >
         ⚠️ You voted through another miniapp client using that wallet. Your daily
-        rewards will be sent to your registered wallet:{" "}
+        rewards will be sent to your registered wallet:{' '}
         {`${rewardRecipient.slice(0, 6)}...${rewardRecipient.slice(-4)}`}
       </Typography>
     </div>

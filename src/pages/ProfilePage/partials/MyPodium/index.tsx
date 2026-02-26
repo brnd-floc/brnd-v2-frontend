@@ -1,18 +1,18 @@
-import { useEffect, useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import sdk from "@farcaster/miniapp-sdk";
-import styles from "./MyPodium.module.scss";
-import { useMyVoteHistory } from "@/hooks/user";
-import { usePodiumCollectibles } from "@/shared/hooks/contract/usePodiumCollectibles";
-import { useAuth } from "@/shared/hooks/auth";
-import { useModal } from "@/shared/hooks/ui/useModal";
-import { ModalsIds } from "@/shared/providers/ModalProvider/types";
-import Typography from "@/components/Typography";
-import IndividualPodium, { MintingStep } from "@/shared/components/IndividualPodium";
-import LoaderIndicator from "@/shared/components/LoaderIndicator";
-import Button from "@/shared/components/Button";
-import { CollectibleData } from "@/shared/types/collectibles";
-import { UserVoteHistory } from "@/shared/hooks/user/types";
+import { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import sdk from '@farcaster/miniapp-sdk';
+import styles from './MyPodium.module.scss';
+import { useMyVoteHistory } from '@/hooks/user';
+import { usePodiumCollectibles } from '@/shared/hooks/contract/usePodiumCollectibles';
+import { useAuth } from '@/shared/hooks/auth';
+import { useModal } from '@/shared/hooks/ui/useModal';
+import { ModalsIds } from '@/shared/providers/ModalProvider/types';
+import Typography from '@/components/Typography';
+import IndividualPodium, { MintingStep } from '@/shared/components/IndividualPodium';
+import LoaderIndicator from '@/shared/components/LoaderIndicator';
+import Button from '@/shared/components/Button';
+import { CollectibleData } from '@/shared/types/collectibles';
+import { UserVoteHistory } from '@/shared/hooks/user/types';
 
 function MyPodium() {
   const navigate = useNavigate();
@@ -22,7 +22,7 @@ function MyPodium() {
     null
   );
   // Track optimistic updates for successful transactions
-  const [successfulPodiums, setSuccessfulPodiums] = useState<Map<string, "mint" | "buy">>(
+  const [successfulPodiums, setSuccessfulPodiums] = useState<Map<string, 'mint' | 'buy'>>(
     new Map()
   );
 
@@ -49,12 +49,12 @@ function MyPodium() {
     refreshData,
   } = usePodiumCollectibles(
     (txData) => {
-      console.log("✅ Podium claimed!", txData);
+      console.log('✅ Podium claimed!', txData);
       // Provide haptic feedback for success
-      sdk.haptics.notificationOccurred("success");
+      sdk.haptics.notificationOccurred('success');
       // Optimistically mark this podium as successful with type
       if (processingPodiumId) {
-        setSuccessfulPodiums((prev) => new Map(prev).set(processingPodiumId, "mint"));
+        setSuccessfulPodiums((prev) => new Map(prev).set(processingPodiumId, 'mint'));
       }
       setProcessingPodiumId(null);
       refreshData();
@@ -62,12 +62,12 @@ function MyPodium() {
       // List will sync when user navigates away and back
     },
     (txData) => {
-      console.log("✅ Podium bought!", txData);
+      console.log('✅ Podium bought!', txData);
       // Provide haptic feedback for success
-      sdk.haptics.notificationOccurred("success");
+      sdk.haptics.notificationOccurred('success');
       // Optimistically mark this podium as successful with type
       if (processingPodiumId) {
-        setSuccessfulPodiums((prev) => new Map(prev).set(processingPodiumId, "buy"));
+        setSuccessfulPodiums((prev) => new Map(prev).set(processingPodiumId, 'buy'));
       }
       setProcessingPodiumId(null);
       refreshData();
@@ -82,12 +82,12 @@ function MyPodium() {
 
   // Calculate current minting step based on hook states
   const getCurrentMintingStep = (): MintingStep => {
-    if (isFetchingSignature) return "fetching_signature";
-    if (isApproving && !isConfirming) return "approving";
-    if (isApproving && isConfirming) return "confirming_approval";
-    if (isClaimingPodium && !isConfirming) return "minting";
-    if (isBuyingPodium && !isConfirming) return "buying";
-    if (isConfirming) return "confirming";
+    if (isFetchingSignature) return 'fetching_signature';
+    if (isApproving && !isConfirming) return 'approving';
+    if (isApproving && isConfirming) return 'confirming_approval';
+    if (isClaimingPodium && !isConfirming) return 'minting';
+    if (isBuyingPodium && !isConfirming) return 'buying';
+    if (isConfirming) return 'confirming';
     return null;
   };
 
@@ -115,12 +115,12 @@ function MyPodium() {
   // Show error modal when contract error occurs
   useEffect(() => {
     if (contractError) {
-      sdk.haptics.notificationOccurred("error");
+      sdk.haptics.notificationOccurred('error');
       openModal(ModalsIds.TRANSACTION_ERROR, {
         error: contractError,
         route: window.location.pathname,
         timestamp: new Date().toISOString(),
-        transactionType: "Podium Transaction (MyPodium)",
+        transactionType: 'Podium Transaction (MyPodium)',
       });
       setProcessingPodiumId(null);
     }
@@ -156,7 +156,7 @@ function MyPodium() {
         setProcessingPodiumId(podiumId);
         await claimPodium(brandIds);
       } catch (error) {
-        console.error("Failed to mint podium:", error);
+        console.error('Failed to mint podium:', error);
         setProcessingPodiumId(null);
       }
     },
@@ -170,7 +170,7 @@ function MyPodium() {
         setProcessingPodiumId(podiumId);
         await buyPodium(tokenId);
       } catch (error) {
-        console.error("Failed to buy podium:", error);
+        console.error('Failed to buy podium:', error);
         setProcessingPodiumId(null);
       }
     },
@@ -204,7 +204,7 @@ function MyPodium() {
   ): CollectibleData => ({
     isCollectible: (vote as any).isCollectible ?? false,
     tokenId: (vote as any).collectibleTokenId ?? null,
-    price: (vote as any).collectiblePrice || "1000000000000000000000000", // 1M BRND default
+    price: (vote as any).collectiblePrice || '1000000000000000000000000', // 1M BRND default
     claimCount: (vote as any).collectibleClaimCount ?? 0,
     genesisCreatorFid: (vote as any).collectibleGenesisCreatorFid ?? null,
     genesisCreatorUsername:
@@ -212,7 +212,7 @@ function MyPodium() {
     ownerFid: (vote as any).collectibleOwnerFid ?? null,
     ownerUsername: (vote as any).collectibleOwnerUsername ?? null,
     ownerPhotoUrl: (vote as any).collectibleOwner?.photoUrl ?? null,
-    totalFeesEarned: (vote as any).collectibleTotalFeesEarned ?? "0",
+    totalFeesEarned: (vote as any).collectibleTotalFeesEarned ?? '0',
   });
 
   // Get isLastVoteForCombination from vote data
@@ -261,7 +261,7 @@ function MyPodium() {
             <Button
               caption="Vote Now"
               variant="primary"
-              onClick={() => navigate("/vote")}
+              onClick={() => navigate('/vote')}
             />
           </div>
         </div>
@@ -293,12 +293,12 @@ function MyPodium() {
               const successType = successfulPodiums.get(vote.id);
               const optimisticCollectibleData = hasSucceeded
                 ? {
-                    ...collectibleData,
-                    isCollectible: true,
-                    ownerFid: userFid,
-                    ownerUsername: authData?.username || null,
-                    ownerPhotoUrl: authData?.photoUrl || null,
-                  }
+                  ...collectibleData,
+                  isCollectible: true,
+                  ownerFid: userFid,
+                  ownerUsername: authData?.username || null,
+                  ownerPhotoUrl: authData?.photoUrl || null,
+                }
                 : collectibleData;
 
               return (

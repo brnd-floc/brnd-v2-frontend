@@ -1,35 +1,35 @@
-import { useCallback, useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useCallback, useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-import { useAccount, useReadContract } from "wagmi";
+import { useAccount, useReadContract } from 'wagmi';
 import {
   BRND_SEASON_2_CONFIG,
   BRND_SEASON_2_CONFIG_ABI,
-} from "@/config/contracts";
+} from '@/config/contracts';
 
 // Components
-import Typography from "@/components/Typography";
+import Typography from '@/components/Typography';
 
 // Hooks
-import { useStoriesInMotion } from "@/shared/hooks/contract/useStoriesInMotion";
-import { useAuth } from "@/shared/hooks/auth";
+import { useStoriesInMotion } from '@/shared/hooks/contract/useStoriesInMotion';
+import { useAuth } from '@/shared/hooks/auth';
 
 // Types
-import { VotingViewProps, VotingViewEnum } from "../../types";
+import { VotingViewProps, VotingViewEnum } from '../../types';
 
 // Assets
 // StyleSheet
-import styles from "./ShareView.module.scss";
+import styles from './ShareView.module.scss';
 import {
   composeMiniAppCast,
   getMiniAppClientFid,
-} from "@/shared/utils/farcasterActions";
-import { triggerNotificationHaptic } from "@/shared/utils/haptics";
-import { logFeatureError } from "@/shared/utils/logger";
+} from '@/shared/utils/farcasterActions';
+import { triggerNotificationHaptic } from '@/shared/utils/haptics';
+import { logFeatureError } from '@/shared/utils/logger';
 import {
   isAbortLikeError,
   isSupersededOperationError,
-} from "@/shared/hooks/contract/useStoriesInMotion.public";
+} from '@/shared/hooks/contract/useStoriesInMotion.public';
 import {
   buildShareCastText,
   getClaimAmountLabel,
@@ -38,11 +38,11 @@ import {
   getShareFeedbackState,
   getShareRecoveryState,
   shouldRenderShareLoadingState,
-} from "./viewModel";
-import { ShareStatusPanel } from "./ShareStatusPanel";
-import { ShareHeaderSection } from "./ShareHeaderSection";
-import { SharePodiumSection } from "./SharePodiumSection";
-import { ShareActionsSection } from "./ShareActionsSection";
+} from './viewModel';
+import { ShareStatusPanel } from './ShareStatusPanel';
+import { ShareHeaderSection } from './ShareHeaderSection';
+import { SharePodiumSection } from './SharePodiumSection';
+import { ShareActionsSection } from './ShareActionsSection';
 
 interface ShareViewProps extends VotingViewProps {}
 type CastComposeResponse = {
@@ -70,7 +70,7 @@ export default function ShareView({
   const { data: authorizedWallets } = useReadContract({
     address: BRND_SEASON_2_CONFIG.CONTRACT,
     abi: BRND_SEASON_2_CONFIG_ABI,
-    functionName: "getUserWallets",
+    functionName: 'getUserWallets',
     args: userFid ? [userFid] : undefined,
     query: {
       enabled: !!userFid,
@@ -94,7 +94,7 @@ export default function ShareView({
     undefined, // onVoteSuccess
     // onClaimSuccess
     async (txData) => {
-      triggerNotificationHaptic("success");
+      triggerNotificationHaptic('success');
 
       const claimTxHash = txData?.txHash;
       if (!claimTxHash) {
@@ -128,7 +128,7 @@ export default function ShareView({
         },
         contextualTransaction: {
           transactionHash: claimTxHash,
-          transactionType: "claim",
+          transactionType: 'claim',
           rewardAmount: rewardAmount,
           castHash:
             castHash || authData?.todaysVoteStatus?.castHash || undefined,
@@ -140,7 +140,7 @@ export default function ShareView({
       navigateToView?.(
         VotingViewEnum.CONGRATS,
         currentBrands,
-        transactionHash || "", // Use transaction hash as vote ID
+        transactionHash || '', // Use transaction hash as vote ID
         transactionHash,
         castHash || undefined
       );
@@ -239,7 +239,7 @@ export default function ShareView({
    * Handles the click event for the "Skip" button.
    */
   const handleClickSkip = useCallback(() => {
-    navigate("/");
+    navigate('/');
   }, [navigate]);
 
   /**
@@ -262,9 +262,9 @@ export default function ShareView({
       // For non-Farcaster (TBA = 309857), we pass empty castHash
       // Backend will search for shares containing the vote hash
       const verificationResult = await verifyShareAndGetClaimSignature(
-        "", // Empty castHash for manual verification
-        voteIdForVerification || "", // Use transaction hash as vote ID
-        transactionHash || "",
+        '', // Empty castHash for manual verification
+        voteIdForVerification || '', // Use transaction hash as vote ID
+        transactionHash || '',
         rewardRecipient,
         clientFid // Pass actual clientFid (309857 for TBA, etc.)
       );
@@ -293,13 +293,13 @@ export default function ShareView({
           hasClaimed: false,
           voteId: transactionHash || null,
           castHash: verificationResult.castHash, // No specific cast hash for manual shares
-          transactionHash: transactionHash || "",
+          transactionHash: transactionHash || '',
           day: day,
         },
         contextualTransaction: {
           transactionHash: null,
           transactionType: null,
-          castHash: "",
+          castHash: '',
           day: day,
         },
       });
@@ -314,11 +314,11 @@ export default function ShareView({
       }
       const errorMessage = getShareErrorMessage(
         error,
-        "Share not found. Please make sure you shared and try again."
+        'Share not found. Please make sure you shared and try again.'
       );
       logFeatureError({
-        feature: "share_view",
-        action: "manual_verify_share",
+        feature: 'share_view',
+        action: 'manual_verify_share',
         error,
       });
       applyShareErrorIfActive(operationId, errorMessage, {
@@ -353,11 +353,11 @@ export default function ShareView({
       const castText = buildShareCastText(currentBrands);
 
       // Build Farcaster embed URL from env, stripping trailing slash
-      const embedBase = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+      const embedBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
       const voteHash = transactionHash;
-        if (!voteHash) {
+      if (!voteHash) {
         if (resetShareLoadingIfActive(operationId)) {
-          setShareError("Vote hash unavailable. Please retry from Vote.");
+          setShareError('Vote hash unavailable. Please retry from Vote.');
         }
         return;
       }
@@ -381,7 +381,7 @@ export default function ShareView({
       } else {
         // For TBA/other clients, use timeout to prevent hanging
         const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("composeCast timeout")), 5000)
+          setTimeout(() => reject(new Error('composeCast timeout')), 5000)
         );
 
         try {
@@ -469,11 +469,11 @@ export default function ShareView({
           }
           const errorMessage = getShareErrorMessage(
             error,
-            "Failed to verify share. Please try again."
+            'Failed to verify share. Please try again.'
           );
           logFeatureError({
-            feature: "share_view",
-            action: "verify_share",
+            feature: 'share_view',
+            action: 'verify_share',
             error,
           });
           applyShareErrorIfActive(operationId, errorMessage);
@@ -489,11 +489,11 @@ export default function ShareView({
       }
     } catch (error) {
       logFeatureError({
-        feature: "share_view",
-        action: "compose_share",
+        feature: 'share_view',
+        action: 'compose_share',
         error,
       });
-      applyShareErrorIfActive(operationId, "Failed to share cast. Please try again.");
+      applyShareErrorIfActive(operationId, 'Failed to share cast. Please try again.');
     }
   }, [
     currentBrands,
@@ -540,11 +540,11 @@ export default function ShareView({
       }
       const errorMessage = getShareErrorMessage(
         error,
-        "Failed to claim reward. Please try again."
+        'Failed to claim reward. Please try again.'
       );
       logFeatureError({
-        feature: "share_view",
-        action: "claim_reward",
+        feature: 'share_view',
+        action: 'claim_reward',
         error,
       });
       applyShareErrorIfActive(operationId, errorMessage, {
@@ -605,11 +605,11 @@ export default function ShareView({
     isWalletMismatch: Boolean(isWalletMismatch),
   });
   const primaryActionHandler =
-    shareUiState.primaryAction === "claim"
+    shareUiState.primaryAction === 'claim'
       ? handleClickClaim
-      : shareUiState.primaryAction === "manual-verify"
-      ? handleManualShareConfirmation
-      : handleClickShare;
+      : shareUiState.primaryAction === 'manual-verify'
+        ? handleManualShareConfirmation
+        : handleClickShare;
 
   return (
     <div className={styles.body}>
