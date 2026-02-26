@@ -4,7 +4,7 @@ import Typography from '@/shared/components/Typography';
 import styles from './PerksModal.module.scss';
 import sdk from '@farcaster/miniapp-sdk';
 
-export type PerksModalData = {};
+export type PerksModalData = object;
 
 export const PerksModal: React.FC<BaseModalProps<PerksModalData>> = ({
   handleClose,

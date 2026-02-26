@@ -84,7 +84,7 @@ export type BottomAlertData = {
 /**
  * Type representing the data structure for the perks modal.
  */
-export type PerksModalData = {};
+export type PerksModalData = object;
 
 /**
  * Type representing the data structure for the podium detail modal.
