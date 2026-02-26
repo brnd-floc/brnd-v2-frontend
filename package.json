@@ -6,8 +6,16 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives",
+    "lint:strict": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "lint:runtime-logs": "rg -n \"(console\\.log\\(|logger\\.debug\\(|console\\.error\\()\" src --glob '!src/pages/AirdropPage/**' --glob '!src/shared/hooks/contract/useAirdropClaim.ts' --glob '!src/shared/hooks/user/useAirdropClaimStatus.ts' --glob '!src/shared/utils/logger.ts' && (echo 'Runtime logs policy violation found' && exit 1) || (echo 'Runtime logs policy passed' && exit 0)",
+    "lint:styles": "node scripts/check-scss-modules.mjs",
+    "lint:styles:strict": "node scripts/check-scss-modules.mjs --strict",
+    "cutover:check-env": "node scripts/cutover-check-env.mjs",
+    "cutover:smoke": "node scripts/cutover-smoke.mjs",
+    "preview": "vite preview",
+    "optimize:png": "node scripts/optimize-pngs.mjs",
+    "optimize:png:check": "node scripts/optimize-pngs.mjs --check"
   },
   "dependencies": {
     "@farcaster/auth-kit": "^0.6.0",
