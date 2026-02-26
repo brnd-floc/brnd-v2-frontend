@@ -127,6 +127,12 @@ function VotePage(): React.ReactNode {
       _transactionHash?: string,
       _castHash?: string
     ) => {
+      void _id;
+      void _selection;
+      void _voteId;
+      void _transactionHash;
+      void _castHash;
+
       // Invalidate auth query to trigger state refresh
       // The state machine will automatically determine the correct view
       // The castHash will be available from todaysVoteStatus.castHash after backend processes it

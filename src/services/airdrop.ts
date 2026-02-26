@@ -56,18 +56,14 @@ export type AirdropSignatureApiResponse =
  */
 export const checkClaimStatus =
   async (): Promise<AirdropClaimStatusResponse> => {
-    try {
-      const response = await request<AirdropClaimStatusResponse>(
-        '/airdrop-service/claim-status',
-        {
-          method: 'GET',
-        }
-      );
+    const response = await request<AirdropClaimStatusResponse>(
+      '/airdrop-service/claim-status',
+      {
+        method: 'GET',
+      }
+    );
 
-      return response;
-    } catch (error: any) {
-      throw error;
-    }
+    return response;
   };
 
 /**
@@ -77,41 +73,41 @@ export const getClaimSignature = async (
   walletAddress: string,
   snapshotId?: number
 ): Promise<AirdropSignatureResponse> => {
-  try {
-    const response = await request<AirdropSignatureResponse>(
-      '/airdrop-service/claim-signature',
-      {
-        method: 'POST',
-        body: {
-          walletAddress,
-          ...(snapshotId && { snapshotId }),
-        },
-      }
-    );
-
-    // Handle case where response might be the data directly or wrapped
-    if ((response as any).success === false) {
-      const errorResponse = response as unknown as AirdropErrorResponse;
-      throw new Error(errorResponse.error || 'Failed to get claim signature');
+  const response = await request<AirdropSignatureResponse>(
+    '/airdrop-service/claim-signature',
+    {
+      method: 'POST',
+      body: {
+        walletAddress,
+        ...(snapshotId && { snapshotId }),
+      },
     }
+  );
 
-    // Check if response has the expected structure
-    if (!(response as any).data && !(response as any).fid) {
-      throw new Error(
-        'Invalid response structure from claim signature endpoint'
-      );
-    }
+  const candidate = response as unknown as {
+    success?: boolean;
+    data?: unknown;
+    fid?: number;
+  };
 
-    // If response doesn't have data property but has the fields directly, wrap it
-    if (!(response as any).data && (response as any).fid) {
-      return {
-        success: true,
-        data: response as any,
-      } as AirdropSignatureResponse;
-    }
-
-    return response;
-  } catch (error: any) {
-    throw error;
+  // Handle case where response might be the data directly or wrapped
+  if (candidate.success === false) {
+    const errorResponse = response as unknown as AirdropErrorResponse;
+    throw new Error(errorResponse.error || 'Failed to get claim signature');
   }
+
+  // Check if response has the expected structure
+  if (!candidate.data && typeof candidate.fid !== 'number') {
+    throw new Error('Invalid response structure from claim signature endpoint');
+  }
+
+  // If response doesn't have data property but has the fields directly, wrap it
+  if (!candidate.data && typeof candidate.fid === 'number') {
+    return {
+      success: true,
+      data: response as unknown as AirdropSignatureResponse['data'],
+    };
+  }
+
+  return response;
 };

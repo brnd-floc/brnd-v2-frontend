@@ -53,10 +53,11 @@ type CastComposeResponse = {
 
 export default function ShareView({
   currentBrands,
-  currentVoteId: _currentVoteId,
+  currentVoteId,
   navigateToView,
   transactionHash,
 }: ShareViewProps) {
+  void currentVoteId;
   const [
     manualVerificationMessageDisplay,
     setManualVerificationMessageDisplay,
