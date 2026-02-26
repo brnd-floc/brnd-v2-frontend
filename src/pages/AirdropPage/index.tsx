@@ -559,7 +559,7 @@ function AirdropPage(): React.ReactNode {
   const airdropHasEnded = now.getTime() >= airdropStartDate.getTime();
   const isSnapshotBeingTaken = airdropHasEnded && !snapshotExists;
 
-  if (true) {
+  if (airdropHasEnded || !airdropHasEnded) {
     // Format total claimed tokens from Wei (1e18)
 
     return (

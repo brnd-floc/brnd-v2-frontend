@@ -327,28 +327,29 @@ function ClaimAirdrop({
         fid: authData.fid,
         walletAddress: address,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Airdrop claim failed
 
       // Handle specific error messages from backend
       let errorMessage = 'Claim failed. Please try again.';
+      const rawMessage = error instanceof Error ? error.message : '';
 
-      if (error.message.includes('not enabled')) {
+      if (rawMessage.includes('not enabled')) {
         errorMessage = 'Claiming is not enabled yet. Please check back later.';
-      } else if (error.message.includes('not set')) {
+      } else if (rawMessage.includes('not set')) {
         errorMessage = 'Airdrop is being prepared. Please check back soon.';
-      } else if (error.message.includes('already claimed')) {
+      } else if (rawMessage.includes('already claimed')) {
         errorMessage = 'You have already claimed your airdrop.';
-      } else if (error.message.includes('not verified')) {
+      } else if (rawMessage.includes('not verified')) {
         errorMessage = 'Please verify your wallet address on Farcaster first.';
-      } else if (error.message.includes('not eligible')) {
+      } else if (rawMessage.includes('not eligible')) {
         errorMessage = 'You are not eligible for this airdrop.';
       } else if (
-        error.message.includes('revert') ||
-        error.message.includes('Reverted')
+        rawMessage.includes('revert') ||
+        rawMessage.includes('Reverted')
       ) {
         // Use the error message directly if it contains revert information
-        errorMessage = error.message;
+        errorMessage = rawMessage;
       }
 
       setClaimError(errorMessage);
