@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Routes, Route } from "react-router-dom";
 
 // StyleSheet
 import styles from "./PodiumPage.module.scss";
 
 // Components
 import AppLayout from "../../shared/layouts/AppLayout";
-import TabNavigator from "@/components/TabNavigator";
 import PublicPodiumsFeed from "./partials/PublicPodiumsFeed";
 
 // Hocs

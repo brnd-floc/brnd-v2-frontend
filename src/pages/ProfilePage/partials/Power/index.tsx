@@ -708,6 +708,35 @@ const Power: React.FC = () => {
 
             return (
               <div className={styles.sectionsContainer}>
+                {/* Apex Message - shown when all levels are completed */}
+                {upcomingLevels.length === 0 && completedLevels.length > 0 && (
+                  <div className={styles.apexSection}>
+                    <div className={styles.apexCard}>
+                      <div className={styles.apexIconContainer}>
+                        <span className={styles.apexIcon}>&#9733;</span>
+                      </div>
+                      <Typography
+                        variant="geist"
+                        weight="bold"
+                        size={16}
+                        lineHeight={20}
+                        className={styles.apexTitle}
+                      >
+                        You've hit the apex of BRND Power.
+                      </Typography>
+                      <Typography
+                        variant="geist"
+                        weight="regular"
+                        size={14}
+                        lineHeight={18}
+                        className={styles.apexSubtitle}
+                      >
+                        The track keeps extending...
+                      </Typography>
+                    </div>
+                  </div>
+                )}
+
                 {upcomingLevels.length > 0 && (
                   <div className={styles.upcomingSection}>
                     <Typography

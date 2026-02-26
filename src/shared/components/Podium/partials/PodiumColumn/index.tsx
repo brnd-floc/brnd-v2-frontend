@@ -8,8 +8,6 @@ import styles from "./PodiumColumn.module.scss";
 import Typography from "@/components/Typography";
 
 // Assets
-import AddIcon from "@/assets/icons/add-solid.svg?react";
-
 import Podium1Icon from "@/shared/assets/icons/podium-1.svg?react";
 import Podium2Icon from "@/shared/assets/icons/podium-2.svg?react";
 import Podium3Icon from "@/shared/assets/icons/podium-3.svg?react";

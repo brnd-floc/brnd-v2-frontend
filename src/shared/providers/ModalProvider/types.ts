@@ -13,6 +13,7 @@ export enum ModalsIds {
   PERKS = "PERKS",
   PODIUM_DETAIL = "PODIUM_DETAIL",
   FEED_PODIUM_DETAIL = "FEED_PODIUM_DETAIL",
+  TRANSACTION_ERROR = "TRANSACTION_ERROR",
 }
 
 /**
@@ -25,6 +26,7 @@ export type ModalData = {
   [ModalsIds.PERKS]: PerksModalData;
   [ModalsIds.PODIUM_DETAIL]: PodiumDetailModalData;
   [ModalsIds.FEED_PODIUM_DETAIL]: FeedPodiumDetailModalData;
+  [ModalsIds.TRANSACTION_ERROR]: TransactionErrorModalData;
 };
 
 /**
@@ -98,4 +100,16 @@ export type PodiumDetailModalData = {
 
 export type FeedPodiumDetailModalData = IndividualPodiumProps & {
   onMintSuccess?: () => void;
+};
+
+/**
+ * Type representing the data structure for a transaction error modal.
+ * Used to display detailed error info for debugging purposes.
+ */
+export type TransactionErrorModalData = {
+  error: string;
+  route: string;
+  timestamp: string;
+  transactionType?: string;
+  additionalInfo?: Record<string, unknown>;
 };

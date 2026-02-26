@@ -11,7 +11,7 @@ import Typography from "@/components/Typography";
 import IndividualPodium, { MintingStep } from "@/shared/components/IndividualPodium";
 import LoaderIndicator from "@/shared/components/LoaderIndicator";
 import Button from "@/shared/components/Button";
-import { CollectibleData, VoteHistoryItem } from "@/shared/types/collectibles";
+import { CollectibleData } from "@/shared/types/collectibles";
 import { UserVoteHistory } from "@/shared/hooks/user/types";
 
 function MyPodium() {
@@ -22,8 +22,8 @@ function MyPodium() {
     null
   );
   // Track optimistic updates for successful transactions
-  const [successfulPodiums, setSuccessfulPodiums] = useState<Set<string>>(
-    new Set()
+  const [successfulPodiums, setSuccessfulPodiums] = useState<Map<string, "mint" | "buy">>(
+    new Map()
   );
 
   const {
@@ -52,9 +52,9 @@ function MyPodium() {
       console.log("✅ Podium claimed!", txData);
       // Provide haptic feedback for success
       sdk.haptics.notificationOccurred("success");
-      // Optimistically mark this podium as successful
+      // Optimistically mark this podium as successful with type
       if (processingPodiumId) {
-        setSuccessfulPodiums((prev) => new Set(prev).add(processingPodiumId));
+        setSuccessfulPodiums((prev) => new Map(prev).set(processingPodiumId, "mint"));
       }
       setProcessingPodiumId(null);
       refreshData();
@@ -65,9 +65,9 @@ function MyPodium() {
       console.log("✅ Podium bought!", txData);
       // Provide haptic feedback for success
       sdk.haptics.notificationOccurred("success");
-      // Optimistically mark this podium as successful
+      // Optimistically mark this podium as successful with type
       if (processingPodiumId) {
-        setSuccessfulPodiums((prev) => new Set(prev).add(processingPodiumId));
+        setSuccessfulPodiums((prev) => new Map(prev).set(processingPodiumId, "buy"));
       }
       setProcessingPodiumId(null);
       refreshData();
@@ -116,13 +116,11 @@ function MyPodium() {
   useEffect(() => {
     if (contractError) {
       sdk.haptics.notificationOccurred("error");
-      openModal(ModalsIds.BOTTOM_ALERT, {
-        title: "Transaction Failed",
-        content: (
-          <Typography size={14} className={styles.errorText}>
-            {contractError}
-          </Typography>
-        ),
+      openModal(ModalsIds.TRANSACTION_ERROR, {
+        error: contractError,
+        route: window.location.pathname,
+        timestamp: new Date().toISOString(),
+        transactionType: "Podium Transaction (MyPodium)",
       });
       setProcessingPodiumId(null);
     }
@@ -131,14 +129,14 @@ function MyPodium() {
   // Clear optimistic updates once real data confirms the change
   useEffect(() => {
     if (history && successfulPodiums.size > 0) {
-      const updatedSuccessful = new Set(successfulPodiums);
+      const updatedSuccessful = new Map(successfulPodiums);
       let hasChanges = false;
 
-      successfulPodiums.forEach((podiumId) => {
+      successfulPodiums.forEach((_, podiumId) => {
         const vote = Object.values(history.data).find(
           (v: UserVoteHistory) => v.id === podiumId
         );
-        // If the real data now shows it's a collectible, remove from optimistic set
+        // If the real data now shows it's a collectible, remove from optimistic map
         if (vote && (vote as any).isCollectible) {
           updatedSuccessful.delete(podiumId);
           hasChanges = true;
@@ -183,10 +181,7 @@ function MyPodium() {
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
     const calc = scrollTop + clientHeight + 50;
     if (calc >= scrollHeight && !isFetching && history) {
-      const totalItems = history.data.length;
-      if (totalItems < history.count) {
-        setPageId((prev) => prev + 1);
-      }
+      setPageId((prev) => prev + 1);
     }
   };
 
@@ -203,6 +198,7 @@ function MyPodium() {
       collectibleGenesisCreatorUsername?: string | null;
       collectibleOwnerFid?: number | null;
       collectibleOwnerUsername?: string | null;
+      collectibleOwner?: { fid: number; username: string; photoUrl: string } | null;
       collectibleTotalFeesEarned?: string;
     }
   ): CollectibleData => ({
@@ -215,6 +211,7 @@ function MyPodium() {
       (vote as any).collectibleGenesisCreatorUsername ?? null,
     ownerFid: (vote as any).collectibleOwnerFid ?? null,
     ownerUsername: (vote as any).collectibleOwnerUsername ?? null,
+    ownerPhotoUrl: (vote as any).collectibleOwner?.photoUrl ?? null,
     totalFeesEarned: (vote as any).collectibleTotalFeesEarned ?? "0",
   });
 
@@ -250,8 +247,7 @@ function MyPodium() {
     );
   }
 
-  // Empty state - no podiums yet
-  if (history && history.data.length === 0) {
+  if (history && Object.keys(history.data).length === 0) {
     return (
       <div className={styles.emptyLayout}>
         <div className={styles.empty}>
@@ -278,52 +274,61 @@ function MyPodium() {
       {history && (
         <div className={styles.view} onScroll={handleScrollList}>
           <ul className={styles.list}>
-            {history.data.map((vote, _) => (
-              <li key={`--podium-key-${vote.id}`} className={styles.item}>
-                <div className={styles.brands}>
-                  <BrandCard
-                    key={"--podium-key-1"}
-                    score={vote.brand1.score}
-                    variation={getBrandScoreVariation(vote.brand1.stateScore)}
-                    name={vote.brand1.name}
-                    photoUrl={vote.brand1.imageUrl}
-                    onClick={() => navigate(`/brand/${vote.brand1.id}`)}
+            {Object.values(history.data).map((vote: UserVoteHistory) => {
+              const collectibleData = toCollectibleData(vote);
+              const podiumUser = ((vote as any).user ?? authData) as any;
+              if (!podiumUser) return null;
+              const brandIds: [number, number, number] = [
+                vote.brand1.id,
+                vote.brand2.id,
+                vote.brand3.id,
+              ];
+              const isProcessing = processingPodiumId === vote.id;
+              const collectibleTokenId = (vote as any).collectibleTokenId;
+              const isLastVoteForCombination =
+                getIsLastVoteForCombination(vote);
+
+              // Apply optimistic update if this podium was successfully transacted
+              const hasSucceeded = successfulPodiums.has(vote.id);
+              const successType = successfulPodiums.get(vote.id);
+              const optimisticCollectibleData = hasSucceeded
+                ? {
+                    ...collectibleData,
+                    isCollectible: true,
+                    ownerFid: userFid,
+                    ownerUsername: authData?.username || null,
+                    ownerPhotoUrl: authData?.photoUrl || null,
+                  }
+                : collectibleData;
+
+              return (
+                <li key={vote.id} className={styles.item}>
+                  <IndividualPodium
+                    podium={vote as any}
+                    user={podiumUser}
+                    brand1={vote.brand1}
+                    brand2={vote.brand2}
+                    brand3={vote.brand3}
+                    collectibleData={optimisticCollectibleData}
+                    isLastVoteForCombination={
+                      hasSucceeded ? true : isLastVoteForCombination
+                    }
+                    onMintClick={() => handleMintPodium(vote.id, brandIds)}
+                    onBuyClick={() => {
+                      if (collectibleTokenId) {
+                        handleBuyPodium(vote.id, collectibleTokenId);
+                      }
+                    }}
+                    isPending={
+                      isProcessing && (isPending || isConfirming || isApproving || isFetchingSignature)
+                    }
+                    mintingStep={isProcessing ? currentMintingStep : null}
+                    hasSucceeded={hasSucceeded}
+                    successType={successType}
                   />
-                  <BrandCard
-                    key={"--podium-key-2"}
-                    score={vote.brand2.score}
-                    variation={getBrandScoreVariation(vote.brand2.stateScore)}
-                    name={vote.brand2.name}
-                    photoUrl={vote.brand2.imageUrl}
-                    onClick={() => navigate(`/brand/${vote.brand2.id}`)}
-                  />
-                  <BrandCard
-                    key={"--podium-key-3"}
-                    score={vote.brand3.score}
-                    variation={getBrandScoreVariation(vote.brand3.stateScore)}
-                    name={vote.brand3.name}
-                    photoUrl={vote.brand3.imageUrl}
-                    onClick={() => navigate(`/brand/${vote.brand3.id}`)}
-                  />
-                </div>
-                <div className={styles.data}>
-                  <Typography
-                    variant={"geist"}
-                    size={14}
-                    lineHeight={14}
-                    weight={"medium"}
-                  >
-                    {formatDistanceToNow(new Date(vote.date).getTime(), {
-                      addSuffix: true,
-                    }).includes("hour")
-                      ? "today"
-                      : formatDistanceToNow(new Date(vote.date).getTime(), {
-                          addSuffix: true,
-                        })}
-                  </Typography>
-                </div>
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
 
           {isFetching && pageId > 1 && (

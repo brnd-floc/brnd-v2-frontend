@@ -75,7 +75,7 @@ export const useStoriesInMotion = (
   onVoteSuccess?: (txData: any) => void,
   onClaimSuccess?: (txData: any) => void,
   onBrandCreateSuccess?: (txData: any) => void,
-  onBrandUpdateSuccess?: (txData: any) => void
+  onBrandUpdateSuccess?: (txData: any) => void,
 ) => {
   const { address: userAddress, isConnected, chainId } = useAccount();
   const { switchChain } = useSwitchChain();
@@ -98,7 +98,7 @@ export const useStoriesInMotion = (
     [number, number, number] | null
   >(null);
   const [pendingVoteAuthData, setPendingVoteAuthData] = useState<string | null>(
-    null
+    null,
   );
   const [pendingBrandCreateData, setPendingBrandCreateData] = useState<{
     handle: string;
@@ -247,7 +247,7 @@ export const useStoriesInMotion = (
         },
       });
     },
-    [userAddress]
+    [userAddress],
   );
 
   const getLevelUpSignature = useCallback(
@@ -272,7 +272,7 @@ export const useStoriesInMotion = (
         },
       });
     },
-    [userAddress]
+    [userAddress],
   );
 
   const getVoteAuthorizationSignature = useCallback(
@@ -298,7 +298,7 @@ export const useStoriesInMotion = (
         },
       });
     },
-    [userAddress]
+    [userAddress],
   );
 
   const getClaimRewardSignature = useCallback(
@@ -307,7 +307,7 @@ export const useStoriesInMotion = (
       voteId: string,
       recipientAddress: string,
       transactionHash: string,
-      castedFrom: number
+      castedFrom: number,
     ) => {
       const { getFarcasterToken } = await import("@/shared/utils/auth");
       getFarcasterToken(); // Ensure token is available
@@ -340,7 +340,7 @@ export const useStoriesInMotion = (
       });
       return response;
     },
-    [userAddress]
+    [userAddress],
   );
 
   // Get claim signature for already shared vote (without requiring castHash)
@@ -349,7 +349,7 @@ export const useStoriesInMotion = (
       voteId: string,
       recipientAddress?: string,
       transactionHash?: string,
-      castedFrom?: number
+      castedFrom?: number,
     ) => {
       if (!castedFrom) {
         throw new Error("Casted from is required to claim reward");
@@ -390,7 +390,7 @@ export const useStoriesInMotion = (
 
       return response;
     },
-    [userAddress]
+    [userAddress],
   );
 
   const getPowerLevelInfo = useCallback(
@@ -399,10 +399,10 @@ export const useStoriesInMotion = (
         `${BLOCKCHAIN_SERVICE}/power-level/${fid}`,
         {
           method: "GET",
-        }
+        },
       );
     },
-    []
+    [],
   );
 
   const getStakeInfo = useCallback(async (fid: number): Promise<StakeInfo> => {
@@ -433,7 +433,7 @@ export const useStoriesInMotion = (
           throw new Error(
             `Cannot level up: ${
               levelUpData.validation.reason || "Requirements not met"
-            }`
+            }`,
           );
         }
 
@@ -473,7 +473,7 @@ export const useStoriesInMotion = (
       getLevelUpSignature,
       getAuthorizationSignature,
       writeContract,
-    ]
+    ],
   );
 
   // Vote function - Updated for V4 contract
@@ -509,7 +509,7 @@ export const useStoriesInMotion = (
         if (balance < voteCost) {
           const errorMsg = `Insufficient BRND balance. Need ${formatUnits(
             voteCost,
-            18
+            18,
           )} BRND, have ${formatUnits(balance, 18)} BRND`;
           console.error("❌ [Vote]", errorMsg);
           throw new Error(errorMsg);
@@ -520,7 +520,7 @@ export const useStoriesInMotion = (
         let authData = "0x";
         if (!isWalletAuthorized) {
           console.log(
-            "🔐 [Vote] Wallet not authorized, preparing vote-specific authData..."
+            "🔐 [Vote] Wallet not authorized, preparing vote-specific authData...",
           );
           if (!userFid) {
             console.error("❌ [Vote] User not authenticated");
@@ -534,13 +534,13 @@ export const useStoriesInMotion = (
               userFid,
               brandIds,
               deadline,
-            }
+            },
           );
 
           try {
             const voteAuth = await getVoteAuthorizationSignature(
               brandIds,
-              deadline
+              deadline,
             );
             console.log("📥 [Vote] Received vote authorization response", {
               hasAuthData: !!voteAuth.authData,
@@ -550,10 +550,10 @@ export const useStoriesInMotion = (
 
             if (!voteAuth.authData) {
               console.error(
-                "❌ [Vote] Failed to get vote authorization signature from backend - no authData in response"
+                "❌ [Vote] Failed to get vote authorization signature from backend - no authData in response",
               );
               throw new Error(
-                "Failed to get vote authorization signature from backend"
+                "Failed to get vote authorization signature from backend",
               );
             }
 
@@ -574,7 +574,7 @@ export const useStoriesInMotion = (
           }
         } else {
           console.log(
-            "✅ [Vote] Wallet already authorized, skipping authData preparation"
+            "✅ [Vote] Wallet already authorized, skipping authData preparation",
           );
         }
 
@@ -601,7 +601,7 @@ export const useStoriesInMotion = (
             args: [BRND_SEASON_2_CONFIG.CONTRACT, 11111000000000000000000n],
           });
           console.log(
-            "✅ [Vote] Approval transaction submitted, waiting for confirmation..."
+            "✅ [Vote] Approval transaction submitted, waiting for confirmation...",
           );
           return;
         }
@@ -626,7 +626,7 @@ export const useStoriesInMotion = (
           chainId: BRND_SEASON_2_CONFIG.CHAIN_ID,
         });
         console.log(
-          "✅ [Vote] Vote transaction submitted, waiting for confirmation..."
+          "✅ [Vote] Vote transaction submitted, waiting for confirmation...",
         );
       } catch (error: any) {
         console.error("❌ [Vote] Vote failed:", error);
@@ -650,7 +650,7 @@ export const useStoriesInMotion = (
       getAuthorizationSignature,
       getVoteAuthorizationSignature,
       writeContract,
-    ]
+    ],
   );
 
   // Get reward amount for a power level
@@ -669,7 +669,7 @@ export const useStoriesInMotion = (
         return "0";
       }
     },
-    []
+    [],
   );
 
   // Get brand information
@@ -694,7 +694,7 @@ export const useStoriesInMotion = (
       handle: string,
       metadataHash: string,
       fid: number,
-      walletAddress: string
+      walletAddress: string,
     ) => {
       console.log("🏭 [CreateBrand] Starting brand creation on-chain", {
         handle,
@@ -766,7 +766,7 @@ export const useStoriesInMotion = (
 
         console.log(
           "✅ [CreateBrand] Brand creation transaction submitted successfully",
-          { result }
+          { result },
         );
 
         return result;
@@ -782,7 +782,7 @@ export const useStoriesInMotion = (
         throw error;
       }
     },
-    [userAddress, switchToBase, writeContract]
+    [userAddress, switchToBase, writeContract],
   );
 
   const updateBrandOnChain = useCallback(
@@ -790,7 +790,7 @@ export const useStoriesInMotion = (
       brandId: number,
       metadataHash: string,
       fid: number,
-      walletAddress: string
+      walletAddress: string,
     ) => {
       console.log("🔄 [UpdateBrand] Starting brand update on-chain", {
         brandId,
@@ -862,7 +862,7 @@ export const useStoriesInMotion = (
 
         console.log(
           "✅ [UpdateBrand] Brand update transaction submitted successfully",
-          { result }
+          { result },
         );
 
         return result;
@@ -878,7 +878,7 @@ export const useStoriesInMotion = (
         throw error;
       }
     },
-    [userAddress, switchToBase, writeContract]
+    [userAddress, switchToBase, writeContract],
   );
 
   // Verify share and get claim signature (does not execute transaction)
@@ -888,7 +888,7 @@ export const useStoriesInMotion = (
       voteId: string,
       transactionHash: string,
       recipientOverride: string,
-      castedFrom: number
+      castedFrom: number,
     ) => {
       setError(null);
 
@@ -912,7 +912,7 @@ export const useStoriesInMotion = (
           recipientAddress: userAddress,
           transactionHash,
           castedFrom,
-        }
+        },
       );
 
       const verifyData = await getClaimRewardSignature(
@@ -920,7 +920,7 @@ export const useStoriesInMotion = (
         voteId,
         recipientOverride || userAddress, // Use override if provided
         transactionHash,
-        castedFrom
+        castedFrom,
       );
 
       console.log("📥 [ClaimReward] Received verify-share response", {
@@ -936,7 +936,7 @@ export const useStoriesInMotion = (
 
       if (!verifyData.claimSignature) {
         throw new Error(
-          "Claim signature not generated. Please ensure recipientAddress was provided."
+          "Claim signature not generated. Please ensure recipientAddress was provided.",
         );
       }
 
@@ -947,7 +947,7 @@ export const useStoriesInMotion = (
         castHash: verifyData.castHash,
       };
     },
-    [userAddress, userFid, getClaimRewardSignature]
+    [userAddress, userFid, getClaimRewardSignature],
   );
 
   // Get claim signature for already shared vote (without castHash)
@@ -957,7 +957,7 @@ export const useStoriesInMotion = (
       voteId: string,
       transactionHash: string,
       recipientOverride: string,
-      castedFrom: number
+      castedFrom: number,
     ) => {
       if (!castedFrom) {
         throw new Error("Casted from is required to claim reward");
@@ -980,14 +980,14 @@ export const useStoriesInMotion = (
           recipientAddress: userAddress,
           transactionHash,
           castedFrom,
-        }
+        },
       );
 
       const verifyData = await getClaimSignatureForSharedVote(
         voteId,
         recipientOverride || userAddress,
         transactionHash,
-        castedFrom
+        castedFrom,
       );
 
       console.log("📥 [ClaimReward] Received claim signature for shared vote", {
@@ -1000,7 +1000,7 @@ export const useStoriesInMotion = (
 
       if (!verifyData.claimSignature) {
         throw new Error(
-          "Claim signature not available. Please ensure the vote was shared and verified."
+          "Claim signature not available. Please ensure the vote was shared and verified.",
         );
       }
 
@@ -1011,7 +1011,7 @@ export const useStoriesInMotion = (
         castHash: verifyData.castHash || "", // Backend may return castHash for already shared votes
       };
     },
-    [userAddress, userFid, getClaimSignatureForSharedVote]
+    [userAddress, userFid, getClaimSignatureForSharedVote],
   );
 
   // Execute claim reward transaction (after verification)
@@ -1026,29 +1026,8 @@ export const useStoriesInMotion = (
         canClaim: boolean;
       },
       day: number,
-      recipient: string
+      recipient: string,
     ) => {
-      console.log(
-        `🔐 [ClaimReward] ===== STARTING CLAIM REWARD EXECUTION =====`
-      );
-      console.log(`💰 [ClaimReward] Input Parameters:`);
-      console.log(`   - castHash: ${castHash}`);
-      console.log(`   - signature: ${claimSignature.signature}`);
-      console.log(`   - signature length: ${claimSignature.signature.length}`);
-      console.log(`   - amount: ${claimSignature.amount}`);
-      console.log(`   - amount type: ${typeof claimSignature.amount}`);
-      console.log(`   - deadline: ${claimSignature.deadline}`);
-      console.log(`   - recipient: ${recipient}`);
-      console.log(`   - connectedWallet: ${userAddress}`);
-      console.log(
-        `   - deadline (readable): ${new Date(
-          claimSignature.deadline * 1000
-        ).toISOString()}`
-      );
-      console.log(`   - nonce: ${claimSignature.nonce}`);
-      console.log(`   - day: ${day}`);
-      console.log(`   - fid: ${userFid}`);
-
       setError(null);
       await switchToBase();
 
@@ -1057,23 +1036,9 @@ export const useStoriesInMotion = (
         return;
       }
 
-      // Log current block timestamp to check if deadline has passed
-      console.log(
-        `⏰ [ClaimReward] Current timestamp: ${Math.floor(Date.now() / 1000)}`
-      );
-      console.log(
-        `⏰ [ClaimReward] Deadline timestamp: ${claimSignature.deadline}`
-      );
-      console.log(
-        `⏰ [ClaimReward] Time until deadline: ${
-          claimSignature.deadline - Math.floor(Date.now() / 1000)
-        }s`
-      );
-
       try {
         setLastOperation("claimReward");
 
-        console.log("📝 [ClaimReward] Contract call arguments:");
         const args = [
           recipient, // recipient
           claimSignature.amount, // amount
@@ -1084,28 +1049,6 @@ export const useStoriesInMotion = (
           claimSignature.signature, // signature
         ];
 
-        args.forEach((arg, index) => {
-          const paramNames = [
-            "recipient",
-            "amount",
-            "fid",
-            "day",
-            "castHash",
-            "deadline",
-            "signature",
-          ];
-          console.log(
-            `   [${index}] ${paramNames[index]}: ${arg} (${typeof arg})`
-          );
-        });
-
-        console.log(
-          `📤 [ClaimReward] Sending transaction to contract: ${BRND_SEASON_2_CONFIG.CONTRACT}`
-        );
-        console.log(
-          `📤 [ClaimReward] Chain ID: ${BRND_SEASON_2_CONFIG.CHAIN_ID}`
-        );
-
         await writeContract({
           address: BRND_SEASON_2_CONFIG.CONTRACT,
           abi: BRND_SEASON_2_CONFIG_ABI,
@@ -1113,20 +1056,7 @@ export const useStoriesInMotion = (
           args,
           chainId: BRND_SEASON_2_CONFIG.CHAIN_ID,
         });
-
-        console.log("✅ [ClaimReward] Transaction submitted successfully");
-        console.log(
-          `🔐 [ClaimReward] ===== CLAIM REWARD EXECUTION COMPLETE =====`
-        );
       } catch (error: any) {
-        console.error("❌ [ClaimReward] Transaction failed");
-        console.error("❌ [ClaimReward] Error:", error);
-        console.error("❌ [ClaimReward] Error message:", error.message);
-        console.error(
-          "❌ [ClaimReward] Error details:",
-          JSON.stringify(error, null, 2)
-        );
-
         // Try to parse revert reason if available
         if (error.message) {
           const revertMatch = error.message.match(/revert reason: (.+)/i);
@@ -1139,7 +1069,7 @@ export const useStoriesInMotion = (
         throw error;
       }
     },
-    [userFid, switchToBase, writeContract]
+    [userFid, switchToBase, writeContract],
   );
 
   // Claim reward with signature (legacy - combines verification and execution)
@@ -1150,7 +1080,7 @@ export const useStoriesInMotion = (
       voteId: string,
       transactionHash: string,
       recipient: string,
-      castedFrom: number
+      castedFrom: number,
     ) => {
       try {
         const { claimSignature, day } = await verifyShareAndGetClaimSignature(
@@ -1158,13 +1088,13 @@ export const useStoriesInMotion = (
           voteId,
           transactionHash,
           recipient,
-          castedFrom
+          castedFrom,
         );
         await executeClaimReward(
           castHash,
           claimSignature,
           day,
-          recipient || userAddress! // Pass recipient
+          recipient || userAddress!, // Pass recipient
         );
       } catch (error: any) {
         console.error("❌ [ClaimReward] Claim reward failed:", error);
@@ -1172,7 +1102,7 @@ export const useStoriesInMotion = (
         throw error;
       }
     },
-    [verifyShareAndGetClaimSignature, executeClaimReward, userAddress]
+    [verifyShareAndGetClaimSignature, executeClaimReward, userAddress],
   );
 
   // Handle transaction errors - clear operation state on error
@@ -1251,7 +1181,7 @@ export const useStoriesInMotion = (
                   (!authDataToUse || authDataToUse === "0x")
                 ) {
                   console.log(
-                    "🔐 [Approve] Wallet not authorized, preparing vote-specific authData..."
+                    "🔐 [Approve] Wallet not authorized, preparing vote-specific authData...",
                   );
                   if (userFid && pendingVoteBrandIds) {
                     const deadline = Math.floor(Date.now() / 1000) + 3600;
@@ -1261,26 +1191,26 @@ export const useStoriesInMotion = (
                         userFid,
                         brandIds: pendingVoteBrandIds,
                         deadline,
-                      }
+                      },
                     );
                     const voteAuth = await getVoteAuthorizationSignature(
                       pendingVoteBrandIds,
-                      deadline
+                      deadline,
                     );
                     console.log(
                       "📥 [Approve] Received vote authorization response",
                       {
                         hasAuthData: !!voteAuth.authData,
                         message: voteAuth.message,
-                      }
+                      },
                     );
 
                     if (!voteAuth.authData) {
                       console.error(
-                        "❌ [Approve] Failed to get vote authorization signature from backend"
+                        "❌ [Approve] Failed to get vote authorization signature from backend",
                       );
                       throw new Error(
-                        "Failed to get vote authorization signature from backend"
+                        "Failed to get vote authorization signature from backend",
                       );
                     }
 
@@ -1290,7 +1220,7 @@ export const useStoriesInMotion = (
                       "✅ [Approve] Vote authorization data prepared",
                       {
                         authDataLength: authDataToUse.length,
-                      }
+                      },
                     );
                   }
                 }
@@ -1309,7 +1239,7 @@ export const useStoriesInMotion = (
                   chainId: BRND_SEASON_2_CONFIG.CHAIN_ID,
                 });
                 console.log(
-                  "✅ [Approve] Vote transaction submitted after approval"
+                  "✅ [Approve] Vote transaction submitted after approval",
                 );
 
                 setPendingVoteBrandIds(null);
@@ -1318,7 +1248,7 @@ export const useStoriesInMotion = (
               } catch (error) {
                 console.error(
                   "❌ [Approve] Auto-retry vote after approval failed:",
-                  error
+                  error,
                 );
                 console.error("❌ [Approve] Error details:", {
                   message: (error as any).message,
@@ -1330,7 +1260,7 @@ export const useStoriesInMotion = (
             }, 1000);
           } else {
             console.log(
-              "⚠️ [Approve] No pending vote brand IDs, skipping auto-retry"
+              "⚠️ [Approve] No pending vote brand IDs, skipping auto-retry",
             );
           }
           break;
@@ -1349,7 +1279,7 @@ export const useStoriesInMotion = (
             refetchUserInfo();
             refetchAuthorizedFid();
             console.log(
-              "🔄 [Vote] Refreshed user info and authorization status after vote"
+              "🔄 [Vote] Refreshed user info and authorization status after vote",
             );
           }, 1000);
 

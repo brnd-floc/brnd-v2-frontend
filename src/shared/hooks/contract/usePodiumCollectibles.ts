@@ -462,7 +462,21 @@
           return;
         }
 
+        // Validate FID is a valid positive number
+        if (userFid <= 0) {
+          setError("Invalid user FID. Please reconnect your wallet.");
+          return;
+        }
+
         try {
+          // First check if we're not trying to buy our own podium
+          console.log("📝 [BuyPodium] Checking podium ownership");
+          const podiumData = await getPodium(tokenId);
+          if (podiumData && podiumData.ownerFid === userFid) {
+            setError("You cannot buy your own podium");
+            return;
+          }
+
           // Get price directly from contract
           console.log("📝 [BuyPodium] Getting price from contract");
           const priceRaw = await readContract(config, {
@@ -478,7 +492,10 @@
             priceBRND: formatUnits(price, 18),
           });
 
-          // Check BRND balance
+          // Refresh balance to get latest value before checking
+          await refetchBrndBalance();
+
+          // Check BRND balance (use fresh value from refetch or cached)
           const balance = brndBalance ? (brndBalance as bigint) : 0n;
           console.log("💰 [BuyPodium] Balance check:", {
             balanceWei: balance.toString(),
@@ -534,7 +551,28 @@
           setExpectedOperationHash(txHash);
         } catch (error: any) {
           console.error("❌ [BuyPodium] Buy failed:", error);
-          setError(error.message || "Buy podium failed");
+
+          // Parse contract-specific errors for better user messages
+          let errorMessage = "Buy podium failed";
+          const errorString = error.message || error.toString();
+
+          if (errorString.includes("CannotBuyOwnPodium")) {
+            errorMessage = "You cannot buy your own podium";
+          } else if (errorString.includes("NotMinted")) {
+            errorMessage = "This podium has not been minted yet";
+          } else if (errorString.includes("InvalidFid")) {
+            errorMessage = "Invalid user ID. Please reconnect your wallet.";
+          } else if (errorString.includes("InsufficientBalance")) {
+            errorMessage = "Insufficient BRND balance in your wallet";
+          } else if (errorString.includes("TransferBlocked")) {
+            errorMessage = "This podium transfer is currently blocked";
+          } else if (errorString.includes("User rejected") || errorString.includes("user rejected")) {
+            errorMessage = "Transaction was cancelled";
+          } else if (error.message) {
+            errorMessage = error.message;
+          }
+
+          setError(errorMessage);
           setLastOperation(null);
           setPendingBuyTokenId(null);
           setExpectedOperationHash(null);
@@ -547,6 +585,8 @@
         brndBalance,
         brndAllowance,
         writeContractAsync,
+        getPodium,
+        refetchBrndBalance,
       ]
     );
 
@@ -569,6 +609,9 @@
         ) {
           return;
         }
+
+        // Set fetching state immediately to show "Preparing..." during allowance sync
+        setIsFetchingSignature(true);
 
         try {
           // Wait for allowance to propagate across RPC nodes
@@ -660,6 +703,7 @@
             setPendingApprovalAmount(null);
             setPendingOperationType(null);
             setLastOperation("buyPodium");
+            setIsFetchingSignature(false);
 
             const txHash = await writeContractAsync({
               address: PODIUM_CONTRACT_CONFIG.CONTRACT,

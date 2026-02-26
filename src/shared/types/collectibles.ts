@@ -14,6 +14,7 @@ export interface CollectibleData {
   genesisCreatorUsername: string | null;
   ownerFid: number | null;
   ownerUsername: string | null;
+  ownerPhotoUrl: string | null;
   totalFeesEarned: string;
 }
 

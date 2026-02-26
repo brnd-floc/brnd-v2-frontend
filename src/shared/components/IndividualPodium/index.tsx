@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import classNames from "clsx";
 import styles from "./IndividualPodium.module.scss";
 import Typography from "@/shared/components/Typography";
@@ -13,6 +13,51 @@ import { User } from "@/shared/hooks/user";
 import { useAccount, useConnect } from "wagmi";
 import sdk from "@farcaster/miniapp-sdk";
 
+// Format time ago display (UTC-based)
+const getTimeAgo = (dateStr: string | undefined): string => {
+  if (!dateStr) return "";
+
+  const nowUtc = Date.now();
+
+  // Normalize date format
+  let normalizedDate = dateStr.replace(" ", "T");
+  if (!normalizedDate.endsWith("Z")) {
+    normalizedDate += "Z";
+  }
+
+  const createdUtc = new Date(normalizedDate).getTime();
+  let diffInMs = nowUtc - createdUtc;
+
+  // Handle clock skew
+  const CLOCK_SKEW_THRESHOLD = 10 * 60 * 1000;
+  if (diffInMs < 0) {
+    if (Math.abs(diffInMs) <= CLOCK_SKEW_THRESHOLD) {
+      return "Just now";
+    }
+    diffInMs = 0;
+  }
+
+  const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+  const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+  const diffInDays = Math.floor(diffInHours / 24);
+
+  if (diffInMinutes < 1) return "Just now";
+  if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+  if (diffInHours < 24) {
+    return `${diffInHours}h ago`;
+  }
+  if (diffInDays === 1) return "Yesterday";
+  if (diffInDays < 7) return `${diffInDays}d ago`;
+
+  const createdDate = new Date(createdUtc);
+  return createdDate.toLocaleDateString(undefined, {
+    timeZone: "UTC",
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+};
+
 // Minting step type for contextual messages
 export type MintingStep =
   | "fetching_signature"
@@ -25,12 +70,12 @@ export type MintingStep =
 
 // Contextual messages for each minting step
 const MINTING_STEP_MESSAGES: Record<Exclude<MintingStep, null>, string> = {
-  fetching_signature: "Checking eligibility...",
-  approving: "Approve $BRND in wallet",
-  confirming_approval: "Confirming approval...",
-  minting: "Confirm in wallet",
-  buying: "Confirm in wallet",
-  confirming: "Minting on chain...",
+  fetching_signature: "Preparing...",
+  approving: "Approve $BRND",
+  confirming_approval: "Approving...",
+  minting: "Confirm mint",
+  buying: "Confirm purchase",
+  confirming: "Confirming...",
 };
 
 export interface IndividualPodiumProps {
@@ -91,6 +136,7 @@ export interface IndividualPodiumProps {
 
 const IndividualPodium: React.FC<IndividualPodiumProps> = ({
   className,
+  podium,
   brand1,
   brand2,
   brand3,
@@ -102,6 +148,7 @@ const IndividualPodium: React.FC<IndividualPodiumProps> = ({
   isPending = false,
   mintingStep = null,
   hasSucceeded = false,
+  successType,
 }) => {
   const { openModal } = useModal();
   const { isConnected } = useAccount();
@@ -154,6 +201,7 @@ const IndividualPodium: React.FC<IndividualPodiumProps> = ({
           isCollectible: true,
           ownerFid: userFid,
           ownerUsername: authData?.username || null,
+          ownerPhotoUrl: authData?.photoUrl || null,
         }
       : collectibleData;
 
@@ -188,6 +236,10 @@ const IndividualPodium: React.FC<IndividualPodiumProps> = ({
   };
 
   const getButtonText = () => {
+    // Show success state first if transaction just succeeded
+    if (hasSucceeded) {
+      return successType === "buy" ? "Bought!" : "Minted!";
+    }
     if (canMint) return `Mint`;
     if (isOwned) return "Owned";
     if (isNotMintable) return "N/A";
@@ -195,33 +247,8 @@ const IndividualPodium: React.FC<IndividualPodiumProps> = ({
     return "N/A";
   };
 
-  // Inline spinner component for loading state
-  const Spinner = () => (
-    <svg
-      className={styles.spinner}
-      width="16"
-      height="16"
-      viewBox="0 0 16 16"
-      fill="none"
-    >
-      <circle
-        cx="8"
-        cy="8"
-        r="6"
-        stroke="currentColor"
-        strokeOpacity="0.25"
-        strokeWidth="2"
-      />
-      <path
-        d="M14 8a6 6 0 0 0-6-6"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-
   const getButtonStyle = () => {
+    if (hasSucceeded) return styles.successButton;
     if (canMint) return styles.mintButton;
     if (isOwned) return styles.ownedButton;
     if (isNotMintable) return styles.notMintableButton;
@@ -229,7 +256,10 @@ const IndividualPodium: React.FC<IndividualPodiumProps> = ({
     return styles.mintButton;
   };
 
-  const isButtonDisabled = isPending || isOwned || isNotMintable;
+  const isButtonDisabled = isPending || isOwned || isNotMintable || hasSucceeded;
+
+  // Memoize time ago calculation
+  const timeAgo = useMemo(() => getTimeAgo(podium?.date), [podium?.date]);
 
   const podiumBrands = [
     { brand: brand2, icon: Podium2Icon, place: "second" as const },
@@ -239,6 +269,19 @@ const IndividualPodium: React.FC<IndividualPodiumProps> = ({
 
   return (
     <div className={classNames(styles.container, className)}>
+      {/* Time ago display */}
+      {timeAgo && (
+        <div className={styles.timeAgoContainer}>
+          <Typography
+            variant="geist"
+            weight="regular"
+            size={10}
+            className={styles.timeAgoText}
+          >
+            {timeAgo}
+          </Typography>
+        </div>
+      )}
       <div className={styles.podiumOuterContainer}>
         <div className={styles.podiumSection}>
           <div className={styles.podiumContainer}>
@@ -299,15 +342,40 @@ const IndividualPodium: React.FC<IndividualPodiumProps> = ({
               >
                 Owner
               </Typography>
-              <Typography
-                variant="geist"
-                weight="bold"
-                size={12}
-                lineHeight={16}
-                className={styles.value}
-              >
-                {isMinted && owner ? `@${owner}` : "—"}
-              </Typography>
+              <div className={styles.ownerInfo}>
+                {isMinted && owner ? (
+                  <>
+                    {collectibleData.ownerPhotoUrl ? (
+                      <img
+                        src={collectibleData.ownerPhotoUrl}
+                        alt={owner}
+                        className={styles.ownerAvatar}
+                      />
+                    ) : (
+                      <div className={styles.ownerAvatarPlaceholder} />
+                    )}
+                    <Typography
+                      variant="geist"
+                      weight="bold"
+                      size={12}
+                      lineHeight={16}
+                      className={styles.value}
+                    >
+                      @{owner}
+                    </Typography>
+                  </>
+                ) : (
+                  <Typography
+                    variant="geist"
+                    weight="bold"
+                    size={12}
+                    lineHeight={16}
+                    className={styles.value}
+                  >
+                    —
+                  </Typography>
+                )}
+              </div>
             </div>
           </div>
 

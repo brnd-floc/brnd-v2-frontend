@@ -383,16 +383,9 @@ export const FeedPodiumDetailModal: React.FC<
               OWNER
             </Typography>
             <div className={styles.creatorInfo}>
-              {/* Use current user's photo if they just bought it */}
-              {hasSucceeded && successType === "buy" && authData?.photoUrl ? (
+              {collectibleData.ownerPhotoUrl ? (
                 <img
-                  src={authData.photoUrl}
-                  alt={owner}
-                  className={styles.creatorAvatar}
-                />
-              ) : podium?.collectibleOwner?.photoUrl ? (
-                <img
-                  src={podium.collectibleOwner.photoUrl}
+                  src={collectibleData.ownerPhotoUrl}
                   alt={owner}
                   className={styles.creatorAvatar}
                 />
