@@ -31,7 +31,7 @@ export const buildShareCastText = (currentBrands: ShareBrand[]) => {
   const formattedBrand2 = getProfileOrChannel(currentBrands[0] || {});
   const formattedBrand3 = getProfileOrChannel(currentBrands[2] || {});
 
-  return `I just created my @BRND podium of today:\n\n🥇${
+  return `I just created my @brnd podium of today:\n\n🥇${
     currentBrands[1]?.name || ''
   } ${formattedBrand1 ? `- ${formattedBrand1}` : ''}\n🥈${
     currentBrands[0]?.name || ''
