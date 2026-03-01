@@ -19,7 +19,7 @@ npm run lint:styles:strict
 
 ```bash
 npm run cutover:verify-api -- \
-  --api-base=https://api.brndland.com \
+  --api-base=https://api.brnd.land \
   --brand-ids=431,428,1 \
   --strict-category \
   --out=./tmp/cutover-baseline-pre.json
@@ -29,7 +29,7 @@ npm run cutover:verify-api -- \
 
 ```bash
 npm run cutover:verify-api -- \
-  --api-base=https://api.brndland.com \
+  --api-base=https://api.brnd.land \
   --brand-ids=431,428,1 \
   --strict-category \
   --out=./tmp/cutover-baseline-post-backend.json
@@ -40,7 +40,7 @@ npm run cutover:verify-api -- \
 ```bash
 npm run cutover:smoke -- \
   --app-url=https://brnd.land \
-  --api-base=https://api.brndland.com \
+  --api-base=https://api.brnd.land \
   --brand-ids=431,428,1 \
   --strict-category
 ```

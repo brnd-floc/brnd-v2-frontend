@@ -20,7 +20,7 @@ const filePath = resolve(process.cwd(), '.env.production');
 const env = parseEnvFile(filePath);
 
 const expected = {
-  VITE_API_URL: process.env.CUTOVER_EXPECTED_API_URL || 'https://api.brndland.com',
+  VITE_API_URL: process.env.CUTOVER_EXPECTED_API_URL || 'https://api.brnd.land',
   VITE_ENVIRONMENT: process.env.CUTOVER_EXPECTED_ENV || 'production',
 };
 

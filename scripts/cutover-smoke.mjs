@@ -13,7 +13,7 @@ function parseArgs(argv) {
 
   return {
     appUrl: (map.get('--app-url') || process.env.CUTOVER_APP_URL || 'https://brnd.land').replace(/\/$/, ''),
-    apiBase: (map.get('--api-base') || process.env.CUTOVER_API_BASE || 'https://api.brndland.com').replace(/\/$/, ''),
+    apiBase: (map.get('--api-base') || process.env.CUTOVER_API_BASE || 'https://api.brnd.land').replace(/\/$/, ''),
     brandIds,
     strictCategory: argv.includes('--strict-category'),
   };
