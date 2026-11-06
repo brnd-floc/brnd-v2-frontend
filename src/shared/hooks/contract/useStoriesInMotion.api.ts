@@ -180,6 +180,7 @@ export const requestClaimRewardSignature = async ({
 }): Promise<
   StoriesApiResult<{
     verified: boolean;
+    hasClaimed?: boolean;
     pointsAwarded: number;
     newTotalPoints: number;
     message: string;
@@ -199,6 +200,7 @@ export const requestClaimRewardSignature = async ({
     getFarcasterToken();
     const data = await request<{
       verified: boolean;
+      hasClaimed?: boolean;
       pointsAwarded: number;
       newTotalPoints: number;
       message: string;
@@ -243,6 +245,7 @@ export const requestClaimSignatureForSharedVote = async ({
 }): Promise<
   StoriesApiResult<{
     verified: boolean;
+    hasClaimed?: boolean;
     pointsAwarded: number;
     newTotalPoints: number;
     message: string;
@@ -262,6 +265,7 @@ export const requestClaimSignatureForSharedVote = async ({
     getFarcasterToken();
     const data = await request<{
       verified: boolean;
+      hasClaimed?: boolean;
       pointsAwarded: number;
       newTotalPoints: number;
       message: string;

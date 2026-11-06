@@ -4,6 +4,7 @@ import { VotingViewEnum } from './types';
 export type VotingState =
   | { type: 'loading' }
   | { type: 'not_voted' }
+  | { type: 'recovering_vote'; hasClaimed: boolean }
   | {
       type: 'voted_not_shared';
       voteId: string;
@@ -36,6 +37,7 @@ interface BuildVotingStateParams {
 
 interface VoteRecord {
   id?: string;
+  date?: string;
   brand1?: Brand;
   brand2?: Brand;
   brand3?: Brand;
@@ -55,9 +57,31 @@ interface UserVoteContext {
   contextualTransaction?: {
     transactionType?: string | null;
     transactionHash?: string | null;
+    day?: number;
   } | null;
   todaysVote?: VoteRecord | null;
 }
+
+const SECONDS_PER_DAY = 86400;
+
+export const normalizeVoteUnixDate = (value?: number): number | undefined => {
+  if (!value || !Number.isSafeInteger(value) || value < 0) return undefined;
+  // The contract returns an epoch day; /votes/:unixDate accepts epoch seconds.
+  return value < 1000000 ? value * SECONDS_PER_DAY : value;
+};
+
+const hasCompleteBrands = (vote?: VoteRecord | null) =>
+  Boolean(vote?.brand1 && vote?.brand2 && vote?.brand3);
+
+const isVoteForDate = (vote: VoteRecord, unixDate?: number) => {
+  if (!unixDate) return true;
+  if (!vote.date) return false;
+  return Math.floor(Date.parse(vote.date) / 86400000) ===
+    Math.floor(unixDate / SECONDS_PER_DAY);
+};
+
+const isTransactionHash = (value?: string | null): value is string =>
+  typeof value === 'string' && /^0x[\da-f]{64}$/i.test(value);
 
 export const shouldAutoRedirectToTodaysVote = ({
   isLoading,
@@ -75,8 +99,7 @@ export const shouldAutoRedirectToTodaysVote = ({
   }
 
   return Boolean(
-    user?.hasVotedToday &&
-      (user?.todaysVote?.id || user?.todaysVoteStatus?.hasVoted),
+    user?.hasVotedToday || user?.todaysVoteStatus?.hasVoted,
   );
 };
 
@@ -86,7 +109,7 @@ export const resolveTodaysVoteUnixDate = ({
 }: {
   user: UserVoteContext | null | undefined;
   nowUnix: number;
-}) => user?.todaysVoteStatus?.day || nowUnix;
+}) => normalizeVoteUnixDate(user?.todaysVoteStatus?.day) || nowUnix;
 
 export const shouldRefreshVoteData = ({
   votingStateType,
@@ -103,7 +126,7 @@ export const shouldRefreshVoteData = ({
     return false;
   }
 
-  if (votingStateType === 'loading' || votingStateType === 'not_voted') {
+  if (votingStateType !== 'recovering_vote') {
     return false;
   }
 
@@ -143,35 +166,46 @@ export const shouldFetchFallbackVoteData = ({
 }) => {
   if (!user) return false;
 
-  const hasVoteStatus = user.todaysVoteStatus?.hasVoted;
-  const hasVoteData =
-    user.todaysVote?.brand1 && user.todaysVote?.brand2 && user.todaysVote?.brand3;
+  const hasVoteStatus = user.todaysVoteStatus?.hasVoted || user.hasVotedToday;
+  const hasVoteData = hasCompleteBrands(user.todaysVote);
 
   return Boolean(
     (unixDate && !user.todaysVote && !user.todaysVoteStatus) ||
-      (hasVoteStatus && !hasVoteData && user.todaysVoteStatus?.day)
+      (hasVoteStatus && !hasVoteData)
   );
 };
 
 export const resolveFallbackUnixDate = ({
   unixDate,
   user,
+  nowUnix = Math.floor(Date.now() / 1000),
 }: {
   unixDate?: string;
   user: UserVoteContext | null | undefined;
+  nowUnix?: number;
 }) => {
-  if (unixDate) return Number(unixDate);
-  if (user?.todaysVoteStatus?.day) return user.todaysVoteStatus.day;
-  return undefined;
+  const statusDate = normalizeVoteUnixDate(user?.todaysVoteStatus?.day);
+  // Today's confirmed vote wins over a stale or malformed route from a prior session.
+  if (statusDate) return statusDate;
+  if (user?.hasVotedToday) return Math.floor(nowUnix / SECONDS_PER_DAY) * SECONDS_PER_DAY;
+  return normalizeVoteUnixDate(Number(unixDate));
 };
 
 export const resolveVoteRecord = ({
   userVote,
   fallbackVotes,
+  expectedUnixDate,
 }: {
   userVote: VoteRecord | null | undefined;
   fallbackVotes: VoteRecord | null | undefined;
-}) => userVote || fallbackVotes || null;
+  expectedUnixDate?: number;
+}) => {
+  if (hasCompleteBrands(userVote) &&
+    (!userVote?.date || isVoteForDate(userVote, expectedUnixDate))) return userVote!;
+  if (fallbackVotes && hasCompleteBrands(fallbackVotes) &&
+    isVoteForDate(fallbackVotes, expectedUnixDate)) return fallbackVotes;
+  return null;
+};
 
 export const buildVotingState = ({
   user,
@@ -185,18 +219,20 @@ export const buildVotingState = ({
   }
 
   const status = user.todaysVoteStatus;
-  const brandData = user.todaysVote || votes;
-  const hasBrandData = !!(brandData?.brand1 && brandData?.brand2 && brandData?.brand3);
+  const hasVoted = Boolean(status?.hasVoted || user.hasVotedToday);
+  const brandData = resolveVoteRecord({
+    userVote: user.todaysVote,
+    fallbackVotes: votes,
+    expectedUnixDate: resolveTodaysVoteUnixDate({ user, nowUnix: Math.floor(Date.now() / 1000) }),
+  });
+  const hasBrandData = hasCompleteBrands(brandData);
 
-  if (status?.hasVoted && hasBrandData) {
-    // Continue to state resolution.
-  } else if (authLoading && !hasBrandData && !status?.hasVoted) {
-    return { type: 'loading' };
-  } else if (status?.hasVoted && !hasBrandData && needsFallbackData && fallbackLoading) {
+  if (!hasVoted && !hasBrandData && (authLoading || (needsFallbackData && fallbackLoading))) {
     return { type: 'loading' };
   }
 
-  const voteTransactionHash = status?.transactionHash ?? null;
+  const voteTransactionHash = [status?.transactionHash, status?.voteId, brandData?.id]
+    .find(isTransactionHash) || null;
   const castHash = status?.castHash ?? null;
   const claimTransactionHash =
     user?.contextualTransaction?.transactionType === 'claim'
@@ -207,11 +243,15 @@ export const buildVotingState = ({
     status?.hasClaimed || (claimTransactionHash && status?.hasShared)
   );
   const resolvedVoteId =
-    status?.voteId || status?.transactionHash || user.todaysVote?.id || votes?.id || '';
+    voteTransactionHash || status?.voteId || brandData?.id || '';
   const orderedBrands =
     hasBrandData && brandData?.brand1 && brandData?.brand2 && brandData?.brand3
       ? ([brandData.brand2, brandData.brand1, brandData.brand3] as Brand[])
       : null;
+
+  if ((hasVoted || hasClaimed) && (!orderedBrands || !voteTransactionHash)) {
+    return { type: 'recovering_vote', hasClaimed };
+  }
 
   if (hasClaimed && orderedBrands) {
     return {
@@ -224,7 +264,7 @@ export const buildVotingState = ({
     };
   }
 
-  if (status?.hasShared && status?.hasVoted && orderedBrands) {
+  if (status?.hasShared && hasVoted && orderedBrands) {
     return {
       type: 'shared_not_claimed',
       voteId: resolvedVoteId,
@@ -234,7 +274,7 @@ export const buildVotingState = ({
     };
   }
 
-  if (status?.hasVoted && orderedBrands) {
+  if (hasVoted && orderedBrands) {
     return {
       type: 'voted_not_shared',
       voteId: resolvedVoteId,
@@ -259,7 +299,8 @@ export const buildVoteViewProps = ({
     castHash?: string
   ) => void;
 }) => {
-  if (votingState.type === 'loading' || votingState.type === 'not_voted') {
+  if (votingState.type === 'loading' || votingState.type === 'not_voted' ||
+    votingState.type === 'recovering_vote') {
     return {
       navigateToView,
       currentView: VotingViewEnum.PODIUM,

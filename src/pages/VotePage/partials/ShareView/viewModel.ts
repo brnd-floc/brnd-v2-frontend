@@ -48,7 +48,6 @@ export const getShareButtonState = ({
   isClaimPending,
   isClaimConfirming,
   hasSharedManually,
-  isFarcasterClient,
 }: {
   isSharing: boolean;
   isVerifying: boolean;
@@ -61,16 +60,16 @@ export const getShareButtonState = ({
 }) => {
   if (isSharing) return 'Sharing...';
   if (isVerifying) return 'Verifying Share';
-  if (claimAmountWei) {
-    const amount = getClaimAmountLabel(claimAmountWei);
-    return `Claim ${amount} $BRND`;
-  }
   if (isClaiming || isClaimPending || isClaimConfirming) {
     if (isClaimPending) return '⏳ Confirm in wallet...';
     if (isClaimConfirming) return '🔄 Processing...';
     return 'Claiming...';
   }
-  if (hasSharedManually && isFarcasterClient !== true) return 'Verify Share';
+  if (claimAmountWei) {
+    const amount = getClaimAmountLabel(claimAmountWei);
+    return `Claim ${amount} $BRND`;
+  }
+  if (hasSharedManually) return 'Retry verification';
   return 'Share now';
 };
 
@@ -83,7 +82,6 @@ export const getSharePrimaryAction = ({
   hasClaimData,
   isVerifying,
   hasSharedManually,
-  isFarcasterClient,
 }: {
   hasClaimData: boolean;
   isVerifying: boolean;
@@ -91,7 +89,7 @@ export const getSharePrimaryAction = ({
   isFarcasterClient: boolean | null;
 }): SharePrimaryAction => {
   if (hasClaimData && !isVerifying) return 'claim';
-  if (hasSharedManually && isFarcasterClient !== true) return 'manual-verify';
+  if (hasSharedManually) return 'manual-verify';
   return 'share';
 };
 
@@ -124,7 +122,7 @@ export const getShareUiState = ({
   });
 
   const showShareIcon = !isLoading && primaryAction === 'share';
-  const disablePrimaryButton = isLoading && primaryAction !== 'claim';
+  const disablePrimaryButton = isLoading;
 
   return {
     isLoading,

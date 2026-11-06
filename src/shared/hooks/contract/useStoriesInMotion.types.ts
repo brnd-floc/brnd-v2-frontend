@@ -106,6 +106,7 @@ export type ClaimSignatureRequest = (
   day: number;
   castHash?: string;
   verified?: boolean;
+  hasClaimed?: boolean;
 }>;
 export type ConfirmOperationHandlers = Record<
   StoriesOperation,
