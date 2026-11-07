@@ -5,6 +5,7 @@ import axios, { AxiosResponse } from 'axios';
 // Config
 import { API_URL } from '@/config/api';
 import { getFarcasterToken } from '@/shared/utils/auth';
+import { getApiResponseError } from './errors';
 
 /**
  * Default headers for the requests.
@@ -77,7 +78,8 @@ export async function request<T>(
   const response = await fetch(fullUrl.toString(), config);
 
   if (!response.ok) {
-    throw new Error(`Error: ${response.statusText}`);
+    const errorBody: unknown = await response.json().catch(() => null);
+    throw getApiResponseError(response.status, response.statusText, errorBody);
   }
 
   // ⚠️ CRITICAL FIX: Don't use response.json() - it corrupts large numbers!

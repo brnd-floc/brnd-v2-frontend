@@ -13,6 +13,7 @@ import Typography from '@/components/Typography';
 // Hooks
 import { useStoriesInMotion } from '@/shared/hooks/contract/useStoriesInMotion';
 import { useAuth } from '@/shared/hooks/auth';
+import { resolveRewardDay } from '@/shared/providers/authRefresh';
 
 // Types
 import { VotingViewProps, VotingViewEnum } from '../../types';
@@ -27,8 +28,8 @@ import {
 import { triggerNotificationHaptic } from '@/shared/utils/haptics';
 import { logFeatureError } from '@/shared/utils/logger';
 import {
-  isAbortLikeError,
   isSupersededOperationError,
+  RewardAlreadyClaimedError,
 } from '@/shared/hooks/contract/useStoriesInMotion.public';
 import {
   buildShareCastText,
@@ -55,15 +56,16 @@ export default function ShareView({
   currentBrands,
   currentVoteId,
   navigateToView,
-  transactionHash,
+  transactionHash: suppliedTransactionHash,
 }: ShareViewProps) {
-  void currentVoteId;
+  const transactionHash = suppliedTransactionHash ||
+    (/^0x[\da-f]{64}$/i.test(currentVoteId) ? currentVoteId : undefined);
   const [
     manualVerificationMessageDisplay,
     setManualVerificationMessageDisplay,
   ] = useState(false);
   const navigate = useNavigate();
-  const { data: authData, updateAuthData } = useAuth();
+  const { data: authData, updateAuthData, refetch: refetchAuth } = useAuth();
 
   const { address: connectedWallet } = useAccount();
   const userFid = authData?.fid ? BigInt(authData.fid) : undefined;
@@ -90,7 +92,6 @@ export default function ShareView({
     isConfirming: isClaimConfirming,
     error: claimError,
   } = useStoriesInMotion(
-    undefined, // onAuthorizeSuccess
     undefined, // onLevelUpSuccess
     undefined, // onVoteSuccess
     // onClaimSuccess
@@ -106,9 +107,7 @@ export default function ShareView({
       const castHash =
         claimData?.castHash || authData?.todaysVoteStatus?.castHash;
 
-      // Calculate today's day number
-      const now = Math.floor(Date.now() / 1000);
-      const day = Math.floor(now / 86400);
+      const day = resolveRewardDay(claimData?.day, authData?.todaysVoteStatus?.day);
 
       // Get reward amount from claimData
       const rewardAmount = claimData?.claimSignature?.amount;
@@ -153,6 +152,7 @@ export default function ShareView({
   const [isClaiming, setIsClaiming] = useState(false);
   const [shareError, setShareError] = useState<string | null>(null);
   const [hasSharedManually, setHasSharedManually] = useState(false);
+  const [pendingCastHash, setPendingCastHash] = useState('');
   const [isFarcasterClient, setIsFarcasterClient] = useState<boolean | null>(
     null
   );
@@ -169,6 +169,26 @@ export default function ShareView({
     recipientAddress: string;
   } | null>(null);
   const shareOperationRef = useRef(0);
+
+  useEffect(() => {
+    if (claimError && !isClaimPending && !isClaimConfirming) {
+      setIsClaiming(false);
+      setClaimData(null);
+    }
+  }, [claimError, isClaimPending, isClaimConfirming]);
+
+  const handleAlreadyClaimed = useCallback(() => {
+    const status = authData?.todaysVoteStatus;
+    if (status) {
+      updateAuthData({ todaysVoteStatus: {
+        ...status, hasVoted: true, hasShared: true, hasClaimed: true,
+      } });
+    }
+    setIsSharing(false);
+    setIsVerifying(false);
+    setIsClaiming(false);
+    void refetchAuth().catch(() => undefined);
+  }, [authData, updateAuthData, refetchAuth]);
 
   const startShareOperation = useCallback(() => {
     shareOperationRef.current += 1;
@@ -247,7 +267,7 @@ export default function ShareView({
    * Handles manual share confirmation for non-Farcaster clients
    */
   const handleManualShareConfirmation = useCallback(async () => {
-    if (isVerifying) return;
+    if (isSharing || isVerifying || isClaiming) return;
     const operationId = startShareOperation();
 
     setIsVerifying(true);
@@ -263,7 +283,7 @@ export default function ShareView({
       // For non-Farcaster (TBA = 309857), we pass empty castHash
       // Backend will search for shares containing the vote hash
       const verificationResult = await verifyShareAndGetClaimSignature(
-        '', // Empty castHash for manual verification
+        pendingCastHash, // Reuse the published cast after a verification outage.
         voteIdForVerification || '', // Use transaction hash as vote ID
         transactionHash || '',
         rewardRecipient,
@@ -282,9 +302,7 @@ export default function ShareView({
         recipientAddress: rewardRecipient || connectedWallet!,
       });
 
-      // Calculate today's day number
-      const now = Math.floor(Date.now() / 1000);
-      const day = Math.floor(now / 86400);
+      const day = verificationResult.day;
 
       // Optimistically update auth context immediately
       updateAuthData({
@@ -309,7 +327,11 @@ export default function ShareView({
         setIsVerifying(false);
       }
     } catch (error: unknown) {
-      if (isAbortLikeError(error) || isSupersededOperationError(error)) {
+      if (error instanceof RewardAlreadyClaimedError) {
+        handleAlreadyClaimed();
+        return;
+      }
+      if (isSupersededOperationError(error)) {
         resetShareLoadingIfActive(operationId);
         return;
       }
@@ -322,14 +344,16 @@ export default function ShareView({
         action: 'manual_verify_share',
         error,
       });
-      applyShareErrorIfActive(operationId, errorMessage, {
-        resetManualFlags: true,
-      });
+      applyShareErrorIfActive(operationId, errorMessage);
     }
   }, [
     transactionHash,
     verifyShareAndGetClaimSignature,
     isVerifying,
+    isSharing,
+    isClaiming,
+    pendingCastHash,
+    handleAlreadyClaimed,
     rewardRecipient,
     connectedWallet,
     updateAuthData,
@@ -397,6 +421,9 @@ export default function ShareView({
 
       // If cast was successful and we have a hash, verify share immediately for Farcaster
       if (castHashFromResponse) {
+        // Preserve the successful share even if the signature service is unavailable.
+        setPendingCastHash(castHashFromResponse);
+        setHasSharedManually(true);
         // For Farcaster, immediately start verification (no intermediate button)
         if (isShareOperationActive(operationId)) {
           setIsSharing(false);
@@ -430,9 +457,7 @@ export default function ShareView({
             recipientAddress: rewardRecipient || connectedWallet!,
           });
 
-          // Calculate today's day number
-          const now = Math.floor(Date.now() / 1000);
-          const day = Math.floor(now / 86400);
+          const day = verificationResult.day;
 
           // Optimistically update auth context immediately with cast hash
           // This ensures UI updates instantly without waiting for backend
@@ -464,7 +489,11 @@ export default function ShareView({
           // Note: castHash is now available and will be passed through viewProps
           // via todaysVoteStatus.castHash after the auth query refreshes
         } catch (error: unknown) {
-          if (isAbortLikeError(error) || isSupersededOperationError(error)) {
+          if (error instanceof RewardAlreadyClaimedError) {
+            handleAlreadyClaimed();
+            return;
+          }
+          if (isSupersededOperationError(error)) {
             resetShareLoadingIfActive(operationId);
             return;
           }
@@ -511,6 +540,7 @@ export default function ShareView({
     isShareOperationActive,
     resetShareLoadingIfActive,
     applyShareErrorIfActive,
+    handleAlreadyClaimed,
   ]);
 
   /**
@@ -535,7 +565,7 @@ export default function ShareView({
 
       // Note: Navigation to CongratsView happens in onClaimSuccess callback
     } catch (error: unknown) {
-      if (isAbortLikeError(error) || isSupersededOperationError(error)) {
+      if (isSupersededOperationError(error)) {
         resetShareLoadingIfActive(operationId);
         return;
       }
@@ -634,6 +664,8 @@ export default function ShareView({
       <ShareActionsSection
         isLoading={shareUiState.isLoading}
         onSkip={handleClickSkip}
+        onVerify={!claimData && !hasSharedManually ? handleManualShareConfirmation : undefined}
+        onShareAgain={hasSharedManually && !claimData ? handleClickShare : undefined}
       />
     </div>
   );

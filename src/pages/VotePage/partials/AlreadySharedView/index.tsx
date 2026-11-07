@@ -13,6 +13,7 @@ import {
 // Hooks
 import { useStoriesInMotion } from '@/shared/hooks/contract/useStoriesInMotion';
 import { useAuth } from '@/shared/hooks/auth';
+import { resolveRewardDay } from '@/shared/providers/authRefresh';
 
 // Types
 import { VotingViewProps } from '../../types';
@@ -26,8 +27,8 @@ import { getMiniAppClientFid } from '@/shared/utils/farcasterActions';
 import { triggerNotificationHaptic } from '@/shared/utils/haptics';
 import { logFeatureError } from '@/shared/utils/logger';
 import {
-  isAbortLikeError,
   isSupersededOperationError,
+  RewardAlreadyClaimedError,
 } from '@/shared/hooks/contract/useStoriesInMotion.public';
 import {
   getAlreadySharedClaimState,
@@ -49,7 +50,7 @@ export default function AlreadySharedView({
   transactionHash,
   castHash,
 }: AlreadySharedViewProps) {
-  const { data: authData, updateAuthData } = useAuth();
+  const { data: authData, updateAuthData, refetch: refetchAuth } = useAuth();
 
   const { address: connectedWallet } = useAccount();
   const userFid = authData?.fid ? BigInt(authData.fid) : undefined;
@@ -100,9 +101,7 @@ export default function AlreadySharedView({
       setIsLoadingClaimData(false);
       setClaimError(null);
 
-      // Calculate today's day number
-      const now = Math.floor(Date.now() / 1000);
-      const day = Math.floor(now / 86400);
+      const day = resolveRewardDay(claimData?.day, authData?.todaysVoteStatus?.day);
 
       // Get reward amount from claimData if available
       const rewardAmount = claimData?.claimSignature?.amount;
@@ -165,6 +164,7 @@ export default function AlreadySharedView({
         return false;
       }
       setClaimError(message);
+      setClaimData(null);
       return true;
     },
     [resetClaimLoadingIfActive]
@@ -201,6 +201,15 @@ export default function AlreadySharedView({
     recipientAddress: string;
   } | null>(null);
 
+  // wagmi reports wallet rejection asynchronously; the awaited mutation can return first.
+  useEffect(() => {
+    if (contractError && !isClaimPending && !isClaimConfirming) {
+      setIsClaiming(false);
+      setIsLoadingClaimData(false);
+      setClaimData(null);
+    }
+  }, [contractError, isClaimPending, isClaimConfirming]);
+
   // Note: Continue button removed as this component is for claiming rewards
 
   /**
@@ -208,7 +217,7 @@ export default function AlreadySharedView({
    */
   const handleClickClaim = useCallback(async () => {
     if (
-      isClaiming ||
+      hasClaimed || isClaiming ||
       isClaimPending ||
       isClaimConfirming ||
       isLoadingClaimData
@@ -217,38 +226,7 @@ export default function AlreadySharedView({
     }
     const operationId = startClaimOperation();
 
-    // If we already have claim data, execute directly
-    if (claimData) {
-      setIsClaiming(true);
-      setClaimError(null);
-
-      try {
-        await executeClaimReward(
-          claimData.castHash,
-          claimData.claimSignature,
-          claimData.day,
-          claimData.recipientAddress
-        );
-      } catch (error: unknown) {
-        if (isAbortLikeError(error) || isSupersededOperationError(error)) {
-          resetClaimLoadingIfActive(operationId);
-          return;
-        }
-        const errorMessage = getAlreadySharedErrorMessage(
-          error,
-          'Failed to claim reward. Please try again.'
-        );
-        logFeatureError({
-          feature: 'already_shared_view',
-          action: 'claim_reward',
-          error,
-        });
-        applyClaimErrorIfActive(operationId, errorMessage);
-      }
-      return;
-    }
-
-    // Otherwise, fetch claim signature first
+    // Recheck eligibility and obtain a fresh signature on every explicit retry.
     if (!currentVoteId) {
       setClaimError('Vote ID is required');
       return;
@@ -293,7 +271,16 @@ export default function AlreadySharedView({
         throw new Error('Cannot claim - already claimed or not eligible');
       }
     } catch (error: unknown) {
-      if (isAbortLikeError(error) || isSupersededOperationError(error)) {
+      if (error instanceof RewardAlreadyClaimedError) {
+        resetClaimLoadingIfActive(operationId);
+        const status = authData?.todaysVoteStatus;
+        if (status) updateAuthData({ todaysVoteStatus: {
+          ...status, hasVoted: true, hasShared: true, hasClaimed: true,
+        } });
+        void refetchAuth().catch(() => undefined);
+        return;
+      }
+      if (isSupersededOperationError(error)) {
         resetClaimLoadingIfActive(operationId);
         return;
       }
@@ -309,7 +296,6 @@ export default function AlreadySharedView({
       applyClaimErrorIfActive(operationId, errorMessage);
     }
   }, [
-    claimData,
     currentVoteId,
     transactionHash,
     getClaimSignatureForSharedVote,
@@ -324,6 +310,10 @@ export default function AlreadySharedView({
     isClaimOperationActive,
     resetClaimLoadingIfActive,
     applyClaimErrorIfActive,
+    hasClaimed,
+    authData,
+    updateAuthData,
+    refetchAuth,
   ]);
 
   const alreadySharedActionVm = getAlreadySharedClaimState({

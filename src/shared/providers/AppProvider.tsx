@@ -36,6 +36,7 @@ import {
   ContextualTransaction,
 } from '@/shared/hooks/user';
 import NotInMiniappPage from '@/pages/NotInMiniappPage';
+import { createAuthRefresher, reconcileAuthRefresh } from './authRefresh';
 
 // Global flag to ensure /me is only called once per session (for initial load)
 let hasCalledGetMe = false;
@@ -138,12 +139,17 @@ export function AppProvider(): JSX.Element {
     [],
   );
 
-  // Refetch function - NO-OP since we only call /me once per session
-  // This is kept for backwards compatibility but does nothing
-  const refetchAuthData = useCallback(async () => {
-    // Do nothing - we don't refetch /me after initial load
-    // All updates happen via updateAuthData (optimistic updates)
-  }, []);
+  const authRefresher = useMemo(() => createAuthRefresher({
+    load: getMe,
+    onStart: () => {
+      setIsLoadingAuth(true);
+      setAuthError(null);
+    },
+    onSuccess: (data) => setAuthData((current) => reconcileAuthRefresh(current, data)),
+    onError: setAuthError,
+    onSettled: () => setIsLoadingAuth(false),
+  }), []);
+  const refetchAuthData = authRefresher.refresh;
 
   useEffect(() => {
     async function initMiniapp() {
@@ -175,25 +181,15 @@ export function AppProvider(): JSX.Element {
           setUserFid(context.user.fid);
         }
 
-        // Call /me endpoint ONLY ONCE during the entire user session
+        // One initial request; explicit recovery can refresh the saved state later.
         if (newToken && !hasCalledGetMe) {
           hasCalledGetMe = true; // Set flag immediately to prevent any other calls
-          setIsLoadingAuth(true);
-          setAuthError(null);
           try {
-            const userData = await getMe();
-
-            setAuthData(userData);
-          } catch (error) {
-            setAuthError(
-              error instanceof Error
-                ? error
-                : new Error('Failed to fetch user data'),
-            );
+            await refetchAuthData();
+          } catch {
+            // The refresher exposes the error without overwriting data after logout.
             // Reset flag on error so user can retry
             hasCalledGetMe = false;
-          } finally {
-            setIsLoadingAuth(false);
           }
         }
 
@@ -288,6 +284,7 @@ export function AppProvider(): JSX.Element {
   }, []);
 
   const signOut = useCallback(() => {
+    authRefresher.invalidate();
     setToken(undefined);
     setMiniappContext(null);
     setIsInitialized(false);

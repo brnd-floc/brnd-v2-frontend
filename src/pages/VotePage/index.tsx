@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Navigate,
   useLocation,
@@ -19,15 +19,14 @@ import {
   shouldAutoRedirectToTodaysVote,
   shouldFetchFallbackVoteData,
   shouldRedirectToVoteHome,
-  shouldRefreshAfterClaim,
-  shouldRefreshVoteData,
 } from './viewModel';
+import { RecoveryView } from './RecoveryView';
 
 // Hooks
 import { Brand } from '@/hooks/brands';
 import { useAuth } from '@/hooks/auth';
 import { useUserVotes } from '@/hooks/user/useUserVotes';
-import { useQueryClient } from '@tanstack/react-query';
+import { withTimeout } from '@/shared/hooks/contract/useStoriesInMotion.async';
 
 // Hocs
 import withProtectionRoute from '@/hocs/withProtectionRoute';
@@ -41,7 +40,6 @@ function VotePage(): React.ReactNode {
   const { unixDate } = useParams<{ unixDate?: string }>();
   const { search } = useLocation();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
 
   const {
     data: user,
@@ -49,8 +47,9 @@ function VotePage(): React.ReactNode {
     refetch: refetchAuth,
   } = useAuth();
 
-  // Track if we're waiting for data after a state change (prevents flickering)
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [recoveryError, setRecoveryError] = useState<string | null>(null);
+  const recoveryAttempt = useRef<string | null>(null);
 
   // Determine if we need to fetch vote data via fallback
   // This happens when we have voteStatus but no brand data in todaysVote
@@ -65,8 +64,9 @@ function VotePage(): React.ReactNode {
     [unixDate, user]
   );
 
-  const { data: fallbackVotes, isFetching: fallbackLoading } = useUserVotes(
-    needsFallbackData ? fallbackUnixDate : undefined
+  const { data: fallbackVotes, isFetching: fallbackLoading, refetch: refetchVotes } = useUserVotes(
+    needsFallbackData ? fallbackUnixDate : undefined,
+    user?.fid,
   );
 
   // Get the best available vote data (prefer todaysVote, fallback to fetched data)
@@ -75,8 +75,9 @@ function VotePage(): React.ReactNode {
       resolveVoteRecord({
         userVote: user?.todaysVote,
         fallbackVotes,
+        expectedUnixDate: fallbackUnixDate,
       }),
-    [user?.todaysVote, fallbackVotes]
+    [user?.todaysVote, fallbackVotes, fallbackUnixDate]
   );
 
   const voteStatus = user?.todaysVoteStatus;
@@ -109,6 +110,31 @@ function VotePage(): React.ReactNode {
     [user, votes, authLoading, needsFallbackData, fallbackLoading]
   );
 
+  const retrySavedVote = useCallback(async () => {
+    if (isTransitioning) return;
+    setIsTransitioning(true);
+    setRecoveryError(null);
+    // Both calls only read the existing vote. Never submit another vote to recover.
+    const results = await Promise.allSettled([
+      refetchAuth(),
+      ...(needsFallbackData ? [withTimeout(refetchVotes({ throwOnError: true }), 15000, 'Podium refresh')] : []),
+    ]);
+    const failed = results.find((result) => result.status === 'rejected');
+    if (failed?.status === 'rejected') {
+      setRecoveryError(failed.reason instanceof Error
+        ? failed.reason.message : 'Unable to reload your podium. Please retry.');
+    }
+    setIsTransitioning(false);
+  }, [isTransitioning, refetchAuth, needsFallbackData, refetchVotes]);
+
+  useEffect(() => {
+    if (votingState.type !== 'recovering_vote') return;
+    const recoveryKey = `${user?.fid}:${fallbackUnixDate}`;
+    if (recoveryAttempt.current === recoveryKey) return;
+    recoveryAttempt.current = recoveryKey;
+    void retrySavedVote();
+  }, [votingState.type, user?.fid, fallbackUnixDate, retrySavedVote]);
+
   /**
    * Navigation function for components that need to trigger state updates.
    * After actions like voting or sharing, we invalidate queries to refresh state.
@@ -136,7 +162,9 @@ function VotePage(): React.ReactNode {
       // Invalidate auth query to trigger state refresh
       // The state machine will automatically determine the correct view
       // The castHash will be available from todaysVoteStatus.castHash after backend processes it
-      queryClient.invalidateQueries({ queryKey: ['auth'] });
+      void refetchAuth().catch((error: unknown) => {
+        setRecoveryError(error instanceof Error ? error.message : 'Unable to refresh your podium.');
+      });
 
       // If we're on a specific date route, ensure we stay on it
       if (unixDate) {
@@ -146,7 +174,7 @@ function VotePage(): React.ReactNode {
         navigate(`/vote/${todayUnix}`, { replace: true });
       }
     },
-    [queryClient, navigate, unixDate]
+    [refetchAuth, navigate, unixDate]
   );
 
   /**
@@ -169,6 +197,13 @@ function VotePage(): React.ReactNode {
         return suspenseFallback;
       case 'not_voted':
         return <PodiumView {...viewProps} />;
+      case 'recovering_vote':
+        return <RecoveryView
+          isLoading={isTransitioning || authLoading}
+          hasClaimed={votingState.hasClaimed}
+          error={recoveryError}
+          onRetry={() => void retrySavedVote()}
+        />;
       case 'voted_not_shared':
         return <ShareView {...viewProps} />;
       case 'shared_not_claimed':
@@ -178,7 +213,8 @@ function VotePage(): React.ReactNode {
       default:
         return <PodiumView {...viewProps} />;
     }
-  }, [votingState.type, viewProps, suspenseFallback]);
+  }, [votingState, viewProps, suspenseFallback, isTransitioning, authLoading,
+    fallbackLoading, recoveryError, retrySavedVote]);
 
   /**
    * Auto-redirect: If user has voted today but no unixDate, redirect to today's vote
@@ -212,53 +248,6 @@ function VotePage(): React.ReactNode {
       window.history.replaceState({}, '', newUrl);
     }
   }, [hasSuccessParam, votingState.type]);
-
-  /**
-   * Monitor state transitions and handle data refresh
-   * This ensures smooth transitions between states without flickering
-   */
-  useEffect(() => {
-    // If we transition from loading to a real state, mark transition as complete
-    if (votingState.type !== 'loading' && isTransitioning) {
-      setIsTransitioning(false);
-    }
-
-    const brandData = user?.todaysVote || votes;
-    const hasBrandData = Boolean(brandData?.brand1);
-    if (
-      shouldRefreshVoteData({
-        votingStateType: votingState.type,
-        isTransitioning,
-        hasVoteStatus: Boolean(voteStatus?.hasVoted),
-        hasBrandData,
-      })
-    ) {
-      setIsTransitioning(true);
-      refetchAuth();
-    }
-  }, [votingState.type, isTransitioning, votes, voteStatus, user, refetchAuth]);
-
-  /**
-   * Monitor for claim completion - when user claims rewards, ensure smooth transition to State 4
-   * This handles the transition from State 3 (shared_not_claimed) to State 4 (claimed)
-   */
-  useEffect(() => {
-    if (
-      shouldRefreshAfterClaim({
-        votingStateType: votingState.type,
-        hasClaimed: Boolean(user?.todaysVoteStatus?.hasClaimed),
-        isTransitioning,
-      })
-    ) {
-      setIsTransitioning(true);
-      refetchAuth();
-    }
-  }, [
-    votingState.type,
-    user?.todaysVoteStatus?.hasClaimed,
-    isTransitioning,
-    refetchAuth,
-  ]);
 
   // Redirect if trying to view a vote that doesn't exist and user hasn't voted today
   // This prevents users from accessing invalid vote pages

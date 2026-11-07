@@ -31,6 +31,7 @@ import GoBackIcon from '@/assets/icons/go-back-icon.svg?react';
 import { ModalsIds, useModal } from '@/hooks/ui';
 import sdk from '@farcaster/miniapp-sdk';
 import Button from '@/shared/components/Button';
+import { buildOnchainVoteRecovery } from '@/shared/providers/authRefresh';
 
 interface PodiumViewProps extends VotingViewProps {}
 
@@ -144,6 +145,14 @@ export default function PodiumView(props: PodiumViewProps) {
       });
     },
   );
+
+  // The contract can confirm the vote before /me or the indexer sees it.
+  // Hand control back to VotePage recovery instead of trapping the user here.
+  useEffect(() => {
+    if (hasVotedOnChain && !authData?.hasVotedToday) {
+      updateAuthData(buildOnchainVoteRecovery(authData));
+    }
+  }, [hasVotedOnChain, authData?.hasVotedToday, updateAuthData]);
 
   // Calculate vote cost when user info changes
   useEffect(() => {

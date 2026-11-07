@@ -8,6 +8,13 @@ import type {
 
 type ClaimSignatureShape = ClaimSignatureRequestResult['claimSignature'];
 
+export class RewardAlreadyClaimedError extends Error {
+  constructor() {
+    super('This reward has already been claimed.');
+    this.name = 'RewardAlreadyClaimedError';
+  }
+}
+
 export const validateClaimSignatureContext = ({
   userAddress,
   userFid,
@@ -89,6 +96,10 @@ export const resolveClaimSignatureRequest = async ({
 
   assertActiveOperation(operationToken, supersededMessage);
 
+  if (verifyData.hasClaimed) {
+    throw new RewardAlreadyClaimedError();
+  }
+
   if (verificationMessage && verifyData.verified === false) {
     throw new Error(verificationMessage);
   }
@@ -152,6 +163,7 @@ export const verifyShareAndGetClaimSignatureCoordinator = async ({
     day: number;
     castHash?: string;
     verified?: boolean;
+    hasClaimed?: boolean;
   }>;
 }): Promise<ClaimSignatureRequestResult> => {
   const operationToken = startOperationToken();
