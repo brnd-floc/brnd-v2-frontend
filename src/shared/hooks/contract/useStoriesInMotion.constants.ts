@@ -7,6 +7,7 @@ export interface StoriesAsyncPolicy {
 }
 
 export const STORIES_BACKEND_TIMEOUT_MS = 8000;
+export const SHARE_VERIFICATION_TIMEOUT_MS = 15000;
 export const STORIES_TRANSIENT_MAX_RETRIES = 2;
 
 export const STORIES_TRANSIENT_RETRY_POLICY: StoriesAsyncPolicy = {

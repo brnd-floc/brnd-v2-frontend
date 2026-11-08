@@ -34,6 +34,7 @@ import {
   withTimeout,
 } from './useStoriesInMotion.async';
 import {
+  SHARE_VERIFICATION_TIMEOUT_MS,
   STORIES_BACKEND_TIMEOUT_MS,
   STORIES_TRANSIENT_RETRY_POLICY,
 } from './useStoriesInMotion.constants';
@@ -538,9 +539,8 @@ export const useStoriesInMotion = (
             transactionHash,
             castedFrom,
           }),
-        timeoutMs: STORIES_TRANSIENT_RETRY_POLICY.timeoutMs,
+        timeoutMs: SHARE_VERIFICATION_TIMEOUT_MS,
         timeoutLabel: 'verify-share',
-        useTransientRetry: true,
       }),
     [runStoriesApiRequest, userAddress]
   );
@@ -561,9 +561,8 @@ export const useStoriesInMotion = (
             transactionHash,
             castedFrom,
           }),
-        timeoutMs: STORIES_TRANSIENT_RETRY_POLICY.timeoutMs,
+        timeoutMs: SHARE_VERIFICATION_TIMEOUT_MS,
         timeoutLabel: 'verify-share-shared-vote',
-        useTransientRetry: true,
       }),
     [runStoriesApiRequest, userAddress]
   );
