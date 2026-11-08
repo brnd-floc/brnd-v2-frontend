@@ -36,6 +36,28 @@ import { router } from './config/router';
 // Error Boundary
 import { ErrorBoundary } from './shared/components/ErrorBoundary';
 
+// A tab left open during a deploy can still reference deleted Vite chunks.
+window.addEventListener('vite:preloadError', (event) => {
+  if (!navigator.onLine) return;
+
+  try {
+    const key = 'brnd:module-reload';
+    const lastReload = Number(sessionStorage.getItem(key));
+    const now = Date.now();
+
+    // Avoid a reload loop if the failure persists after refreshing.
+    if (now - lastReload < 30_000) return;
+
+    sessionStorage.setItem(key, String(now));
+  } catch {
+    // Without a persisted guard, let the normal error UI handle the failure.
+    return;
+  }
+
+  event.preventDefault();
+  window.location.reload();
+});
+
 if (import.meta.env.VITE_ENVIRONMENT === 'dev') {
   import('eruda').then((eruda) => eruda.default.init());
 }
