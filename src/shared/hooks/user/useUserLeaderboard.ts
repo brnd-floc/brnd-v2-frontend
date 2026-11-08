@@ -9,7 +9,6 @@ export type LeaderboardSeason = 'all' | 's1' | 's2';
 
 /**
  * Hook for fetching user leaderboard with pagination and current user position.
- * Data is cached on the backend for 15 minutes for performance.
  *
  * @param page - Page number for pagination
  * @param limit - Number of users per page
@@ -23,7 +22,9 @@ export const useUserLeaderboard = (
   return useQuery({
     queryKey: ['leaderboard', page, limit, season],
     queryFn: () => getUserLeaderboard(page, limit, season),
-    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes (backend caches for 15)
+    // Return to the leaderboard after a vote or claim with fresh server data.
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: 'always',
     placeholderData: keepPreviousData, // Keep previous data while loading new page
   });
 };
