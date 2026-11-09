@@ -29,9 +29,7 @@ interface TopRankingsProps {
 
 function TopRankings({ period }: TopRankingsProps) {
   const navigate = useNavigate();
-  const { data } = useBrandList('top', '', 1, 50, period);
-
-  // No need to manually refetch - data is already cached by BrandRankingsProvider
+  const { data } = useBrandList('top', '', 1, 50, period, true);
 
   // Process brands with smart scoring and proper sorting
   const processedBrands = useMemo(() => {
