@@ -40,7 +40,7 @@ function BrandOfTheDay() {
   const processedBrands = useMemo(() => {
     if (!data?.brands) return [];
     // Apply daily scoring to determine the true daily winner
-    const sortedBrands = data.brands.sort((a, b) => b.scoreDay - a.scoreDay);
+    const sortedBrands = [...data.brands].sort((a, b) => b.scoreDay - a.scoreDay);
     return sortedBrands;
   }, [data?.brands]);
 

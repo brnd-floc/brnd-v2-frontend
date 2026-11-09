@@ -41,12 +41,6 @@ export interface PublicPodium {
 export type BrandTimePeriod = 'day' | 'week' | 'month' | 'all';
 
 /**
- * Cache for brand list requests
- * Key format: `${searchQuery}|${pageId}|${limit}|${order}|${period}`
- */
-const brandListCache = new Map<string, GetBrandListResponse>();
-
-/**
  * Response structure for recent podiums API
  * Now matches /my-vote-history format
  */
@@ -115,16 +109,7 @@ export const getBrandList = async (
   order: 'top' | 'new' | 'all' = 'all',
   period: BrandTimePeriod = 'all' // NEW: Added period parameter
 ): Promise<GetBrandListResponse> => {
-  // Create cache key from all parameters
-  const cacheKey = `${searchQuery}|${pageId}|${limit}|${order}|${period}`;
-
-  // Return cached result if available
-  if (brandListCache.has(cacheKey)) {
-    return brandListCache.get(cacheKey)!;
-  }
-
-  // Fetch from API
-  const result = await request<GetBrandListResponse>(`${BRAND_SERVICE}/list`, {
+  return request<GetBrandListResponse>(`${BRAND_SERVICE}/list`, {
     method: 'GET',
     params: {
       search: searchQuery,
@@ -134,11 +119,6 @@ export const getBrandList = async (
       period,
     },
   });
-
-  // Cache the result
-  brandListCache.set(cacheKey, result);
-
-  return result;
 };
 
 /* =======================================

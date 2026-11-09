@@ -1,5 +1,3 @@
-// /src/hooks/brands.ts - Update your useBrandList hook:
-
 // Dependencies
 import { useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -15,37 +13,39 @@ export const useBrandList = (
   searchQuery: string = '',
   pageId: number = 1,
   limit: number = 27,
-  period: BrandTimePeriod = 'all'
+  period: BrandTimePeriod = 'all',
+  live = false
 ) => {
   const brandsRef = useRef<Brand[]>([]);
   const countRef = useRef<number>(0);
 
   const result = useQuery({
-    queryKey: ['brands', searchQuery, pageId, limit, order, period], // NEW: Include period in query key
+    queryKey: ['brands', searchQuery, pageId, limit, order, period],
     queryFn: () =>
-      getBrandList(searchQuery, String(pageId), String(limit), order, period), // NEW: Pass period
+      getBrandList(searchQuery, String(pageId), String(limit), order, period),
     retry: false,
-    staleTime: Infinity, // Never consider data stale - cache indefinitely
-    gcTime: Infinity, // Keep cached data indefinitely (formerly cacheTime)
-    enabled: false,
+    staleTime: live ? 30_000 : Infinity,
+    gcTime: Infinity,
+    enabled: live,
+    refetchOnMount: live ? 'always' : false,
+    refetchOnWindowFocus: live ? 'always' : false,
+    refetchInterval: live ? 30_000 : false,
     placeholderData: (prev) => prev,
   });
 
-  if (!result.isError && !result.isLoading) {
-    const brands = result.data?.brands || [];
+  if (result.data && !result.isPlaceholderData) {
+    const { brands, count } = result.data;
 
-    if (searchQuery !== '' && pageId === 1) {
+    if (pageId === 1) {
       brandsRef.current = brands;
     } else {
-      const existingBrandIds = new Set(
-        brandsRef.current.map((brand) => brand.id)
-      );
-      const newBrands = brands.filter(
-        (brand) => !existingBrandIds.has(brand.id)
-      );
-      brandsRef.current = [...brandsRef.current, ...newBrands];
+      const byId = new Map(brandsRef.current.map((brand) => [brand.id, brand]));
+      for (const brand of brands) {
+        byId.set(brand.id, brand);
+      }
+      brandsRef.current = [...byId.values()];
     }
-    countRef.current = result.data?.count ?? 0;
+    countRef.current = count;
   }
 
   return {

@@ -25,6 +25,7 @@ export const useUserLeaderboard = (
     // Return to the leaderboard after a vote or claim with fresh server data.
     refetchOnMount: 'always',
     refetchOnWindowFocus: 'always',
+    refetchInterval: page === 1 && season !== 's1' ? 60_000 : false,
     placeholderData: keepPreviousData, // Keep previous data while loading new page
   });
 };
